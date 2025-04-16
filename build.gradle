@@ -1,0 +1,31 @@
+plugins {
+    id 'me.champeau.jmh' version '0.7.3'
+}
+
+group = 'org.nimbus'
+version = '1.0.0'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    testImplementation platform('org.junit:junit-bom:5.10.0')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+
+    implementation 'org.graalvm.truffle:truffle-api:24.2.0'
+    implementation 'org.graalvm.polyglot:polyglot:24.2.0'
+
+    annotationProcessor 'org.graalvm.truffle:truffle-dsl-processor:24.2.0'
+
+    jmh 'org.openjdk.jmh:jmh-core:1.36'
+    jmh 'org.openjdk.jmh:jmh-generator-annprocess:1.36'
+    jmhAnnotationProcessor 'org.openjdk.jmh:jmh-generator-annprocess:1.36'
+    jmhRuntimeOnly 'org.graalvm.truffle:truffle-sl:24.2.0'
+    jmhRuntimeOnly 'org.graalvm.truffle:truffle-runtime:24.2.0'
+    jmhRuntimeOnly 'org.graalvm.polyglot:polyglot:24.2.0'
+}
+
+test {
+    useJUnitPlatform()
+}
