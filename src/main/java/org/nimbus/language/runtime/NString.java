@@ -26,6 +26,10 @@ public final class NString {
     return fromJavaStringNode.execute(object.toString(), NimbusLanguage.ENCODING);
   }
 
+  public static boolean equals(TruffleString a, TruffleString b, TruffleString.EqualNode equalNode) {
+    return equalNode.execute(a, b, NimbusLanguage.ENCODING);
+  }
+
   public static long length(TruffleString string, TruffleString.CodePointLengthNode lengthNode) {
     return lengthNode.execute(string, NimbusLanguage.ENCODING);
   }

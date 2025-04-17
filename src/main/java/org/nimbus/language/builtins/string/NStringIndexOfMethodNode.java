@@ -48,9 +48,9 @@ public abstract class NStringIndexOfMethodNode extends NBuiltinFunctionNode {
 
   @Fallback
   protected Object unknownArguments(Object self, Object other, Object object) {
-    System.out.println("SELF = " + self);
-    System.out.println("OTHER = " + other);
-    System.out.println("OBJ = " + object);
-    throw new NimRuntimeError("unsupported arguments");
+    if(other instanceof TruffleString) {
+      throw new NimRuntimeError("string.index_of() expects number in argument 2");
+    }
+    throw new NimRuntimeError("string.index_of() expects string in argument 1");
   }
 }
