@@ -39,7 +39,7 @@ public abstract class NReadStringPropertyNode extends Node {
   @Specialization(guards = {
     "INDEX_OF_PROP.equals(name)",
     "same(indexOfMethod.methodTarget, string)"
-  }, limit = "2")
+  }, limit = "3")
   protected NFunctionObject cachedReadIndexOfProperty(
     TruffleString string, String name,
     @Cached("createStringIndexOfMethod(string)") NFunctionObject indexOfMethod
@@ -55,7 +55,7 @@ public abstract class NReadStringPropertyNode extends Node {
   @Specialization(guards = {
     "UPPER_PROP.equals(name)",
     "same(indexOfMethod.methodTarget, string)"
-  }, limit = "2")
+  }, limit = "3")
   protected NFunctionObject cachedReadUpperProperty(
     TruffleString string, String name,
     @Cached("createStringUpperMethod(string)") NFunctionObject indexOfMethod
@@ -69,15 +69,15 @@ public abstract class NReadStringPropertyNode extends Node {
   }
 
   protected NFunctionObject createStringIndexOfMethod(TruffleString string) {
-    return new NFunctionObject(INDEX_OF_PROP, NimContext.get(this).stringPrototype.indexOfMethod, 2, string);
+    return new NFunctionObject(INDEX_OF_PROP, NimContext.get(this).stringPrototype.indexOfMethod, 3, string);
   }
 
   protected NFunctionObject createStringUpperMethod(TruffleString string) {
-    return new NFunctionObject(UPPER_PROP, NimContext.get(this).stringPrototype.upperMethod, 0, string);
+    return new NFunctionObject(UPPER_PROP, NimContext.get(this).stringPrototype.upperMethod, 1, string);
   }
 
   @Fallback
-  protected NimNil readUnknownProperty(TruffleString string, Object property) {
+  protected Object readUnknownProperty(TruffleString string, Object property) {
     throw new NimRuntimeError("class String has no named property '" + property + "'");
   }
 }

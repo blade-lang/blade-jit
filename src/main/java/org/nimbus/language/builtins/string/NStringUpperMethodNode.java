@@ -9,7 +9,7 @@ import org.nimbus.language.nodes.NBuiltinFunctionNode;
 import org.nimbus.language.runtime.NString;
 
 public abstract class NStringUpperMethodNode extends NBuiltinFunctionNode {
-  @CompilerDirectives.TruffleBoundary
+//  @CompilerDirectives.TruffleBoundary
   @Specialization
   protected TruffleString upper(TruffleString self,
                                 @Cached TruffleString.FromJavaStringNode fromJavaStringNode) {

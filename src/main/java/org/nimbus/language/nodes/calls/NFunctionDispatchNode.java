@@ -21,17 +21,17 @@ public abstract class NFunctionDispatchNode extends Node {
       return arguments;
     }
 
-    Object[] ret = new Object[function.argumentsCount];
     int start = function.methodTarget == null ? 0 : 1;
+    Object[] ret = new Object[function.argumentsCount];
     if(start == 1) {
       ret[0] = function.methodTarget;
     }
 
     if (arguments.length - start >= 0) {
-      System.arraycopy(arguments, start, ret, start, arguments.length - start);
+      System.arraycopy(arguments, 0, ret, start, arguments.length);
     }
 
-    for(int i = arguments.length; i < function.argumentsCount; i++) {
+    for(int i = arguments.length + start; i < function.argumentsCount; i++) {
       ret[i] = NimNil.SINGLETON;
     }
 

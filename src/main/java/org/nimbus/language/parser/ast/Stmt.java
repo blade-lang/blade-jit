@@ -291,10 +291,10 @@ public abstract class Stmt {
   public static class Function extends Stmt {
     public final Token name;
     public final List<Expr.Identifier> parameters;
-    public final Block body;
+    public final Stmt.Block body;
     public final boolean isVariadic;
 
-    public Function(Token name, List<Expr.Identifier> parameters, Block body, boolean isVariadic) {
+    public Function(Token name, List<Expr.Identifier> parameters, Stmt.Block body, boolean isVariadic) {
       this.name = name;
       this.parameters = parameters;
       this.body = body;
@@ -309,11 +309,11 @@ public abstract class Stmt {
   public static class Method extends Stmt {
     public final Token name;
     public final List<Expr.Identifier> parameters;
-    public final Block body;
+    public final Stmt.Block body;
     public final boolean isVariadic;
     public final boolean isStatic;
 
-    public Method(Token name, List<Expr.Identifier> parameters, Block body, boolean isVariadic, boolean isStatic) {
+    public Method(Token name, List<Expr.Identifier> parameters, Stmt.Block body, boolean isVariadic, boolean isStatic) {
       this.name = name;
       this.parameters = parameters;
       this.body = body;

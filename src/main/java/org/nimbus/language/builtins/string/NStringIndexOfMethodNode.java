@@ -3,6 +3,8 @@ package org.nimbus.language.builtins.string;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.dsl.*;
 import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.interop.InteropLibrary;
+import com.oracle.truffle.api.library.CachedLibrary;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.strings.TruffleString;
 import org.nimbus.language.NimbusLanguage;
@@ -14,10 +16,12 @@ import org.nimbus.language.runtime.NimRuntimeError;
 
 public abstract class NStringIndexOfMethodNode extends NBuiltinFunctionNode {
 
-  @Specialization(guards = "isNil(ignored)")
-  protected long indexOfNil(TruffleString self, TruffleString other, NimNil ignored,
-                                @Cached @Cached.Shared("indexOfStringNode") TruffleString.IndexOfStringNode indexOfStringNode,
-                                @Cached @Cached.Shared("lengthNode") TruffleString.CodePointLengthNode lengthNode) {
+  @Specialization(guards = "isNil(extra)")
+  protected long indexOfNil(
+    TruffleString self, TruffleString other, Object extra,
+    @Cached @Cached.Shared("indexOfStringNode") TruffleString.IndexOfStringNode indexOfStringNode,
+    @Cached @Cached.Shared("lengthNode") TruffleString.CodePointLengthNode lengthNode
+  ) {
     if(self == NString.EMPTY) {
       return -1;
     }
@@ -26,9 +30,11 @@ public abstract class NStringIndexOfMethodNode extends NBuiltinFunctionNode {
   }
 
   @Specialization(replaces = "indexOfNil")
-  protected long indexOfLong(TruffleString self, TruffleString other, long startIndex,
-                                @Cached @Cached.Shared("indexOfStringNode") TruffleString.IndexOfStringNode indexOfStringNode,
-                                @Cached @Cached.Shared("lengthNode") TruffleString.CodePointLengthNode lengthNode) {
+  protected long indexOfLong(
+    TruffleString self, TruffleString other, long startIndex,
+    @Cached @Cached.Shared("indexOfStringNode") TruffleString.IndexOfStringNode indexOfStringNode,
+    @Cached @Cached.Shared("lengthNode") TruffleString.CodePointLengthNode lengthNode
+  ) {
     if(self == NString.EMPTY) {
       return -1;
     }
@@ -42,6 +48,9 @@ public abstract class NStringIndexOfMethodNode extends NBuiltinFunctionNode {
 
   @Fallback
   protected Object unknownArguments(Object self, Object other, Object object) {
+    System.out.println("SELF = " + self);
+    System.out.println("OTHER = " + other);
+    System.out.println("OBJ = " + object);
     throw new NimRuntimeError("unsupported arguments");
   }
 }
