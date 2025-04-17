@@ -21,21 +21,18 @@ public abstract class NFunctionDispatchNode extends Node {
       return arguments;
     }
 
-    int totalLength = function.argumentsCount;
-    Object[] ret;
-
-    int start = 0;
-    if(function.methodTarget != null) {
-      totalLength += 1;
-      ret = new Object[totalLength];
+    Object[] ret = new Object[function.argumentsCount];
+    int start = function.methodTarget == null ? 0 : 1;
+    if(start == 1) {
       ret[0] = function.methodTarget;
-      start = 1;
-    } else {
-      ret = new Object[totalLength];
     }
 
-    for (int i = start; i < totalLength; i++) {
-      ret[i] = i < arguments.length ? arguments[i] : NimNil.SINGLETON;
+    if (arguments.length - start >= 0) {
+      System.arraycopy(arguments, start, ret, start, arguments.length - start);
+    }
+
+    for(int i = arguments.length; i < function.argumentsCount; i++) {
+      ret[i] = NimNil.SINGLETON;
     }
 
     return ret;

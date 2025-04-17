@@ -7,6 +7,7 @@ import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.strings.TruffleString;
 import org.nimbus.language.NimbusLanguage;
 import org.nimbus.language.nodes.NBinaryNode;
+import org.nimbus.language.runtime.NString;
 import org.nimbus.language.runtime.NimRuntimeError;
 
 public abstract class NAddNode extends NBinaryNode {
@@ -24,7 +25,21 @@ public abstract class NAddNode extends NBinaryNode {
   @Specialization
   protected TruffleString doStrings(TruffleString left, TruffleString right,
                                     @Cached @Cached.Shared("concatNode") TruffleString.ConcatNode concatNode) {
-    return concatNode.execute(left, right, NimbusLanguage.ENCODING, true);
+    return NString.concat(concatNode, left, right);
+  }
+
+  @Specialization
+  protected TruffleString doStringLong(TruffleString left, long right,
+                                    @Cached @Cached.Shared("fromLongNode") TruffleString.FromLongNode fromLongNode,
+                                    @Cached @Cached.Shared("concatNode") TruffleString.ConcatNode concatNode) {
+    return NString.concat(concatNode, left, NString.fromLong(fromLongNode, right));
+  }
+
+  @Specialization
+  protected TruffleString doLongString(long left, TruffleString right,
+                                    @Cached @Cached.Shared("fromLongNode") TruffleString.FromLongNode fromLongNode,
+                                    @Cached @Cached.Shared("concatNode") TruffleString.ConcatNode concatNode) {
+    return NString.concat(concatNode, NString.fromLong(fromLongNode, left), right);
   }
 
   @CompilerDirectives.TruffleBoundary
@@ -33,10 +48,10 @@ public abstract class NAddNode extends NBinaryNode {
                                             @Cached TruffleString.FromJavaStringNode leftFromJavaNode,
                                             @Cached TruffleString.FromJavaStringNode rightFromJavaNode,
                                             @Cached @Cached.Shared("concatNode") TruffleString.ConcatNode concatNode) {
-    return concatNode.execute(
-      leftFromJavaNode.execute(left.toString(), NimbusLanguage.ENCODING),
-      rightFromJavaNode.execute(right.toString(), NimbusLanguage.ENCODING),
-      NimbusLanguage.ENCODING, true
+    return NString.concat(
+      concatNode,
+      NString.fromObject(leftFromJavaNode, left),
+      NString.fromObject(rightFromJavaNode, right)
     );
   }
 

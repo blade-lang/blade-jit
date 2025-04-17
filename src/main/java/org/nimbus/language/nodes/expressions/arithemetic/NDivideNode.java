@@ -7,12 +7,25 @@ import org.nimbus.language.runtime.NimRuntimeError;
 
 public abstract class NDivideNode extends NBinaryNode {
 
-  @Specialization(rewriteOn = ArithmeticException.class)
-  protected double doLongs(long left, long right) {
-    return (double) left / right;
+  @Specialization(rewriteOn = ArithmeticException.class, guards = "right > 0")
+  protected long doLongs(long left, long right) {
+    if(left % right == 0) {
+      return left / right;
+    }
+    throw new ArithmeticException();
   }
 
-  @Specialization(replaces = "doLongs")
+  @Specialization(rewriteOn = ArithmeticException.class, guards = "left > 0")
+  protected long doLongs2(long left, long right) {
+    return doLongs(left, right);
+  }
+
+  @Specialization(rewriteOn = ArithmeticException.class, guards = "isCornerCase(left, right)")
+  protected long doLongs3(long left, long right) {
+    return doLongs(left, right);
+  }
+
+  @Specialization(replaces = {"doLongs", "doLongs2", "doLongs3"})
   protected double doDoubles(double left, double right) {
     return left / right;
   }
@@ -20,5 +33,9 @@ public abstract class NDivideNode extends NBinaryNode {
   @Fallback
   protected double doUnsupported(Object left, Object right) {
     throw new NimRuntimeError("operation / is undefined for object of types");
+  }
+
+  protected static boolean isCornerCase(long a, long b) {
+    return a != 0L && !(b == -1L && a == Long.MIN_VALUE);
   }
 }

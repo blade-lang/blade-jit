@@ -12,6 +12,7 @@ import com.oracle.truffle.api.object.Shape;
 import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.strings.TruffleString;
 import org.nimbus.language.builtins.AbsBuiltinFunctionNodeFactory;
+import org.nimbus.language.builtins.string.NStringIndexOfMethodNodeFactory;
 import org.nimbus.language.builtins.string.NStringUpperMethodNodeFactory;
 import org.nimbus.language.nodes.NBuiltinFunctionNode;
 import org.nimbus.language.nodes.NRootNode;
@@ -93,7 +94,8 @@ public class NimbusLanguage extends TruffleLanguage<NimContext> {
 
   public NStringPrototype createStringPrototype() {
     return new NStringPrototype(
-      createCallTarget(NStringUpperMethodNodeFactory.getInstance())
+      createCallTarget(NStringUpperMethodNodeFactory.getInstance()),
+      createCallTarget(NStringIndexOfMethodNodeFactory.getInstance())
     );
   }
 

@@ -10,9 +10,7 @@ public class FibonacciBenchmark extends TruffleBenchmark {
     "        return 1\n" +
     "    }\n" +
     "    return fib(n - 1) + fib(n - 2)\n" +
-    "}\n" +
-    "\n" +
-    "fib(20)";
+    "}\n";
 
   private static final String SL_FIBONACCI = "\n" +
     "function fib(n) { " +
@@ -20,9 +18,6 @@ public class FibonacciBenchmark extends TruffleBenchmark {
     "        return 1; " +
     "    } " +
     "    return fib(n - 1) + fib(n - 2); " +
-    "}" +
-    "function main() { " +
-    "    return fib(20); " +
     "}";
 
   public static int fibonacciJava(int n) {
@@ -31,13 +26,21 @@ public class FibonacciBenchmark extends TruffleBenchmark {
       : fibonacciJava(n - 1) + fibonacciJava(n - 2);
   }
 
-//  @Fork(jvmArgsPrepend = {
+  @Override
+  public void setup() {
+    super.setup();
+
+    context.eval("nim", REM_FIBONACCI);
+    context.eval("sl", SL_FIBONACCI);
+  }
+
+  //  @Fork(jvmArgsPrepend = {
 //    "-Dgraal.Dump=Truffle:1",
 //    "-Dgraal.PrintGraph=File"
 //  })
   @Benchmark
   public int rem_eval() {
-    return context.eval("nim", REM_FIBONACCI).asInt();
+    return context.eval("nim", "fib(20)").asInt();
   }
 
   @Benchmark
@@ -51,6 +54,8 @@ public class FibonacciBenchmark extends TruffleBenchmark {
   })
   @Benchmark
   public int sl_eval() {
-    return context.eval("sl", SL_FIBONACCI).asInt();
+    return context.eval("sl", "function main() { " +
+      "    return fib(20); " +
+      "}").asInt();
   }
 }
