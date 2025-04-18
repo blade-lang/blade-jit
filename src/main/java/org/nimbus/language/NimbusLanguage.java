@@ -101,7 +101,7 @@ public class NimbusLanguage extends TruffleLanguage<NimContext> {
 
   @Override
   protected NimContext createContext(Env env) {
-    NimContext context = new NimContext(rootShape, createStringPrototype());
+    NimContext context = new NimContext(this);
     installBuiltinFunctions(context);
     return  context;
   }
@@ -113,7 +113,7 @@ public class NimbusLanguage extends TruffleLanguage<NimContext> {
     Parser parser = new Parser(new Lexer(source));
     List<Stmt> statements = parser.parse();
 
-    var visitor = new NimTranslator(listShape);
+    var visitor = new NimTranslator(rootShape, listShape);
     var parseResult = visitor.translate(statements);
     return new NRootNode(this, parseResult.frameDescriptor, parseResult.node).getCallTarget();
   }

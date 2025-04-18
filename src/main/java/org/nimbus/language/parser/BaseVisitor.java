@@ -90,6 +90,11 @@ public class BaseVisitor<T> implements Expr.Visitor<T>, Stmt.Visitor<T> {
   }
 
   @Override
+  public T visitNewExpr(Expr.New expr) {
+    return null;
+  }
+
+  @Override
   public T visitParentExpr(Expr.Parent expr) {
     return null;
   }

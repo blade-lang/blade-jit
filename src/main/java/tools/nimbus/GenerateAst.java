@@ -47,6 +47,7 @@ public class GenerateAst {
       "Index              : Expr callee, List<Expr> arguments",
       "Array              : List<Expr> items",
       "Dict               : List<Expr> keys, List<Expr> values",
+      "New                : Expr expression, List<Expr> arguments",
       "Parent             :",
       "Self               :",
       "Assign             : Expr expression, Expr value",

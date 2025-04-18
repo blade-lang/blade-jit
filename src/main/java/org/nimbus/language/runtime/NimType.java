@@ -17,12 +17,14 @@ public final class NimType implements TruffleObject {
   public static final NimType NUMBER = new NimType("Number", (l, v) -> l.fitsInLong(v) || v instanceof Double);
   public static final NimType NIL = new NimType("Nil", InteropLibrary::isNull);
   public static final NimType STRING = new NimType("String", InteropLibrary::isString);
+  public static final NimType LIST = new NimType("List", (l, v) -> v instanceof NListObject);
   public static final NimType BOOLEAN = new NimType("Boolean", InteropLibrary::isBoolean);
+  public static final NimType CLASS = new NimType("Class", (l, v) -> v instanceof NClassObject);
   public static final NimType OBJECT = new NimType("Object", InteropLibrary::hasMembers);
   public static final NimType FUNCTION = new NimType("Function", InteropLibrary::isExecutable);
 
   @CompilerDirectives.CompilationFinal(dimensions = 1)
-  public static final NimType[] PRECEDENCE = new NimType[]{NIL, NUMBER, STRING, BOOLEAN, FUNCTION, OBJECT};
+  public static final NimType[] PRECEDENCE = new NimType[]{NIL, BOOLEAN, NUMBER, STRING, LIST, FUNCTION, CLASS, OBJECT};
 
   private final String name;
   private final TypeCheck isInstance;

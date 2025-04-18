@@ -8,6 +8,8 @@ import com.oracle.truffle.api.library.CachedLibrary;
 import com.oracle.truffle.api.strings.TruffleString;
 import org.nimbus.language.nodes.NNode;
 import org.nimbus.language.nodes.NSharedPropertyReaderNode;
+import org.nimbus.language.nodes.NimTypesGen;
+import org.nimbus.language.runtime.NListObject;
 import org.nimbus.language.runtime.NString;
 import org.nimbus.language.runtime.NimRuntimeError;
 
@@ -57,6 +59,9 @@ public abstract class NListIndexReadNode extends NNode {
     Object list, Object index,
     @Cached @Cached.Shared("propertyReaderNode") NSharedPropertyReaderNode propertyReaderNode
   ) {
+    if(list instanceof NListObject && NimTypesGen.isImplicitDouble(index)) {
+      throw new NimRuntimeError("List index " + index +" out of range");
+    }
     return propertyReaderNode.executeRead(list, index);
   }
 }

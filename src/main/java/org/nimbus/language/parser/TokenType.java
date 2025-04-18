@@ -78,6 +78,7 @@ public enum TokenType {
   IN,  // in token
   ITER,  // iter token
   NIL,  // nil token
+  NEW,  // new token
   OR,  // or token
   PARENT,  // parent token
   RAISE,  // raise token

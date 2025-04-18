@@ -48,6 +48,7 @@ public class Lexer {
         put("import", IMPORT);
         put("in", IN);
         put("iter", ITER);
+        put("new", NEW);
         put("nil", NIL);
         put("or", OR);
         put("parent", PARENT);

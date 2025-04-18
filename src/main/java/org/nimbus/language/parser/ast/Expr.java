@@ -29,6 +29,7 @@ public abstract class Expr {
     T visitIndexExpr(Index expr);
     T visitArrayExpr(Array expr);
     T visitDictExpr(Dict expr);
+    T visitNewExpr(New expr);
     T visitParentExpr(Parent expr);
     T visitSelfExpr(Self expr);
     T visitAssignExpr(Assign expr);
@@ -262,6 +263,20 @@ public abstract class Expr {
 
     public <T> T accept(Visitor<T> visitor) {
       return visitor.visitDictExpr(this);
+    }
+  }
+
+  public static class New extends Expr {
+    public final Expr expression;
+    public final List<Expr> arguments;
+
+    public New(Expr expression, List<Expr> arguments) {
+      this.expression = expression;
+      this.arguments = arguments;
+    }
+
+    public <T> T accept(Visitor<T> visitor) {
+      return visitor.visitNewExpr(this);
     }
   }
 

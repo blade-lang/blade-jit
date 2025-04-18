@@ -12,10 +12,14 @@ public class NimContext {
 
   public final NGlobalScopeObject globalScope;
   public final NStringPrototype stringPrototype;
+  public final Shape listShape;
+  public final Shape rootShape;
 
-  public NimContext(Shape shape, NStringPrototype stringPrototype) {
-    globalScope = new NGlobalScopeObject(shape);
-    this.stringPrototype = stringPrototype;
+  public NimContext(NimbusLanguage language) {
+    globalScope = new NGlobalScopeObject(language.rootShape);
+    stringPrototype = language.createStringPrototype();
+    listShape = language.listShape;
+    rootShape = language.rootShape;
   }
 
   public static NimContext get(Node node) {

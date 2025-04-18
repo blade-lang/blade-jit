@@ -47,7 +47,10 @@ public class NAddNodeTest {
     try {
       var source = Source.newBuilder(NimbusLanguage.ID, "2 + 2", "<script>").build();
 
-      var visitor = new NimTranslator(Shape.newBuilder().build());
+      var visitor = new NimTranslator(
+        Shape.newBuilder().build(),
+        Shape.newBuilder().build()
+      );
       var parseResult = new Parser(new Lexer(source))
           .parse();
       assertEquals(1, parseResult.size());

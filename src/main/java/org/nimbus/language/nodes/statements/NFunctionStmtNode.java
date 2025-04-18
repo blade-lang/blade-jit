@@ -11,11 +11,12 @@ import com.oracle.truffle.api.object.DynamicObjectLibrary;
 import org.nimbus.language.NimbusLanguage;
 import org.nimbus.language.nodes.NFunctionRootNode;
 import org.nimbus.language.nodes.NGlobalScopeObjectNode;
+import org.nimbus.language.nodes.NNode;
 import org.nimbus.language.nodes.NStmtNode;
 import org.nimbus.language.runtime.NFunctionObject;
 import org.nimbus.language.runtime.NimNil;
 
-@NodeChild(value = "globalScopeNode", type = NGlobalScopeObjectNode.class)
+@NodeChild(value = "containerNode", type = NNode.class)
 @NodeField(name = "name", type = String.class)
 @NodeField(name = "frameDescriptor", type = FrameDescriptor.class)
 @NodeField(name = "body", type = NFunctionBodyNode.class)
@@ -30,8 +31,8 @@ public abstract class NFunctionStmtNode extends NStmtNode {
   private NFunctionObject cachedFunction = null;
 
   @Specialization(limit = "3")
-  public Object declare(DynamicObject globalScope,
-                        @CachedLibrary("globalScope") DynamicObjectLibrary objectLibrary) {
+  public Object declare(DynamicObject container,
+                        @CachedLibrary("container") DynamicObjectLibrary objectLibrary) {
     if (cachedFunction == null) {
       CompilerDirectives.transferToInterpreterAndInvalidate();
 
@@ -39,7 +40,7 @@ public abstract class NFunctionStmtNode extends NStmtNode {
       cachedFunction = new NFunctionObject(getName(), function.getCallTarget(), getArgumentCount());
     }
 
-    objectLibrary.putConstant(globalScope, getName(), cachedFunction, 0);
+    objectLibrary.putConstant(container, getName(), cachedFunction, 0);
     return NimNil.SINGLETON;
   }
 }

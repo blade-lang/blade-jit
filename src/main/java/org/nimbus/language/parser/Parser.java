@@ -10,6 +10,7 @@ import java.util.Map;
 
 import static org.nimbus.language.parser.TokenType.*;
 
+@SuppressWarnings("StatementWithEmptyBody")
 public class Parser {
   private static final TokenType[] ASSIGNERS = new TokenType[]{
     EQUAL, PLUS_EQ, MINUS_EQ, PERCENT_EQ, DIVIDE_EQ, MULTIPLY_EQ,
@@ -114,11 +115,11 @@ public class Parser {
 
     consume(NEWLINE, "end of statement expected");
 
-    while (match(NEWLINE, SEMICOLON)) ;
+    while (match(NEWLINE, SEMICOLON));
   }
 
   private void ignoreNewlines() {
-    while (match(NEWLINE)) ;
+    while (match(NEWLINE) || match(SEMICOLON)) ;
   }
 
   private Expr.Grouping grouping() {
@@ -197,12 +198,33 @@ public class Parser {
     return expr;
   }
 
+  private Expr newStatement() {
+    Expr expr = primary();
+    List<Expr> arguments = new ArrayList<>();
+
+    consume(LPAREN, "'(' expected after new class instance");
+    if (!check(RPAREN)) {
+      arguments.add(expression());
+
+      while (match(COMMA)) {
+        ignoreNewlines();
+        arguments.add(expression());
+      }
+    }
+
+    ignoreNewlines();
+    consume(RPAREN, "')' expected after new class instance arguments");
+
+    return new Expr.New(expr, arguments);
+  }
+
   private Expr primary() {
     if (match(FALSE)) return new Expr.Boolean(false);
     if (match(TRUE)) return new Expr.Boolean(true);
     if (match(NIL)) return new Expr.Nil();
     if (match(SELF)) return new Expr.Self();
     if (match(PARENT)) return new Expr.Parent();
+    if (match(NEW)) return newStatement();
 
     if (check(INTERPOLATION)) return interpolation();
 
@@ -367,7 +389,7 @@ public class Parser {
     while (match(GREATER, GREATER_EQ, LESS, LESS_EQ)) {
       Token op = previous();
       ignoreNewlines();
-      expr = new Expr.Binary(expr, op, bitOr());
+      expr = new Expr.Logical(expr, op, bitOr());
     }
 
     return expr;
@@ -379,7 +401,7 @@ public class Parser {
     while (match(BANG_EQ, EQUAL_EQ)) {
       Token op = previous();
       ignoreNewlines();
-      expr = new Expr.Binary(expr, op, comparison());
+      expr = new Expr.Logical(expr, op, comparison());
     }
 
     return expr;
@@ -391,7 +413,7 @@ public class Parser {
     while (match(AND)) {
       Token op = previous();
       ignoreNewlines();
-      expr = new Expr.Binary(expr, op, equality());
+      expr = new Expr.Logical(expr, op, equality());
     }
 
     return expr;
@@ -403,7 +425,7 @@ public class Parser {
     while (match(OR)) {
       Token op = previous();
       ignoreNewlines();
-      expr = new Expr.Binary(expr, op, and());
+      expr = new Expr.Logical(expr, op, and());
     }
 
     return expr;
@@ -694,6 +716,10 @@ public class Parser {
   }
 
   private Stmt iterStatement() {
+    if(check(LPAREN)) {
+      match(LPAREN);
+    }
+
     Stmt decl = null;
     if (!check(SEMICOLON)) {
       if (check(VAR)) {
@@ -712,11 +738,15 @@ public class Parser {
     ignoreNewlines();
 
     Stmt.Expression iterator = null;
-    if (!check(LBRACE)) {
+    if (!check(LBRACE) && !check(RPAREN)) {
       do {
         iterator = expressionStatement(true);
         ignoreNewlines();
       } while (match(COMMA));
+    }
+
+    if(check(RPAREN)) {
+      match(RPAREN);
     }
 
     consume(LBRACE, "'{' expected after catch");
@@ -904,7 +934,6 @@ public class Parser {
 
     consume(LPAREN, "'(' expected after method name");
     while (match(IDENTIFIER, TRI_DOT)) {
-      consumeAny("parameter name expected", IDENTIFIER, TRI_DOT);
       if (previous().type() == TRI_DOT) {
         isVariadic = true;
         break;

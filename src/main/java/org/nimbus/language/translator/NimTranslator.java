@@ -3,14 +3,13 @@ package org.nimbus.language.translator;
 import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.FrameSlotKind;
 import com.oracle.truffle.api.object.Shape;
+import org.nimbus.language.nodes.NDynamicObjectRefNode;
 import org.nimbus.language.nodes.NGlobalScopeObjectNode;
 import org.nimbus.language.nodes.NGlobalScopeObjectNodeGen;
 import org.nimbus.language.nodes.NNode;
 import org.nimbus.language.nodes.calls.NFunctionCallExprNode;
 import org.nimbus.language.nodes.calls.NWriteFunctionArgExprNode;
-import org.nimbus.language.nodes.expressions.NGlobalAssignExprNodeGen;
-import org.nimbus.language.nodes.expressions.NGetPropertyNodeGen;
-import org.nimbus.language.nodes.expressions.NGlobalVarRefExprNodeGen;
+import org.nimbus.language.nodes.expressions.*;
 import org.nimbus.language.nodes.expressions.arithemetic.*;
 import org.nimbus.language.nodes.expressions.bitwise.*;
 import org.nimbus.language.nodes.list.NListIndexReadNodeGen;
@@ -23,6 +22,7 @@ import org.nimbus.language.nodes.statements.loops.*;
 import org.nimbus.language.parser.BaseVisitor;
 import org.nimbus.language.parser.ast.Expr;
 import org.nimbus.language.parser.ast.Stmt;
+import org.nimbus.language.runtime.NClassObject;
 import org.nimbus.language.runtime.NLocalRefSlot;
 import org.nimbus.language.runtime.NimRuntimeError;
 
@@ -30,6 +30,7 @@ import java.util.*;
 
 public class NimTranslator extends BaseVisitor<NNode> {
   private final Shape listShape;
+  private final Shape objectShape;
 
   private enum ParserState { TOP_LEVEL, NESTED_TOP_LEVEL, FUNC_DEF }
 
@@ -40,7 +41,8 @@ public class NimTranslator extends BaseVisitor<NNode> {
 
   private final NGlobalScopeObjectNode globalScopeNode = NGlobalScopeObjectNodeGen.create();
 
-  public NimTranslator(Shape listShape) {
+  public NimTranslator(Shape objectShape, Shape listShape) {
+    this.objectShape = objectShape;
     this.listShape = listShape;
   }
 
@@ -162,8 +164,32 @@ public class NimTranslator extends BaseVisitor<NNode> {
   }
 
   @Override
+  public NNode visitLogicalExpr(Expr.Logical expr) {
+    return switch (expr.op.type()) {
+      case EQUAL_EQ -> NEqualNodeGen.create(visitExpr(expr.left), visitExpr(expr.right));
+      case BANG_EQ -> NNotEqualNodeGen.create(visitExpr(expr.left), visitExpr(expr.right));
+      case LESS -> NLessThanNodeGen.create(visitExpr(expr.left), visitExpr(expr.right));
+      case LESS_EQ -> NLessThanOrEqualNodeGen.create(visitExpr(expr.left), visitExpr(expr.right));
+      case GREATER -> NGreaterThanNodeGen.create(visitExpr(expr.left), visitExpr(expr.right));
+      case GREATER_EQ -> NGreaterThanOrEqualNodeGen.create(visitExpr(expr.left), visitExpr(expr.right));
+      case AND -> new NLogicalAndNode(visitExpr(expr.left), visitExpr(expr.right));
+      case OR -> new NLogicalOrNode(visitExpr(expr.left), visitExpr(expr.right));
+      default -> throw new UnsupportedOperationException(expr.op.literal());
+    };
+  }
+
+  @Override
   public NNode visitGroupingExpr(Expr.Grouping expr) {
     return visitExpr(expr.expression);
+  }
+
+  @Override
+  public NNode visitConditionExpr(Expr.Condition expr) {
+    return new NConditionalNode(
+      visitExpr(expr.expression),
+      visitExpr(expr.truth),
+      visitExpr(expr.falsy)
+    );
   }
 
   @Override
@@ -201,6 +227,16 @@ public class NimTranslator extends BaseVisitor<NNode> {
   }
 
   @Override
+  public NNode visitNewExpr(Expr.New expr) {
+    List<NNode> arguments = new ArrayList<>();
+    for(Expr arg : expr.arguments) {
+      arguments.add(visitExpr(arg));
+    }
+
+    return NNewExprNodeGen.create(visitExpr(expr.expression), arguments);
+  }
+
+  @Override
   public NNode visitCallExpr(Expr.Call expr) {
     List<NNode> arguments = new ArrayList<>();
     for (Expr arg : expr.args) {
@@ -229,7 +265,7 @@ public class NimTranslator extends BaseVisitor<NNode> {
     for(Expr e : expr.items) {
       nodes.add(visitExpr(e));
     }
-    return new NListLiteralNode(listShape, nodes);
+    return new NListLiteralNode(nodes);
   }
 
   @Override
@@ -335,34 +371,21 @@ public class NimTranslator extends BaseVisitor<NNode> {
 
   @Override
   public NNode visitFunctionStmt(Stmt.Function stmt) {
-
-    FrameDescriptor.Builder previousFrameDescriptor = frameDescriptor;
-    ParserState previousState = state;
-    var previousLocalScopes = localScopes;
-
-    this.frameDescriptor = FrameDescriptor.newBuilder();
-    this.state = ParserState.FUNC_DEF;
-    this.localScopes = new Stack<>();
-
-    Map<String, NFrameMember> localVariables = new HashMap<>();
-    for (int i = 0; i < stmt.parameters.size(); i++) {
-      localVariables.put(stmt.parameters.get(i).token.literal(), new NFrameMember.FunctionArgument(i));
-    }
-    this.localScopes.push(localVariables);
-
-    NBlockStmtNode statements = visitBlockStmt(stmt.body);
-
-    FrameDescriptor frameDescriptor = this.frameDescriptor.build();
-    this.frameDescriptor = previousFrameDescriptor;
-    this.state = previousState;
-    this.localScopes = previousLocalScopes;
-
-    return NFunctionStmtNodeGen.create(
-      globalScopeNode,
+    return translateFunction(
       stmt.name.literal(),
-      frameDescriptor,
-      new NFunctionBodyNode(statements),
-      stmt.parameters.size()
+      stmt.parameters,
+      stmt.body,
+      globalScopeNode
+    );
+  }
+
+  @Override
+  public NNode visitMethodStmt(Stmt.Method stmt) {
+    return translateFunction(
+      stmt.name.literal(),
+      stmt.parameters,
+      stmt.body,
+      globalScopeNode
     );
   }
 
@@ -376,6 +399,63 @@ public class NimTranslator extends BaseVisitor<NNode> {
       stmt.value == null ?
         new NNilLiteralNode() :
       visitExpr(stmt.value)
+    );
+  }
+
+  @Override
+  public NNode visitClassStmt(Stmt.Class stmt) {
+    if(state == ParserState.FUNC_DEF) {
+      throw new NimRuntimeError("Not yet supported!");
+    }
+
+    List<NNode> methods = new ArrayList<>();
+    NClassObject classPrototype = new NClassObject(objectShape, stmt.name.literal());
+
+    for(Stmt.Method method : stmt.methods) {
+      methods.add(translateFunction(
+        method.name.literal(),
+        method.parameters,
+        method.body,
+        new NDynamicObjectRefNode(classPrototype)
+      ));
+    }
+
+    return NGlobalDeclNodeGen.create(
+      NGlobalScopeObjectNodeGen.create(),
+      new NClassDeclNode(methods, classPrototype),
+      stmt.name.literal(),
+      false
+    );
+  }
+
+  private NNode translateFunction(String name, List<Expr. Identifier> parameters, Stmt. Block body, NNode root) {
+    FrameDescriptor.Builder previousFrameDescriptor = frameDescriptor;
+    ParserState previousState = state;
+    var previousLocalScopes = localScopes;
+
+    this.frameDescriptor = FrameDescriptor.newBuilder();
+    this.state = ParserState.FUNC_DEF;
+    this.localScopes = new Stack<>();
+
+    Map<String, NFrameMember> localVariables = new HashMap<>();
+    for (int i = 0; i < parameters.size(); i++) {
+      localVariables.put(parameters.get(i).token.literal(), new NFrameMember.FunctionArgument(i));
+    }
+    this.localScopes.push(localVariables);
+
+    NBlockStmtNode statements = visitBlockStmt(body);
+
+    FrameDescriptor frameDescriptor = this.frameDescriptor.build();
+    this.frameDescriptor = previousFrameDescriptor;
+    this.state = previousState;
+    this.localScopes = previousLocalScopes;
+
+    return NFunctionStmtNodeGen.create(
+      root,
+      name,
+      frameDescriptor,
+      new NFunctionBodyNode(statements),
+      parameters.size()
     );
   }
 
@@ -402,13 +482,6 @@ public class NimTranslator extends BaseVisitor<NNode> {
     state = previousState;
     localScopes.pop();
     return result;
-  }
-
-  private boolean isConstantNode(Expr expr) {
-    return expr instanceof Expr.Nil
-      || expr instanceof Expr.Boolean
-      || expr instanceof Expr.Number
-      || expr instanceof Expr.Literal;
   }
 
   interface Callback {

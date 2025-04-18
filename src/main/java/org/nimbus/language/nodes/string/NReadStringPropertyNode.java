@@ -1,12 +1,8 @@
 package org.nimbus.language.nodes.string;
 
-import com.oracle.truffle.api.dsl.Cached;
-import com.oracle.truffle.api.dsl.Fallback;
-import com.oracle.truffle.api.dsl.ImportStatic;
-import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.dsl.*;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.strings.TruffleString;
-import org.nimbus.language.nodes.NNode;
 import org.nimbus.language.runtime.*;
 
 @ImportStatic(NString.class)
@@ -21,9 +17,12 @@ public abstract class NReadStringPropertyNode extends Node {
   protected Object readStringIndex(
     TruffleString string, long index,
     @Cached @Cached.Shared("lengthNode") TruffleString.CodePointLengthNode lengthNode,
+    @Cached(value = "length(string, lengthNode)") long stringLength,
     @Cached TruffleString.SubstringNode substringNode
   ) {
-    return index < 0 || index >= NString.length(string, lengthNode)
+    if(index < 0) index = index + stringLength;
+
+    return index < 0 || index >= stringLength
       ? NString.EMPTY
       : NString.substring(string, (int)index, 1, substringNode);
   }
@@ -31,9 +30,10 @@ public abstract class NReadStringPropertyNode extends Node {
   @Specialization(guards = "LENGTH_PROP.equals(name)")
   protected long readLengthProperty(
     TruffleString string, String name,
-    @Cached @Cached.Shared("lengthNode") TruffleString.CodePointLengthNode lengthNode
+    @Cached @Cached.Shared("lengthNode") TruffleString.CodePointLengthNode lengthNode,
+    @Cached(value = "length(string, lengthNode)", neverDefault = false) long stringLength
   ) {
-    return NString.length(string, lengthNode);
+    return stringLength;
   }
 
   @Specialization(guards = {

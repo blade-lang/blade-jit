@@ -4,15 +4,14 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.object.Shape;
 import org.nimbus.language.nodes.NNode;
 import org.nimbus.language.runtime.NListObject;
+import org.nimbus.language.runtime.NimContext;
 
 import java.util.List;
 
 public final class NListLiteralNode extends NNode {
   @Children private final NNode[] items;
-  private final Shape shape;
 
-  public NListLiteralNode(Shape shape, List<NNode> items) {
-    this.shape = shape;
+  public NListLiteralNode(List<NNode> items) {
     this.items = items.toArray(new NNode[0]);
   }
 
@@ -23,6 +22,11 @@ public final class NListLiteralNode extends NNode {
       objects[i] = items[i].execute(frame);
     }
 
-    return new NListObject(shape, objects);
+    return new NListObject(NimContext.get(this).listShape, objects);
+  }
+
+  @Override
+  public boolean executeBoolean(VirtualFrame frame) {
+    return items.length > 0;
   }
 }

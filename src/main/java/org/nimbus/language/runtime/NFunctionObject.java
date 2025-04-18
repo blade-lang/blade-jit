@@ -5,6 +5,7 @@ import com.oracle.truffle.api.interop.InteropLibrary;
 import com.oracle.truffle.api.interop.TruffleObject;
 import com.oracle.truffle.api.library.ExportLibrary;
 import com.oracle.truffle.api.library.ExportMessage;
+import com.oracle.truffle.api.strings.TruffleString;
 import org.nimbus.language.nodes.NimTypesGen;
 import org.nimbus.language.nodes.calls.NFunctionDispatchNode;
 import org.nimbus.language.nodes.calls.NFunctionDispatchNodeGen;
@@ -65,7 +66,10 @@ public final class NFunctionObject implements TruffleObject {
     return NimTypesGen.isImplicitDouble(value) ||
       NimTypesGen.isBoolean(value) ||
       value == NimNil.SINGLETON ||
+      value instanceof String ||
+      value instanceof TruffleString ||
       value instanceof NBaseObject ||
-      value instanceof NFunctionObject;
+      value instanceof NFunctionObject ||
+      value instanceof NClassInstance;
   }
 }
