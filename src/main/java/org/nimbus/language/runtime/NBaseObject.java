@@ -11,9 +11,11 @@ import com.oracle.truffle.api.library.ExportMessage;
 import com.oracle.truffle.api.object.DynamicObject;
 import com.oracle.truffle.api.object.DynamicObjectLibrary;
 import com.oracle.truffle.api.object.Shape;
+import org.nimbus.annotations.ObjectName;
 import org.nimbus.language.NimbusLanguage;
 
 @ExportLibrary(InteropLibrary.class)
+@ObjectName("Object")
 public class NBaseObject extends DynamicObject implements TruffleObject {
   public NBaseObject(Shape shape) {
     super(shape);

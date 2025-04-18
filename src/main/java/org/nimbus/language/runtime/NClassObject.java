@@ -4,8 +4,10 @@ import com.oracle.truffle.api.interop.InteropLibrary;
 import com.oracle.truffle.api.library.ExportLibrary;
 import com.oracle.truffle.api.library.ExportMessage;
 import com.oracle.truffle.api.object.Shape;
+import org.nimbus.annotations.ObjectName;
 
 @ExportLibrary(InteropLibrary.class)
+@ObjectName("Class")
 public final class NClassObject extends NBaseObject {
   public final String name;
 

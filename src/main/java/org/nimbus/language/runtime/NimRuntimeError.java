@@ -6,6 +6,7 @@ import com.oracle.truffle.api.interop.InteropLibrary;
 import com.oracle.truffle.api.interop.UnsupportedMessageException;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.source.SourceSection;
+import org.nimbus.annotations.NAnnotationHelper;
 
 import static com.oracle.truffle.api.CompilerDirectives.shouldNotReachHere;
 
@@ -47,24 +48,20 @@ public class NimRuntimeError extends AbstractTruffleException {
 
     String sep = " (";
     for (Object o : values) {
-      Object value = NimLanguageView.forValue(o);
       result.append(sep);
       sep = ", ";
-      if (value == null) {
-        result.append("unknown");
-      } else {
-        InteropLibrary valueLib = InteropLibrary.getFactory().getUncached(value);
-        if (valueLib.hasMetaObject(value) && !valueLib.isNull(value)) {
-          String qualifiedName;
-          try {
-            qualifiedName = UNCACHED_LIB.asString(UNCACHED_LIB.getMetaQualifiedName(valueLib.getMetaObject(value)));
-          } catch (UnsupportedMessageException e) {
-            throw shouldNotReachHere(e);
-          }
-          result.append(qualifiedName);
-          result.append(" ");
+
+      if(o instanceof NClassInstance classInstance) {
+        result.append(classInstance.getClassName());
+      } else {String[] qualifiedName = NAnnotationHelper.getObjectName(o.getClass()).split("[.]");
+        String name = qualifiedName[qualifiedName.length - 1];
+        if(name.equals("TruffleString")) {
+          name = "String";
         }
+
+        result.append(name);
       }
+
     }
     result.append(")");
 

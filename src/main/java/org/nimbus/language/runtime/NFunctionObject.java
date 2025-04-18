@@ -5,12 +5,16 @@ import com.oracle.truffle.api.interop.InteropLibrary;
 import com.oracle.truffle.api.interop.TruffleObject;
 import com.oracle.truffle.api.library.ExportLibrary;
 import com.oracle.truffle.api.library.ExportMessage;
+import com.oracle.truffle.api.profiles.BranchProfile;
+import com.oracle.truffle.api.profiles.CountingConditionProfile;
 import com.oracle.truffle.api.strings.TruffleString;
+import org.nimbus.annotations.ObjectName;
 import org.nimbus.language.nodes.NimTypesGen;
 import org.nimbus.language.nodes.calls.NFunctionDispatchNode;
 import org.nimbus.language.nodes.calls.NFunctionDispatchNodeGen;
 
 @ExportLibrary(InteropLibrary.class)
+@ObjectName("Function")
 public final class NFunctionObject implements TruffleObject {
   private final NFunctionDispatchNode dispatchNode;
 

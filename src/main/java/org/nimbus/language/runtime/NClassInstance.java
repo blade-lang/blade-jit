@@ -53,4 +53,8 @@ public class NClassInstance implements TruffleObject {
   ) {
     return new NMemberNamesObject(objectLibrary.getKeyArray(classObject));
   }
+
+  public String getClassName() {
+    return classObject.name;
+  }
 }

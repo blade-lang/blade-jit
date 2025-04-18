@@ -8,6 +8,7 @@ import org.nimbus.language.nodes.NGlobalScopeObjectNode;
 import org.nimbus.language.nodes.NGlobalScopeObjectNodeGen;
 import org.nimbus.language.nodes.NNode;
 import org.nimbus.language.nodes.calls.NFunctionCallExprNode;
+import org.nimbus.language.nodes.calls.NFunctionCallExprNodeGen;
 import org.nimbus.language.nodes.calls.NWriteFunctionArgExprNode;
 import org.nimbus.language.nodes.expressions.*;
 import org.nimbus.language.nodes.expressions.arithemetic.*;
@@ -243,7 +244,7 @@ public class NimTranslator extends BaseVisitor<NNode> {
       arguments.add(visitExpr(arg));
     }
 
-    return new NFunctionCallExprNode(visitExpr(expr.callee), arguments);
+    return NFunctionCallExprNodeGen.create(visitExpr(expr.callee), arguments);
   }
 
   @Override

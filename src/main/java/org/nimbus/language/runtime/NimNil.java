@@ -5,8 +5,10 @@ import com.oracle.truffle.api.interop.TruffleObject;
 import com.oracle.truffle.api.library.ExportLibrary;
 import com.oracle.truffle.api.library.ExportMessage;
 import com.oracle.truffle.api.utilities.TriState;
+import org.nimbus.annotations.ObjectName;
 
 @ExportLibrary(InteropLibrary.class)
+@ObjectName("Nil")
 public class NimNil implements TruffleObject {
   public static final NimNil SINGLETON = new NimNil();
   private static final int IDENTITY_HASH = System.identityHashCode(SINGLETON);

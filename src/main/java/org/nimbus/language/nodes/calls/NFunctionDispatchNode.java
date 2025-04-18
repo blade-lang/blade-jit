@@ -5,38 +5,15 @@ import com.oracle.truffle.api.nodes.DirectCallNode;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.nodes.IndirectCallNode;
 import com.oracle.truffle.api.nodes.Node;
+import com.oracle.truffle.api.profiles.BranchProfile;
+import com.oracle.truffle.api.profiles.CountingConditionProfile;
 import org.nimbus.language.runtime.NFunctionObject;
 import org.nimbus.language.runtime.NimNil;
 import org.nimbus.language.runtime.NimRuntimeError;
 
-//@NodeField(name = "profile", type = BranchProfile.class)
 @SuppressWarnings("truffle-inlining")
 public abstract class NFunctionDispatchNode extends Node {
   public abstract Object executeDispatch(Object function, Object[] values);
-//  public abstract BranchProfile getProfile();
-
-  @ExplodeLoop
-  private static Object[] extendArguments(Object[] arguments, NFunctionObject function) {
-    if (arguments.length >= function.argumentsCount && function.methodTarget == null) {
-      return arguments;
-    }
-
-    int start = function.methodTarget == null ? 0 : 1;
-    Object[] ret = new Object[function.argumentsCount];
-    if(start == 1) {
-      ret[0] = function.methodTarget;
-    }
-
-    if (arguments.length - start >= 0) {
-      System.arraycopy(arguments, 0, ret, start, arguments.length);
-    }
-
-    for(int i = arguments.length + start; i < function.argumentsCount; i++) {
-      ret[i] = NimNil.SINGLETON;
-    }
-
-    return ret;
-  }
 
   @Specialization(guards = "function.callTarget == callNode.getCallTarget()", limit = "3")
   protected Object directDispatch(
@@ -44,10 +21,6 @@ public abstract class NFunctionDispatchNode extends Node {
     @Cached("function") NFunctionObject cachedFunction,
     @Cached("create(function.callTarget)") DirectCallNode callNode
   ) {
-    if(cachedFunction.argumentsCount > arguments.length) {
-//      getProfile().enter();
-      return callNode.call(extendArguments(arguments, cachedFunction));
-    }
     return callNode.call(arguments);
   }
 
@@ -57,7 +30,7 @@ public abstract class NFunctionDispatchNode extends Node {
     @Cached("function") NFunctionObject cachedFunction,
     @Cached IndirectCallNode callNode
   ) {
-    return callNode.call(cachedFunction.callTarget, extendArguments(arguments, cachedFunction));
+    return callNode.call(cachedFunction.callTarget, arguments);
   }
 
   @Fallback

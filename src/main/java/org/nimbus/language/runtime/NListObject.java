@@ -7,11 +7,13 @@ import com.oracle.truffle.api.library.ExportLibrary;
 import com.oracle.truffle.api.library.ExportMessage;
 import com.oracle.truffle.api.object.DynamicObjectLibrary;
 import com.oracle.truffle.api.object.Shape;
+import org.nimbus.annotations.ObjectName;
 
 import java.util.ArrayList;
 import java.util.List;
 
 @ExportLibrary(InteropLibrary.class)
+@ObjectName("List")
 public class NListObject extends NBaseObject {
   private Object[] items;
 
