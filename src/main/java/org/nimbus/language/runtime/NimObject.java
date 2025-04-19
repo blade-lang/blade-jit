@@ -2,8 +2,8 @@ package org.nimbus.language.runtime;
 
 import com.oracle.truffle.api.TruffleLanguage;
 import com.oracle.truffle.api.interop.InteropLibrary;
-import com.oracle.truffle.api.interop.TruffleObject;
 import com.oracle.truffle.api.interop.UnknownIdentifierException;
+import com.oracle.truffle.api.interop.UnsupportedMessageException;
 import com.oracle.truffle.api.library.CachedLibrary;
 import com.oracle.truffle.api.library.ExportLibrary;
 import com.oracle.truffle.api.library.ExportMessage;
@@ -13,10 +13,10 @@ import com.oracle.truffle.api.object.Shape;
 import org.nimbus.language.NimbusLanguage;
 
 @ExportLibrary(InteropLibrary.class)
-public class NClassInstance extends DynamicObject {
-  final NClassObject classObject;
+public class NimObject extends DynamicObject {
+  final NimClass classObject;
 
-  public NClassInstance(Shape shape, NClassObject classObject) {
+  public NimObject(Shape shape, NimClass classObject) {
     super(shape);
     this.classObject = classObject;
   }
@@ -44,6 +44,16 @@ public class NClassInstance extends DynamicObject {
   @ExportMessage
   Class<? extends TruffleLanguage<?>> getLanguage() {
     return NimbusLanguage.class;
+  }
+
+  @ExportMessage
+  boolean hasMetaObject() {
+    return true;
+  }
+
+  @ExportMessage
+  Object getMetaObject() throws UnsupportedMessageException {
+    return NimType.OBJECT;
   }
 
   @ExportMessage

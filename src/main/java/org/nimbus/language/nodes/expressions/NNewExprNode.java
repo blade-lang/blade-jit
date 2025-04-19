@@ -6,8 +6,8 @@ import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 import org.nimbus.language.nodes.NNode;
-import org.nimbus.language.runtime.NClassInstance;
-import org.nimbus.language.runtime.NClassObject;
+import org.nimbus.language.runtime.NimObject;
+import org.nimbus.language.runtime.NimClass;
 import org.nimbus.language.runtime.NimRuntimeError;
 
 import java.util.List;
@@ -25,9 +25,9 @@ public abstract class NNewExprNode extends NNode {
   }
 
   @Specialization
-  protected Object doObject(VirtualFrame frame, NClassObject classObject) {
+  protected Object doObject(VirtualFrame frame, NimClass classObject) {
     consumeArguments(frame);
-    return new NClassInstance(languageContext().objectsModel.rootShape, classObject);
+    return new NimObject(languageContext().objectsModel.rootShape, classObject);
   }
 
   @Fallback

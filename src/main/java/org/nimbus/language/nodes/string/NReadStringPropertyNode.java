@@ -2,11 +2,9 @@ package org.nimbus.language.nodes.string;
 
 import com.oracle.truffle.api.dsl.*;
 import com.oracle.truffle.api.library.CachedLibrary;
-import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.object.DynamicObjectLibrary;
 import com.oracle.truffle.api.strings.TruffleString;
 import org.nimbus.language.nodes.NBaseNode;
-import org.nimbus.language.nodes.NNode;
 import org.nimbus.language.runtime.*;
 
 @ImportStatic(NString.class)
@@ -41,7 +39,7 @@ public abstract class NReadStringPropertyNode extends NBaseNode {
   @Fallback
   protected Object readOthers(
     TruffleString truffleString, Object property,
-    @Cached(value = "languageContext().objectsModel.stringObject", neverDefault = false) NClassObject stringClass,
+    @Cached(value = "languageContext().objectsModel.stringObject", neverDefault = false) NimClass stringClass,
     @CachedLibrary(limit = "3") DynamicObjectLibrary stringObjectLibrary
   ) {
     return stringObjectLibrary.getOrDefault(stringClass, property, NimNil.SINGLETON);

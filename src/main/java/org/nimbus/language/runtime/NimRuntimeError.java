@@ -3,7 +3,6 @@ package org.nimbus.language.runtime;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.exception.AbstractTruffleException;
 import com.oracle.truffle.api.interop.InteropLibrary;
-import com.oracle.truffle.api.interop.UnsupportedMessageException;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.source.SourceSection;
 import org.nimbus.annotations.NAnnotationHelper;
@@ -51,7 +50,7 @@ public class NimRuntimeError extends AbstractTruffleException {
       result.append(sep);
       sep = ", ";
 
-      if(o instanceof NClassInstance classInstance) {
+      if(o instanceof NimObject classInstance) {
         result.append(classInstance.getClassName());
       } else {
         String[] qualifiedName = NAnnotationHelper.getObjectName(o.getClass()).split("[.]");

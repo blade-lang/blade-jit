@@ -22,7 +22,7 @@ import org.nimbus.language.nodes.string.NStringLiteralNode;
 import org.nimbus.language.parser.BaseVisitor;
 import org.nimbus.language.parser.ast.Expr;
 import org.nimbus.language.parser.ast.Stmt;
-import org.nimbus.language.runtime.NClassObject;
+import org.nimbus.language.runtime.NimClass;
 import org.nimbus.language.shared.NLocalRefSlot;
 import org.nimbus.language.runtime.NimRuntimeError;
 
@@ -409,7 +409,7 @@ public class NimTranslator extends BaseVisitor<NNode> {
     }
 
     List<NNode> methods = new ArrayList<>();
-    NClassObject classPrototype = new NClassObject(objectShape, stmt.name.literal());
+    NimClass classPrototype = new NimClass(objectShape, stmt.name.literal());
 
     for(Stmt.Method method : stmt.methods) {
       methods.add(translateFunction(

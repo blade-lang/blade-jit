@@ -6,13 +6,12 @@ import com.oracle.truffle.api.library.ExportLibrary;
 import com.oracle.truffle.api.library.ExportMessage;
 import com.oracle.truffle.api.object.Shape;
 import com.oracle.truffle.api.strings.TruffleString;
-import org.nimbus.annotations.ObjectName;
 import org.nimbus.language.nodes.NimTypesGen;
 import org.nimbus.language.nodes.functions.NFunctionDispatchNode;
 import org.nimbus.language.nodes.functions.NFunctionDispatchNodeGen;
 
 @ExportLibrary(InteropLibrary.class)
-public final class NFunctionObject extends NClassInstance {
+public final class NFunctionObject extends NimObject {
   private final NFunctionDispatchNode dispatchNode;
 
   public final String name;
@@ -20,11 +19,11 @@ public final class NFunctionObject extends NClassInstance {
   public CallTarget callTarget;
   public final int argumentsCount;
 
-  public NFunctionObject(Shape shape, NClassObject classObject,  String name, CallTarget target, int argumentsCount) {
+  public NFunctionObject(Shape shape, NimClass classObject, String name, CallTarget target, int argumentsCount) {
     this(shape, classObject, name, target, argumentsCount, null);
   }
 
-  public NFunctionObject(Shape shape, NClassObject classObject,  String name, CallTarget target, int argumentsCount, Object object) {
+  public NFunctionObject(Shape shape, NimClass classObject, String name, CallTarget target, int argumentsCount, Object object) {
     super(shape, classObject);
     callTarget = target;
     dispatchNode = NFunctionDispatchNodeGen.create();
@@ -70,7 +69,7 @@ public final class NFunctionObject extends NClassInstance {
       value == NimNil.SINGLETON ||
       value instanceof String ||
       value instanceof TruffleString ||
-      value instanceof NClassObject ||
-      value instanceof NClassInstance;
+      value instanceof NimClass ||
+      value instanceof NimObject;
   }
 }

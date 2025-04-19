@@ -19,7 +19,7 @@ public final class NimType implements TruffleObject {
   public static final NimType STRING = new NimType("String", InteropLibrary::isString);
   public static final NimType LIST = new NimType("List", (l, v) -> v instanceof NListObject);
   public static final NimType BOOLEAN = new NimType("Boolean", InteropLibrary::isBoolean);
-  public static final NimType CLASS = new NimType("Class", (l, v) -> v instanceof NClassObject);
+  public static final NimType CLASS = new NimType("Class", (l, v) -> v instanceof NimClass);
   public static final NimType OBJECT = new NimType("Object", InteropLibrary::hasMembers);
   public static final NimType FUNCTION = new NimType("Function", InteropLibrary::isExecutable);
 

@@ -58,10 +58,10 @@ public class NimbusLanguage extends TruffleLanguage<NimContext> {
   public final Shape listShape = createShape(NListObject.class);
 
   // models
-  private final NClassObject functionClass = new NClassObject(rootShape, "Function");
-  private final NClassObject listClass = new NClassObject(rootShape, "List");
+  private final NimClass functionClass = new NimClass(rootShape, "Function");
+  private final NimClass listClass = new NimClass(rootShape, "List");
 
-  private Shape createShape(Class<? extends NClassInstance> layout) {
+  private Shape createShape(Class<? extends NimObject> layout) {
     return Shape.newBuilder()
       .allowImplicitCastIntToLong(true)
       .layout(layout, MethodHandles.lookup())
@@ -87,8 +87,8 @@ public class NimbusLanguage extends TruffleLanguage<NimContext> {
     );
   }
 
-  private NClassObject createStringClass(DynamicObjectLibrary objectLibrary) {
-    NClassObject stringClass = new NClassObject(rootShape, "String");
+  private NimClass createStringClass(DynamicObjectLibrary objectLibrary) {
+    NimClass stringClass = new NimClass(rootShape, "String");
 
     defineBuiltinMethod(objectLibrary, stringClass, "upper", NStringUpperMethodNodeFactory.getInstance());
     defineBuiltinMethod(objectLibrary, stringClass, "index_of", NStringIndexOfMethodNodeFactory.getInstance());
@@ -117,7 +117,7 @@ public class NimbusLanguage extends TruffleLanguage<NimContext> {
   }
 
   private void defineBuiltinMethod(
-    DynamicObjectLibrary objectLibrary, NClassObject classObject, String name,
+    DynamicObjectLibrary objectLibrary, NimClass classObject, String name,
     NodeFactory<? extends NBuiltinFunctionNode> factory
   ) {
     objectLibrary.putConstant(

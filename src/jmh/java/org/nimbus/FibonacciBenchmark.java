@@ -34,7 +34,7 @@ public class FibonacciBenchmark extends TruffleBenchmark {
     context.eval("sl", SL_FIBONACCI);
   }
 
-  //  @Fork(jvmArgsPrepend = {
+//  @Fork(jvmArgsPrepend = {
 //    "-Dgraal.Dump=Truffle:1",
 //    "-Dgraal.PrintGraph=File"
 //  })

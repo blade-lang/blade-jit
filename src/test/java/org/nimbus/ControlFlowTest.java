@@ -133,7 +133,7 @@ public class ControlFlowTest {
   }
 
   @Test
-  public void for_parts_are_all_optional() {
+  public void iter_parts_are_all_optional() {
     var result = context.eval("nim",
       """
         def fib(n) {

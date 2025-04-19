@@ -9,13 +9,12 @@ import com.oracle.truffle.api.library.ExportLibrary;
 import com.oracle.truffle.api.library.ExportMessage;
 import com.oracle.truffle.api.object.DynamicObjectLibrary;
 import com.oracle.truffle.api.object.Shape;
-import org.nimbus.annotations.ObjectName;
 
 import java.util.ArrayList;
 import java.util.List;
 
 @ExportLibrary(InteropLibrary.class)
-public class NListObject extends NClassInstance {
+public class NListObject extends NimObject {
   static final String LENGTH_PROP = "length";
 
   private Object[] items;
@@ -23,7 +22,7 @@ public class NListObject extends NClassInstance {
   // List properties...
   @DynamicField private long length;
 
-  public NListObject(Shape shape, NClassObject classObject, Object[] objects) {
+  public NListObject(Shape shape, NimClass classObject, Object[] objects) {
     super(shape, classObject);
     setArrayElements(objects, DynamicObjectLibrary.getUncached());
   }

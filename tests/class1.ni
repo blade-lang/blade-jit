@@ -3,5 +3,4 @@ class A {
         return 'A.a'
     }
 }
-
-new A()
+new A().a()

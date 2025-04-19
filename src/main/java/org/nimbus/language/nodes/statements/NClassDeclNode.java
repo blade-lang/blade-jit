@@ -3,7 +3,7 @@ package org.nimbus.language.nodes.statements;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 import org.nimbus.language.nodes.NNode;
-import org.nimbus.language.runtime.NClassObject;
+import org.nimbus.language.runtime.NimClass;
 
 import java.util.List;
 
@@ -11,9 +11,9 @@ public final class NClassDeclNode extends NNode {
   @Children
   private final NNode[] methods;
 
-  private final NClassObject classObject;
+  private final NimClass classObject;
 
-  public NClassDeclNode(List<NNode> methods, NClassObject classObject) {
+  public NClassDeclNode(List<NNode> methods, NimClass classObject) {
     this.methods = methods.toArray(new NNode[0]);
     this.classObject = classObject;
   }

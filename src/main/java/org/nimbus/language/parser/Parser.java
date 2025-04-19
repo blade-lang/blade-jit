@@ -118,6 +118,10 @@ public class Parser {
     while (match(NEWLINE, SEMICOLON));
   }
 
+  private void ignoreNewlinesNoSemi() {
+    while (match(NEWLINE)) ;
+  }
+
   private void ignoreNewlines() {
     while (match(NEWLINE) || match(SEMICOLON)) ;
   }
@@ -728,14 +732,14 @@ public class Parser {
       decl = varDeclaration(false);
     }
     consume(SEMICOLON, "';' expected");
-    ignoreNewlines();
+    ignoreNewlinesNoSemi();
 
     Expr condition = null;
     if (!check(SEMICOLON)) {
       condition = expression();
     }
     consume(SEMICOLON, "';' expected");
-    ignoreNewlines();
+    ignoreNewlinesNoSemi();
 
     Stmt.Expression iterator = null;
     if (!check(LBRACE) && !check(RPAREN)) {

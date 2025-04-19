@@ -14,7 +14,7 @@ import org.nimbus.language.runtime.NimRuntimeError;
 public abstract class NSharedPropertyWriterNode extends Node {
   public abstract Object executeWrite(Object target, Object name, Object value);
 
-  @Specialization(guards = "interopLibrary.isMemberWritable(target, name)", limit = "2")
+  @Specialization(guards = "interopLibrary.isMemberWritable(target, name)", limit = "3")
   protected Object doWrite(Object target, String name, Object value,
                                  @CachedLibrary("target") InteropLibrary interopLibrary) {
     try {
@@ -25,7 +25,7 @@ public abstract class NSharedPropertyWriterNode extends Node {
     return value;
   }
 
-  @Specialization(guards = "interopLibrary.isNull(target)", limit = "2")
+  @Specialization(guards = "interopLibrary.isNull(target)", limit = "3")
   protected Object doWriteNil(Object target, Object name, Object value,
                                             @CachedLibrary("target") InteropLibrary interopLibrary) {
     throw new NimRuntimeError("Cannot set properties of nil (setting '" + name + "')");
