@@ -28,17 +28,17 @@ public abstract class NListIndexReadNode extends NNode {
 
   @Specialization
   protected Object doIndexOrProperty(Object target, Object indexOrProperty) {
-    return this.innerNode.executeRead(target, indexOrProperty);
+    return innerNode.executeRead(target, indexOrProperty);
   }
 
   @Override
   public Object evaluateReceiver(VirtualFrame frame) {
-    return this.getListExpr().execute(frame);
+    return getListExpr().execute(frame);
   }
 
   @Override
   public Object evaluateFunction(VirtualFrame frame, Object receiver) {
-    Object property = this.getIndexExpr().execute(frame);
+    Object property = getIndexExpr().execute(frame);
     return doIndexOrProperty(receiver, property);
   }
 

@@ -1,6 +1,11 @@
 class A {
-    a() {
-        return 'A.a'
-    }
+  A() {
+    self.value = 1
+  }
+
+  a() {
+      return self.value
+  }
 }
+
 new A().a()

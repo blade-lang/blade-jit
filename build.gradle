@@ -24,6 +24,7 @@ dependencies {
     jmhRuntimeOnly 'org.graalvm.truffle:truffle-sl:24.2.0'
     jmhRuntimeOnly 'org.graalvm.truffle:truffle-runtime:24.2.0'
     jmhRuntimeOnly 'org.graalvm.polyglot:polyglot:24.2.0'
+    jmhRuntimeOnly 'org.graalvm.js:js:24.2.0'
 }
 
 test {

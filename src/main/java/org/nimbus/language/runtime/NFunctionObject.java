@@ -7,12 +7,12 @@ import com.oracle.truffle.api.library.ExportMessage;
 import com.oracle.truffle.api.object.Shape;
 import com.oracle.truffle.api.strings.TruffleString;
 import org.nimbus.language.nodes.NimTypesGen;
-import org.nimbus.language.nodes.functions.NFunctionDispatchNode;
-import org.nimbus.language.nodes.functions.NFunctionDispatchNodeGen;
+import org.nimbus.language.nodes.functions.NMethodDispatchNode;
+import org.nimbus.language.nodes.functions.NMethodDispatchNodeGen;
 
 @ExportLibrary(InteropLibrary.class)
 public final class NFunctionObject extends NimObject {
-  private final NFunctionDispatchNode dispatchNode;
+  private final NMethodDispatchNode dispatchNode;
 
   public final String name;
   public final Object methodTarget;
@@ -26,7 +26,7 @@ public final class NFunctionObject extends NimObject {
   public NFunctionObject(Shape shape, NimClass classObject, String name, CallTarget target, int argumentsCount, Object object) {
     super(shape, classObject);
     callTarget = target;
-    dispatchNode = NFunctionDispatchNodeGen.create();
+    dispatchNode = NMethodDispatchNodeGen.create();
     this.name = name;
     this.argumentsCount = argumentsCount;
     this.methodTarget = object;

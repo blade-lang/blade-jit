@@ -239,11 +239,27 @@ public class NimTranslator extends BaseVisitor<NNode> {
   @Override
   public NNode visitCallExpr(Expr.Call expr) {
     List<NNode> arguments = new ArrayList<>();
+    if(expr.callee instanceof Expr.Identifier) {
+      arguments.add(new NNilLiteralNode());
+    }
+
     for (Expr arg : expr.args) {
       arguments.add(visitExpr(arg));
     }
 
-    return new NFunctionCallExprNode(visitExpr(expr.callee), arguments);
+    if(expr.callee instanceof Expr.Identifier) {
+      return NFunctionCallExprNodeGen.create(visitExpr(expr.callee), arguments);
+    }
+    return new NMethodCallExprNode(visitExpr(expr.callee), arguments);
+  }
+
+  @Override
+  public NNode visitSetExpr(Expr.Set expr) {
+    return NSetPropertyNodeGen.create(
+      visitExpr(expr.expression),
+      visitExpr(expr.value),
+      expr.name.token.literal()
+    );
   }
 
   @Override
@@ -487,6 +503,10 @@ public class NimTranslator extends BaseVisitor<NNode> {
     state = previousState;
     localScopes.pop();
     return result;
+  }
+
+  private boolean isReadingExpr(Expr expr) {
+    return expr instanceof Expr.Identifier;
   }
 
   interface Callback {
