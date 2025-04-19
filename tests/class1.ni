@@ -8,4 +8,4 @@ class A {
   }
 }
 
-new A().a()
+echo new A().a()

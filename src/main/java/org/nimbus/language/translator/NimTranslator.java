@@ -285,6 +285,11 @@ public class NimTranslator extends BaseVisitor<NNode> {
   }
 
   @Override
+  public NNode visitEchoStmt(Stmt.Echo stmt) {
+    return new NEchoStmtNode(visitExpr(stmt.value));
+  }
+
+  @Override
   public NNode visitExpressionStmt(Stmt.Expression stmt) {
     assert stmt.expression != null;
     return visitExpr(stmt.expression);
