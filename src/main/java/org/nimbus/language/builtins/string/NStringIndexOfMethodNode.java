@@ -2,7 +2,7 @@ package org.nimbus.language.builtins.string;
 
 import com.oracle.truffle.api.dsl.*;
 import com.oracle.truffle.api.strings.TruffleString;
-import org.nimbus.language.nodes.NBuiltinFunctionNode;
+import org.nimbus.language.nodes.functions.NBuiltinFunctionNode;
 import org.nimbus.language.runtime.NString;
 import org.nimbus.language.runtime.NimNil;
 import org.nimbus.language.runtime.NimRuntimeError;

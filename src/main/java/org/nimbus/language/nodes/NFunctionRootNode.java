@@ -4,7 +4,7 @@ import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.RootNode;
 import org.nimbus.language.NimbusLanguage;
-import org.nimbus.language.nodes.statements.NFunctionBodyNode;
+import org.nimbus.language.nodes.functions.NFunctionBodyNode;
 
 public final class NFunctionRootNode extends RootNode {
   @SuppressWarnings("FieldMayBeFinal")

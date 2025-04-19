@@ -1,4 +1,4 @@
-package org.nimbus.language.nodes.statements;
+package org.nimbus.language.nodes.functions;
 
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.dsl.NodeChild;
@@ -10,11 +10,11 @@ import com.oracle.truffle.api.object.DynamicObject;
 import com.oracle.truffle.api.object.DynamicObjectLibrary;
 import org.nimbus.language.NimbusLanguage;
 import org.nimbus.language.nodes.NFunctionRootNode;
-import org.nimbus.language.nodes.NGlobalScopeObjectNode;
 import org.nimbus.language.nodes.NNode;
 import org.nimbus.language.nodes.NStmtNode;
 import org.nimbus.language.runtime.NFunctionObject;
 import org.nimbus.language.runtime.NimNil;
+import org.nimbus.language.shared.NBuiltinClassesModel;
 
 @NodeChild(value = "containerNode", type = NNode.class)
 @NodeField(name = "name", type = String.class)
@@ -37,7 +37,8 @@ public abstract class NFunctionStmtNode extends NStmtNode {
       CompilerDirectives.transferToInterpreterAndInvalidate();
 
       NFunctionRootNode function = new NFunctionRootNode(NimbusLanguage.get(this), getFrameDescriptor(), getBody());
-      cachedFunction = new NFunctionObject(getName(), function.getCallTarget(), getArgumentCount());
+      NBuiltinClassesModel classesModel = languageContext().objectsModel;
+      cachedFunction = new NFunctionObject(classesModel.rootShape, classesModel.functionObject, getName(), function.getCallTarget(), getArgumentCount());
     }
 
     objectLibrary.putConstant(container, getName(), cachedFunction, 0);

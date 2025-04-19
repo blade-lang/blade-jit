@@ -1,4 +1,4 @@
-package org.nimbus.language.runtime;
+package org.nimbus.language.shared;
 
 import java.util.Objects;
 

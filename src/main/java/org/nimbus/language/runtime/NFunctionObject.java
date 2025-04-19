@@ -2,20 +2,17 @@ package org.nimbus.language.runtime;
 
 import com.oracle.truffle.api.CallTarget;
 import com.oracle.truffle.api.interop.InteropLibrary;
-import com.oracle.truffle.api.interop.TruffleObject;
 import com.oracle.truffle.api.library.ExportLibrary;
 import com.oracle.truffle.api.library.ExportMessage;
-import com.oracle.truffle.api.profiles.BranchProfile;
-import com.oracle.truffle.api.profiles.CountingConditionProfile;
+import com.oracle.truffle.api.object.Shape;
 import com.oracle.truffle.api.strings.TruffleString;
 import org.nimbus.annotations.ObjectName;
 import org.nimbus.language.nodes.NimTypesGen;
-import org.nimbus.language.nodes.calls.NFunctionDispatchNode;
-import org.nimbus.language.nodes.calls.NFunctionDispatchNodeGen;
+import org.nimbus.language.nodes.functions.NFunctionDispatchNode;
+import org.nimbus.language.nodes.functions.NFunctionDispatchNodeGen;
 
 @ExportLibrary(InteropLibrary.class)
-@ObjectName("Function")
-public final class NFunctionObject implements TruffleObject {
+public final class NFunctionObject extends NClassInstance {
   private final NFunctionDispatchNode dispatchNode;
 
   public final String name;
@@ -23,11 +20,12 @@ public final class NFunctionObject implements TruffleObject {
   public CallTarget callTarget;
   public final int argumentsCount;
 
-  public NFunctionObject(String name, CallTarget target, int argumentsCount) {
-    this(name, target, argumentsCount, null);
+  public NFunctionObject(Shape shape, NClassObject classObject,  String name, CallTarget target, int argumentsCount) {
+    this(shape, classObject, name, target, argumentsCount, null);
   }
 
-  public NFunctionObject(String name, CallTarget target, int argumentsCount, Object object) {
+  public NFunctionObject(Shape shape, NClassObject classObject,  String name, CallTarget target, int argumentsCount, Object object) {
+    super(shape, classObject);
     callTarget = target;
     dispatchNode = NFunctionDispatchNodeGen.create();
     this.name = name;
@@ -63,7 +61,7 @@ public final class NFunctionObject implements TruffleObject {
       }
     }
 
-    return dispatchNode.executeDispatch(this, arguments);
+    return dispatchNode.executeDispatch(this, NimNil.SINGLETON, arguments);
   }
 
   private boolean isRemValue(Object value) {
@@ -72,8 +70,7 @@ public final class NFunctionObject implements TruffleObject {
       value == NimNil.SINGLETON ||
       value instanceof String ||
       value instanceof TruffleString ||
-      value instanceof NBaseObject ||
-      value instanceof NFunctionObject ||
+      value instanceof NClassObject ||
       value instanceof NClassInstance;
   }
 }

@@ -7,6 +7,7 @@ import com.oracle.truffle.api.dsl.NodeFactory;
 import com.oracle.truffle.api.instrumentation.ProvidedTags;
 import com.oracle.truffle.api.instrumentation.StandardTags.*;
 import com.oracle.truffle.api.nodes.Node;
+import com.oracle.truffle.api.object.DynamicObject;
 import com.oracle.truffle.api.object.DynamicObjectLibrary;
 import com.oracle.truffle.api.object.Shape;
 import com.oracle.truffle.api.source.Source;
@@ -14,14 +15,15 @@ import com.oracle.truffle.api.strings.TruffleString;
 import org.nimbus.language.builtins.AbsBuiltinFunctionNodeFactory;
 import org.nimbus.language.builtins.string.NStringIndexOfMethodNodeFactory;
 import org.nimbus.language.builtins.string.NStringUpperMethodNodeFactory;
-import org.nimbus.language.nodes.NBuiltinFunctionNode;
+import org.nimbus.language.nodes.functions.NBuiltinFunctionNode;
 import org.nimbus.language.nodes.NRootNode;
-import org.nimbus.language.nodes.calls.NReadFunctionArgsExprNode;
-import org.nimbus.language.nodes.calls.NFunctionRootNode;
+import org.nimbus.language.nodes.functions.NReadFunctionArgsExprNode;
+import org.nimbus.language.nodes.functions.NFunctionRootNode;
 import org.nimbus.language.parser.Lexer;
 import org.nimbus.language.parser.Parser;
 import org.nimbus.language.parser.ast.Stmt;
 import org.nimbus.language.runtime.*;
+import org.nimbus.language.shared.NBuiltinClassesModel;
 import org.nimbus.language.translator.NimTranslator;
 
 import java.lang.invoke.MethodHandles;
@@ -49,61 +51,93 @@ public class NimbusLanguage extends TruffleLanguage<NimContext> {
   private static final LanguageReference<NimbusLanguage> REFERENCE = LanguageReference.create(NimbusLanguage.class);
   public final static TruffleString.Encoding ENCODING = TruffleString.Encoding.UTF_8;
 
+  private final DynamicObjectLibrary objectLibrary = DynamicObjectLibrary.getUncached();
+
   // Shapes
   public final Shape rootShape = Shape.newBuilder().build();
   public final Shape listShape = createShape(NListObject.class);
 
-  private final DynamicObjectLibrary objectLibrary = DynamicObjectLibrary.getUncached();
+  // models
+  private final NClassObject functionClass = new NClassObject(rootShape, "Function");
+  private final NClassObject listClass = new NClassObject(rootShape, "List");
 
-  private void declareBuiltinFunction(NimContext context, String name, NodeFactory<? extends NBuiltinFunctionNode> factory) {
-    objectLibrary.putConstant(
-      context.globalScope,
-      name,
-      defineBuiltinFunction(name, factory),
-      0
-    );
-  }
-
-  private CallTarget createCallTarget(NodeFactory<? extends NBuiltinFunctionNode> factory) {
-    int argumentCount = factory.getExecutionSignature().size();
-
-    NReadFunctionArgsExprNode[] arguments = IntStream.range(0, argumentCount)
-      .mapToObj(NReadFunctionArgsExprNode::new)
-      .toArray(NReadFunctionArgsExprNode[]::new);
-
-    NFunctionRootNode rootNode = new NFunctionRootNode(this,
-      factory.createNode((Object) arguments));
-
-    return rootNode.getCallTarget();
-  }
-
-  private NFunctionObject defineBuiltinFunction(String name, NodeFactory<? extends NBuiltinFunctionNode> factory) {
-    return new NFunctionObject(name, createCallTarget(factory), factory.getExecutionSignature().size());
-  }
-
-  private void installBuiltinFunctions(NimContext context) {
-    declareBuiltinFunction(context, "abs", AbsBuiltinFunctionNodeFactory.getInstance());
-  }
-
-  private Shape createShape(Class<? extends NBaseObject> layout) {
+  private Shape createShape(Class<? extends NClassInstance> layout) {
     return Shape.newBuilder()
       .allowImplicitCastIntToLong(true)
       .layout(layout, MethodHandles.lookup())
       .build();
   }
 
-  public NStringPrototype createStringPrototype() {
-    return new NStringPrototype(
-      createCallTarget(NStringUpperMethodNodeFactory.getInstance()),
-      createCallTarget(NStringIndexOfMethodNodeFactory.getInstance())
+  @Override
+  protected NimContext createContext(Env env) {
+    DynamicObjectLibrary objectLibrary = DynamicObjectLibrary.getUncached();
+    return new NimContext(
+      createGlobalScope(objectLibrary),
+      createBuiltinClasses(objectLibrary)
     );
   }
 
-  @Override
-  protected NimContext createContext(Env env) {
-    NimContext context = new NimContext(this);
-    installBuiltinFunctions(context);
-    return  context;
+  private NBuiltinClassesModel createBuiltinClasses(DynamicObjectLibrary objectLibrary) {
+    return new NBuiltinClassesModel(
+      rootShape,
+      listShape,
+      functionClass,
+      listClass,
+      createStringClass(objectLibrary)
+    );
+  }
+
+  private NClassObject createStringClass(DynamicObjectLibrary objectLibrary) {
+    NClassObject stringClass = new NClassObject(rootShape, "String");
+
+    defineBuiltinMethod(objectLibrary, stringClass, "upper", NStringUpperMethodNodeFactory.getInstance());
+    defineBuiltinMethod(objectLibrary, stringClass, "index_of", NStringIndexOfMethodNodeFactory.getInstance());
+
+    return stringClass;
+  }
+
+  private DynamicObject createGlobalScope(DynamicObjectLibrary objectLibrary) {
+    NGlobalScopeObject globalScope = new NGlobalScopeObject(rootShape);
+
+    defineBuiltinFunction(objectLibrary, globalScope, "abs", AbsBuiltinFunctionNodeFactory.getInstance());
+
+    return globalScope;
+  }
+
+  private void defineBuiltinFunction(
+    DynamicObjectLibrary objectLibrary, NGlobalScopeObject globalScope, String name,
+    NodeFactory<? extends NBuiltinFunctionNode> factory
+  ) {
+    objectLibrary.putConstant(
+      globalScope,
+      name,
+      new NFunctionObject(rootShape, functionClass, name, createCallTarget(factory, true), factory.getExecutionSignature().size()),
+      0
+    );
+  }
+
+  private void defineBuiltinMethod(
+    DynamicObjectLibrary objectLibrary, NClassObject classObject, String name,
+    NodeFactory<? extends NBuiltinFunctionNode> factory
+  ) {
+    objectLibrary.putConstant(
+      classObject,
+      name,
+      new NFunctionObject(rootShape, functionClass, name, createCallTarget(factory, false), factory.getExecutionSignature().size() - 1),
+      0
+    );
+  }
+
+  private CallTarget createCallTarget(NodeFactory<? extends NBuiltinFunctionNode> factory, boolean offset) {
+    int argumentCount = factory.getExecutionSignature().size();
+
+    NReadFunctionArgsExprNode[] arguments = IntStream.range(0, argumentCount)
+      .mapToObj(i -> new NReadFunctionArgsExprNode(offset ? i + 1 : i))
+      .toArray(NReadFunctionArgsExprNode[]::new);
+
+    NFunctionRootNode rootNode = new NFunctionRootNode(this, factory.createNode((Object) arguments));
+
+    return rootNode.getCallTarget();
   }
 
   @Override

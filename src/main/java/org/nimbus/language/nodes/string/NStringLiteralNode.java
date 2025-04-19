@@ -1,4 +1,4 @@
-package org.nimbus.language.nodes.literals;
+package org.nimbus.language.nodes.string;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.strings.TruffleString;

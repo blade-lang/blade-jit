@@ -3,7 +3,7 @@ package org.nimbus.language.builtins;
 import com.oracle.truffle.api.dsl.Fallback;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
-import org.nimbus.language.nodes.NBuiltinFunctionNode;
+import org.nimbus.language.nodes.functions.NBuiltinFunctionNode;
 
 @GenerateNodeFactory
 public abstract class AbsBuiltinFunctionNode extends NBuiltinFunctionNode {

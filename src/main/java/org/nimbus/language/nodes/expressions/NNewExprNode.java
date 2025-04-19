@@ -27,7 +27,7 @@ public abstract class NNewExprNode extends NNode {
   @Specialization
   protected Object doObject(VirtualFrame frame, NClassObject classObject) {
     consumeArguments(frame);
-    return new NClassInstance(classObject);
+    return new NClassInstance(languageContext().objectsModel.rootShape, classObject);
   }
 
   @Fallback

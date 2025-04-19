@@ -1,14 +1,17 @@
 package org.nimbus.language.runtime;
 
+import com.oracle.truffle.api.TruffleLanguage;
 import com.oracle.truffle.api.interop.InteropLibrary;
 import com.oracle.truffle.api.library.ExportLibrary;
 import com.oracle.truffle.api.library.ExportMessage;
+import com.oracle.truffle.api.object.DynamicObject;
 import com.oracle.truffle.api.object.Shape;
 import org.nimbus.annotations.ObjectName;
+import org.nimbus.language.NimbusLanguage;
 
 @ExportLibrary(InteropLibrary.class)
 @ObjectName("Class")
-public final class NClassObject extends NBaseObject {
+public class NClassObject extends DynamicObject {
   public final String name;
 
   public NClassObject(Shape shape, String name) {
@@ -24,18 +27,5 @@ public final class NClassObject extends NBaseObject {
   @ExportMessage
   Object toDisplayString(@SuppressWarnings("unused") boolean allowSideEffects) {
     return toString();
-  }
-
-  @ExportMessage
-  boolean hasMetaObject() { return true; }
-
-  @ExportMessage
-  Object getMetaObject() {
-    return NimType.CLASS;
-  }
-
-  @ExportMessage
-  boolean hasMembers() {
-    return false;
   }
 }

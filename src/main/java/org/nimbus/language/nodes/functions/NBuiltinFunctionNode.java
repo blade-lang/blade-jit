@@ -1,8 +1,8 @@
-package org.nimbus.language.nodes;
+package org.nimbus.language.nodes.functions;
 
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.NodeChild;
-import org.nimbus.language.nodes.calls.NReadFunctionArgsExprNode;
+import org.nimbus.language.nodes.NNode;
 
 @NodeChild(value = "arguments", type = NReadFunctionArgsExprNode[].class)
 @GenerateNodeFactory

@@ -1,4 +1,4 @@
-package org.nimbus.language.nodes.calls;
+package org.nimbus.language.nodes.functions;
 
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.frame.VirtualFrame;

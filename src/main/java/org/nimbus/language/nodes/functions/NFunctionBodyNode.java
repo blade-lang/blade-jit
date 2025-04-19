@@ -1,9 +1,11 @@
-package org.nimbus.language.nodes.statements;
+package org.nimbus.language.nodes.functions;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.profiles.BranchProfile;
 import org.nimbus.language.nodes.NNode;
+import org.nimbus.language.nodes.statements.NBlockStmtNode;
+import org.nimbus.language.nodes.statements.NReturnException;
 import org.nimbus.language.runtime.NimNil;
 
 public final class NFunctionBodyNode extends NNode {

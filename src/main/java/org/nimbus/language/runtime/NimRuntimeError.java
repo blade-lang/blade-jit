@@ -53,7 +53,8 @@ public class NimRuntimeError extends AbstractTruffleException {
 
       if(o instanceof NClassInstance classInstance) {
         result.append(classInstance.getClassName());
-      } else {String[] qualifiedName = NAnnotationHelper.getObjectName(o.getClass()).split("[.]");
+      } else {
+        String[] qualifiedName = NAnnotationHelper.getObjectName(o.getClass()).split("[.]");
         String name = qualifiedName[qualifiedName.length - 1];
         if(name.equals("TruffleString")) {
           name = "String";

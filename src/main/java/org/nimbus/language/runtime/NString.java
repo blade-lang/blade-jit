@@ -1,5 +1,6 @@
 package org.nimbus.language.runtime;
 
+import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.strings.TruffleString;
 import org.nimbus.language.NimbusLanguage;
 
@@ -50,5 +51,10 @@ public final class NString {
 
   public static boolean same(Object o1, Object o2) {
     return o1 == o2;
+  }
+
+  @CompilerDirectives.TruffleBoundary
+  public static String toString(Object object) {
+    return object.toString();
   }
 }

@@ -1,5 +1,7 @@
 package org.nimbus.language.runtime;
 
+import com.oracle.truffle.api.dsl.Fallback;
+import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.interop.InteropLibrary;
 import com.oracle.truffle.api.interop.UnknownIdentifierException;
 import com.oracle.truffle.api.library.CachedLibrary;
@@ -13,15 +15,16 @@ import java.util.ArrayList;
 import java.util.List;
 
 @ExportLibrary(InteropLibrary.class)
-@ObjectName("List")
-public class NListObject extends NBaseObject {
+public class NListObject extends NClassInstance {
+  static final String LENGTH_PROP = "length";
+
   private Object[] items;
 
   // List properties...
   @DynamicField private long length;
 
-  public NListObject(Shape shape, Object[] objects) {
-    super(shape);
+  public NListObject(Shape shape, NClassObject classObject, Object[] objects) {
+    super(shape, classObject);
     setArrayElements(objects, DynamicObjectLibrary.getUncached());
   }
 
@@ -48,7 +51,6 @@ public class NListObject extends NBaseObject {
 
   @ExportMessage
   boolean isArrayElementInsertable(long index) {
-//    return index >= items.length;
     return false;
   }
 
@@ -63,6 +65,15 @@ public class NListObject extends NBaseObject {
   }
 
   @ExportMessage
+  Object readMember(String member,
+                    @CachedLibrary("this") DynamicObjectLibrary objectLibrary) throws UnknownIdentifierException {
+    switch (member) {
+      case "length": return objectLibrary.getOrDefault(this, "length", 0);
+      default: throw UnknownIdentifierException.create(member);
+    }
+  }
+
+  @ExportMessage
   void writeArrayElement(long index, Object value) {
     index = effectiveIndex(index);
 
@@ -74,11 +85,18 @@ public class NListObject extends NBaseObject {
   }
 
   @ExportMessage
-  Object readMember(String member,
-                    @CachedLibrary("this") DynamicObjectLibrary objectLibrary) throws UnknownIdentifierException {
-    switch (member) {
-      case "length": return objectLibrary.getOrDefault(this, "length", 0);
-      default: throw UnknownIdentifierException.create(member);
+  static class WriteMember {
+    @Specialization(guards = "LENGTH_PROP.equals(member)")
+    static void writeLength(NListObject list, String member, Object value) {
+      throw new NimRuntimeError("Direct modification of list.length prohibited");
+    }
+
+    @Fallback
+    static void writeNonLength(
+      NListObject list, String member, Object value,
+      @CachedLibrary(limit = "3") DynamicObjectLibrary objectLibrary
+    ) {
+      list.writeMember(member, value, objectLibrary);
     }
   }
 
@@ -97,7 +115,7 @@ public class NListObject extends NBaseObject {
 
   private void setArrayElements(Object[] items, DynamicObjectLibrary objectLibrary) {
     this.items = items;
-    objectLibrary.putLong(this, "length", items.length);
+    writeMember(LENGTH_PROP, items.length, objectLibrary);
   }
 
   private long effectiveIndex(long index) {

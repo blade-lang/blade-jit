@@ -1,10 +1,10 @@
-package org.nimbus.language.nodes.literals;
+package org.nimbus.language.nodes.list;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
-import com.oracle.truffle.api.object.Shape;
 import org.nimbus.language.nodes.NNode;
 import org.nimbus.language.runtime.NListObject;
 import org.nimbus.language.runtime.NimContext;
+import org.nimbus.language.shared.NBuiltinClassesModel;
 
 import java.util.List;
 
@@ -22,7 +22,8 @@ public final class NListLiteralNode extends NNode {
       objects[i] = items[i].execute(frame);
     }
 
-    return new NListObject(NimContext.get(this).listShape, objects);
+    NBuiltinClassesModel classesModel = NimContext.get(this).objectsModel;
+    return new NListObject(classesModel.listShape, classesModel.listObject, objects);
   }
 
   @Override

@@ -24,10 +24,10 @@ public abstract class NSharedPropertyReaderNode extends Node {
   }
 
   @Specialization(guards = "interopLibrary.hasMembers(target)", limit = "3")
-  protected Object doGeneric(Object target, String propertyName,
+  protected Object doGeneric(Object target, String name,
                              @CachedLibrary("target") InteropLibrary interopLibrary) {
     try {
-      return interopLibrary.readMember(target, propertyName);
+      return interopLibrary.readMember(target, name);
     } catch (UnknownIdentifierException e) {
       return NimNil.SINGLETON;
     } catch (UnsupportedMessageException e) {
@@ -38,7 +38,7 @@ public abstract class NSharedPropertyReaderNode extends Node {
   @Specialization(guards = "interopLibrary.isNull(target)", limit = "3")
   protected Object doNil(Object target, Object property,
                          @CachedLibrary("target") InteropLibrary interopLibrary) {
-    throw new NimRuntimeError("Cannot read properties of undefined (reading '" + property + "')");
+    throw new NimRuntimeError("Cannot read properties of nil (reading '" + property + "')");
   }
 
   @Fallback

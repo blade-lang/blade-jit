@@ -7,24 +7,23 @@ import org.nimbus.language.nodes.NDynamicObjectRefNode;
 import org.nimbus.language.nodes.NGlobalScopeObjectNode;
 import org.nimbus.language.nodes.NGlobalScopeObjectNodeGen;
 import org.nimbus.language.nodes.NNode;
-import org.nimbus.language.nodes.calls.NFunctionCallExprNode;
-import org.nimbus.language.nodes.calls.NFunctionCallExprNodeGen;
-import org.nimbus.language.nodes.calls.NWriteFunctionArgExprNode;
+import org.nimbus.language.nodes.functions.*;
 import org.nimbus.language.nodes.expressions.*;
 import org.nimbus.language.nodes.expressions.arithemetic.*;
 import org.nimbus.language.nodes.expressions.bitwise.*;
 import org.nimbus.language.nodes.list.NListIndexReadNodeGen;
 import org.nimbus.language.nodes.list.NListIndexWriteNodeGen;
+import org.nimbus.language.nodes.list.NListLiteralNode;
 import org.nimbus.language.nodes.literals.*;
-import org.nimbus.language.nodes.calls.NReadFunctionArgsExprNode;
 import org.nimbus.language.nodes.expressions.logical.*;
 import org.nimbus.language.nodes.statements.*;
 import org.nimbus.language.nodes.statements.loops.*;
+import org.nimbus.language.nodes.string.NStringLiteralNode;
 import org.nimbus.language.parser.BaseVisitor;
 import org.nimbus.language.parser.ast.Expr;
 import org.nimbus.language.parser.ast.Stmt;
 import org.nimbus.language.runtime.NClassObject;
-import org.nimbus.language.runtime.NLocalRefSlot;
+import org.nimbus.language.shared.NLocalRefSlot;
 import org.nimbus.language.runtime.NimRuntimeError;
 
 import java.util.*;
@@ -244,7 +243,7 @@ public class NimTranslator extends BaseVisitor<NNode> {
       arguments.add(visitExpr(arg));
     }
 
-    return NFunctionCallExprNodeGen.create(visitExpr(expr.callee), arguments);
+    return new NFunctionCallExprNode(visitExpr(expr.callee), arguments);
   }
 
   @Override
@@ -429,6 +428,11 @@ public class NimTranslator extends BaseVisitor<NNode> {
     );
   }
 
+  @Override
+  public NNode visitSelfExpr(Expr.Self expr) {
+    return new NSelfLiteralNode();
+  }
+
   private NNode translateFunction(String name, List<Expr. Identifier> parameters, Stmt. Block body, NNode root) {
     FrameDescriptor.Builder previousFrameDescriptor = frameDescriptor;
     ParserState previousState = state;
@@ -440,7 +444,7 @@ public class NimTranslator extends BaseVisitor<NNode> {
 
     Map<String, NFrameMember> localVariables = new HashMap<>();
     for (int i = 0; i < parameters.size(); i++) {
-      localVariables.put(parameters.get(i).token.literal(), new NFrameMember.FunctionArgument(i));
+      localVariables.put(parameters.get(i).token.literal(), new NFrameMember.FunctionArgument(i + 1));
     }
     this.localScopes.push(localVariables);
 

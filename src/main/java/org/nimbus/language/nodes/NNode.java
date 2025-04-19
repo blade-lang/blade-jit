@@ -10,12 +10,8 @@ import org.nimbus.language.runtime.NimContext;
 import org.nimbus.language.runtime.NimNil;
 
 @TypeSystemReference(NimTypes.class)
-public abstract class NNode extends Node {
+public abstract class NNode extends NBaseNode {
   public abstract Object execute(VirtualFrame frame);
-
-  protected final NimContext languageContext() {
-    return NimContext.get(this);
-  }
 
   public boolean executeBoolean(VirtualFrame frame) {
     Object value = execute(frame);
@@ -51,5 +47,13 @@ public abstract class NNode extends Node {
 
   public double executeDouble(VirtualFrame frame) throws UnexpectedResultException {
     return NimTypesGen.expectDouble(execute(frame));
+  }
+
+  public Object evaluateReceiver(VirtualFrame frame) {
+    return NimNil.SINGLETON;
+  }
+
+  public Object evaluateFunction(VirtualFrame frame, Object receiver) {
+    return execute(frame);
   }
 }
