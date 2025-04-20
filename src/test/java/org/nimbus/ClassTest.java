@@ -29,7 +29,7 @@ public class ClassTest {
       "A");
 
     assertEquals("<class A>", result.toString());
-    assertFalse(result.hasMembers());
+    assertTrue(result.hasMembers());
   }
 
   @Test

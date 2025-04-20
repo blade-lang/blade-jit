@@ -2,26 +2,44 @@ package org.nimbus;
 
 import org.openjdk.jmh.annotations.Benchmark;
 
-public class SelfCounterBenchmark extends TruffleBenchmark {
+public class ClassCounterBenchmark extends TruffleBenchmark {
   private static final int INPUT = 1_000_000;
 
   private static final String COUNTER_CLASS = """
-    class Counter {
-        @new() {
-            self.count = 0
-        }
-        increment() {
-            self.count = self.count + 1
-        }
-        getCount() {
-            return self.count
-        }
+    class Base < Object {
+      @new() {
+          parent()
+          self.count = 0
+      }
+      increment() {
+          self.count = self.count + 1
+      }
+      getCount() {
+          return self.count
+      }
+    }
+    class LowerMiddle < Base {
+    }
+    class UpperMiddle < LowerMiddle {
+      @new() {
+          parent()
+      }
+      increment() {
+          return parent.increment()
+      }
+      getCount() {
+          return parent.getCount()
+      }
+    }
+    class Counter < UpperMiddle {
     }
     """;
 
   private static final String JS_COUNTER_CLASS = """
-    class Counter {
+    
+    class Base extends Object {
         constructor() {
+            super();
             this.count = 0;
         }
         increment() {
@@ -31,7 +49,22 @@ public class SelfCounterBenchmark extends TruffleBenchmark {
             return this.count;
         }
     }
-    """;
+    class LowerMiddle extends Base {
+    }
+    class UpperMiddle extends LowerMiddle {
+        constructor() {
+            super();
+        }
+        increment() {
+            return super.increment();
+        }
+        getCount() {
+            return super.getCount();
+        }
+    }
+    class Counter extends UpperMiddle {
+    }
+    """;;
 
   private static final String COUNT_WITH_SELF_IN_ITER = """
     def countWithSelfInIterDirect(n) {

@@ -1,5 +1,5 @@
 class A {
-  A() {
+  @new() {
     self.value = 1
   }
 

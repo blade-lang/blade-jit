@@ -2,16 +2,9 @@ package org.nimbus.language.nodes.expressions;
 
 import com.oracle.truffle.api.dsl.*;
 import com.oracle.truffle.api.frame.VirtualFrame;
-import com.oracle.truffle.api.interop.InteropLibrary;
-import com.oracle.truffle.api.interop.UnknownIdentifierException;
-import com.oracle.truffle.api.interop.UnsupportedMessageException;
-import com.oracle.truffle.api.library.CachedLibrary;
 import org.nimbus.language.nodes.NNode;
 import org.nimbus.language.nodes.NSharedPropertyReaderNode;
 import org.nimbus.language.nodes.NSharedPropertyReaderNodeGen;
-import org.nimbus.language.nodes.NSharedPropertyWriterNode;
-import org.nimbus.language.runtime.NimNil;
-import org.nimbus.language.runtime.NimRuntimeError;
 
 @NodeChild("targetExpr")
 @NodeField(name = "name", type = String.class)
@@ -30,7 +23,13 @@ public abstract class NGetPropertyNode extends NNode {
 
   @Override
   public Object evaluateFunction(VirtualFrame frame, Object receiver) {
-    return readProperty(receiver);
+    NNode expr = getTargetExpr();
+
+    Object target = expr instanceof NParentExprNode parentNode
+      ? parentNode.getParentClass()
+      : receiver;
+
+    return readProperty(target);
   }
 
   @Override

@@ -69,7 +69,6 @@ public final class NFunctionObject extends NimObject {
       value == NimNil.SINGLETON ||
       value instanceof String ||
       value instanceof TruffleString ||
-      value instanceof NimClass ||
       value instanceof NimObject;
   }
 }

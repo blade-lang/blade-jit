@@ -1,6 +1,9 @@
 package org.nimbus.language.nodes.string;
 
 import com.oracle.truffle.api.dsl.*;
+import com.oracle.truffle.api.interop.InteropLibrary;
+import com.oracle.truffle.api.interop.UnknownIdentifierException;
+import com.oracle.truffle.api.interop.UnsupportedMessageException;
 import com.oracle.truffle.api.library.CachedLibrary;
 import com.oracle.truffle.api.object.DynamicObjectLibrary;
 import com.oracle.truffle.api.strings.TruffleString;
@@ -10,7 +13,7 @@ import org.nimbus.language.runtime.*;
 @ImportStatic(NString.class)
 @SuppressWarnings("truffle-inlining")
 public abstract class NReadStringPropertyNode extends NBaseNode {
-  protected static final String LENGTH_PROP = "length";
+  public static final String LENGTH_PROP = "length";
   public abstract Object executeProperty(TruffleString self, Object property);
 
   @Specialization
@@ -38,10 +41,16 @@ public abstract class NReadStringPropertyNode extends NBaseNode {
 
   @Fallback
   protected Object readOthers(
-    TruffleString truffleString, Object property,
+    TruffleString string, Object property,
     @Cached(value = "languageContext().objectsModel.stringObject", neverDefault = false) NimClass stringClass,
-    @CachedLibrary(limit = "3") DynamicObjectLibrary stringObjectLibrary
+    @CachedLibrary(limit = "3") InteropLibrary interopLibrary
   ) {
-    return stringObjectLibrary.getOrDefault(stringClass, property, NimNil.SINGLETON);
+    try {
+      return interopLibrary.readMember(stringClass, NString.tryToString(property));
+    } catch (UnsupportedMessageException e) {
+      throw new NimRuntimeError(e.getMessage());
+    } catch (UnknownIdentifierException e) {
+      return NimNil.SINGLETON;
+    }
   }
 }

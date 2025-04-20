@@ -8,13 +8,16 @@ import com.oracle.truffle.api.interop.UnknownIdentifierException;
 import com.oracle.truffle.api.interop.UnsupportedMessageException;
 import com.oracle.truffle.api.library.CachedLibrary;
 import com.oracle.truffle.api.nodes.Node;
+import com.oracle.truffle.api.object.DynamicObjectLibrary;
 import com.oracle.truffle.api.strings.TruffleString;
 import org.nimbus.language.nodes.string.NReadStringPropertyNode;
+import org.nimbus.language.runtime.NObject;
+import org.nimbus.language.runtime.NString;
 import org.nimbus.language.runtime.NimNil;
 import org.nimbus.language.runtime.NimRuntimeError;
 
 @SuppressWarnings("truffle-inlining")
-public abstract class NSharedPropertyReaderNode extends Node {
+public abstract class NSharedPropertyReaderNode extends NBaseNode {
   public abstract Object executeRead(Object object, Object property);
 
   @Specialization
@@ -42,7 +45,12 @@ public abstract class NSharedPropertyReaderNode extends Node {
   }
 
   @Fallback
-  protected Object doUnknown(Object target, Object property) {
-    throw new NimRuntimeError("Object of type does not carry properties.");
+  protected Object doUnknown(
+    @SuppressWarnings("unused") Object target,
+    @SuppressWarnings("unused") Object property,
+    @Cached("languageContext().objectsModel.objectObject") NObject objectObject,
+    @CachedLibrary(limit = "3") DynamicObjectLibrary dynamicObjectLibrary
+  ) {
+    return dynamicObjectLibrary.getOrDefault(objectObject, NString.toString(property), NimNil.SINGLETON);
   }
 }

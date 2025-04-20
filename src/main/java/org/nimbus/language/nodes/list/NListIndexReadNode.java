@@ -11,6 +11,7 @@ import com.oracle.truffle.api.strings.TruffleString;
 import org.nimbus.language.nodes.NNode;
 import org.nimbus.language.nodes.NSharedPropertyReaderNode;
 import org.nimbus.language.nodes.NimTypesGen;
+import org.nimbus.language.nodes.expressions.NParentExprNode;
 import org.nimbus.language.runtime.NListObject;
 import org.nimbus.language.runtime.NString;
 import org.nimbus.language.runtime.NimRuntimeError;
@@ -39,7 +40,13 @@ public abstract class NListIndexReadNode extends NNode {
   @Override
   public Object evaluateFunction(VirtualFrame frame, Object receiver) {
     Object property = getIndexExpr().execute(frame);
-    return doIndexOrProperty(receiver, property);
+
+    NNode expr = getListExpr();
+    Object target = expr instanceof NParentExprNode parentNode
+      ? parentNode.getParentClass()
+      : receiver;
+
+    return doIndexOrProperty(target, property);
   }
 
 

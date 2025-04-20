@@ -4,6 +4,9 @@ import com.oracle.truffle.api.dsl.Executed;
 import com.oracle.truffle.api.dsl.Fallback;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.interop.InteropLibrary;
+import com.oracle.truffle.api.interop.UnknownIdentifierException;
+import com.oracle.truffle.api.interop.UnsupportedMessageException;
 import com.oracle.truffle.api.library.CachedLibrary;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.object.DynamicObjectLibrary;
@@ -33,9 +36,17 @@ public abstract class NNewExprNode extends NNode {
 
   @Specialization(limit = "3")
   protected Object doObject(VirtualFrame frame, NimClass classObject,
-                            @CachedLibrary("classObject") DynamicObjectLibrary objectLibrary) {
+                            @CachedLibrary("classObject") InteropLibrary interopLibrary) {
     NimObject object = new NimObject(languageContext().objectsModel.rootShape, classObject);
-    Object constructor = objectLibrary.getOrDefault(classObject, classObject.name, null);
+    Object constructor = null;
+    try {
+      constructor = interopLibrary.readMember(classObject, "@new");
+    } catch (UnsupportedMessageException e) {
+      throw new NimRuntimeError(e.getMessage());
+    } catch (UnknownIdentifierException e) {
+      // fallthrough
+    }
+
     if(constructor instanceof NFunctionObject constructorFunction) {
       constructorDispatch.executeDispatch(constructorFunction, object, executeArguments(frame));
     } else {

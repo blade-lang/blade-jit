@@ -57,4 +57,10 @@ public final class NString {
   public static String toString(Object object) {
     return object.toString();
   }
+
+  public static String tryToString(Object object) {
+    return object instanceof String
+      ? (String) object
+      : toString(object);
+  }
 }

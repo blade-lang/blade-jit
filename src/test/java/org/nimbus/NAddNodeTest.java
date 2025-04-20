@@ -11,6 +11,7 @@ import org.nimbus.language.nodes.expressions.arithemetic.NAddNodeGen;
 import org.nimbus.language.nodes.literals.NLongLiteralNode;
 import org.nimbus.language.parser.Lexer;
 import org.nimbus.language.parser.Parser;
+import org.nimbus.language.runtime.NObject;
 import org.nimbus.language.translator.NimTranslator;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -47,10 +48,7 @@ public class NAddNodeTest {
     try {
       var source = Source.newBuilder(NimbusLanguage.ID, "2 + 2", "<script>").build();
 
-      var visitor = new NimTranslator(
-        Shape.newBuilder().build(),
-        Shape.newBuilder().build()
-      );
+      var visitor = new NimTranslator(Shape.newBuilder().build(), new NObject(Shape.newBuilder().build()));
       var parseResult = new Parser(new Lexer(source))
           .parse();
       assertEquals(1, parseResult.size());

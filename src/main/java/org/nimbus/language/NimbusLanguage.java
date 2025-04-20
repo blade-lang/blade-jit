@@ -4,6 +4,7 @@ import com.oracle.truffle.api.CallTarget;
 import com.oracle.truffle.api.TruffleLanguage;
 import com.oracle.truffle.api.dsl.Bind;
 import com.oracle.truffle.api.dsl.NodeFactory;
+import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.instrumentation.ProvidedTags;
 import com.oracle.truffle.api.instrumentation.StandardTags.*;
 import com.oracle.truffle.api.nodes.Node;
@@ -13,12 +14,16 @@ import com.oracle.truffle.api.object.Shape;
 import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.strings.TruffleString;
 import org.nimbus.language.builtins.AbsBuiltinFunctionNodeFactory;
+import org.nimbus.language.builtins.object.NObjectHasPropMethodNodeFactory;
+import org.nimbus.language.builtins.object.NObjectToStringMethodNodeFactory;
 import org.nimbus.language.builtins.string.NStringIndexOfMethodNodeFactory;
 import org.nimbus.language.builtins.string.NStringUpperMethodNodeFactory;
-import org.nimbus.language.nodes.functions.NBuiltinFunctionNode;
+import org.nimbus.language.nodes.NBlockRootNode;
 import org.nimbus.language.nodes.NRootNode;
-import org.nimbus.language.nodes.functions.NReadFunctionArgsExprNode;
+import org.nimbus.language.nodes.functions.NBuiltinFunctionNode;
 import org.nimbus.language.nodes.functions.NFunctionRootNode;
+import org.nimbus.language.nodes.functions.NReadFunctionArgsExprNode;
+import org.nimbus.language.nodes.statements.NBlockStmtNode;
 import org.nimbus.language.parser.Lexer;
 import org.nimbus.language.parser.Parser;
 import org.nimbus.language.parser.ast.Stmt;
@@ -27,6 +32,7 @@ import org.nimbus.language.shared.NBuiltinClassesModel;
 import org.nimbus.language.translator.NimTranslator;
 
 import java.lang.invoke.MethodHandles;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.IntStream;
 
@@ -47,19 +53,20 @@ public class NimbusLanguage extends TruffleLanguage<NimContext> {
 
   public static final String ID = "nim";
   public static final String MIME_TYPE = "application/x-nimbus-lang";
-
-  private static final LanguageReference<NimbusLanguage> REFERENCE = LanguageReference.create(NimbusLanguage.class);
   public final static TruffleString.Encoding ENCODING = TruffleString.Encoding.UTF_8;
-
-  private final DynamicObjectLibrary objectLibrary = DynamicObjectLibrary.getUncached();
-
+  private static final LanguageReference<NimbusLanguage> REFERENCE = LanguageReference.create(NimbusLanguage.class);
   // Shapes
   public final Shape rootShape = Shape.newBuilder().build();
   public final Shape listShape = createShape(NListObject.class);
-
+  private final DynamicObjectLibrary objectLibrary = DynamicObjectLibrary.getUncached();
   // models
-  private final NimClass functionClass = new NimClass(rootShape, "Function");
-  private final NimClass listClass = new NimClass(rootShape, "List");
+  private final NObject objectClass = new NObject(rootShape);
+  private final NimClass functionClass = new NimClass(rootShape, "Function", objectClass);
+  private final NimClass listClass = new NimClass(rootShape, "List", objectClass);
+
+  public static NimbusLanguage get(Node node) {
+    return REFERENCE.get(node);
+  }
 
   private Shape createShape(Class<? extends NimObject> layout) {
     return Shape.newBuilder()
@@ -73,7 +80,17 @@ public class NimbusLanguage extends TruffleLanguage<NimContext> {
     DynamicObjectLibrary objectLibrary = DynamicObjectLibrary.getUncached();
     return new NimContext(
       createGlobalScope(objectLibrary),
-      createBuiltinClasses(objectLibrary)
+      createBuiltinClasses(objectLibrary),
+      new NFunctionObject(
+        rootShape,
+        functionClass,
+        "<>",
+        new NBlockRootNode(
+          this,
+          FrameDescriptor.newBuilder().build(),
+          new NBlockStmtNode(Collections.emptyList())
+        ).getCallTarget(),
+        0)
     );
   }
 
@@ -81,6 +98,7 @@ public class NimbusLanguage extends TruffleLanguage<NimContext> {
     return new NBuiltinClassesModel(
       rootShape,
       listShape,
+      objectClass,
       functionClass,
       listClass,
       createStringClass(objectLibrary)
@@ -88,7 +106,7 @@ public class NimbusLanguage extends TruffleLanguage<NimContext> {
   }
 
   private NimClass createStringClass(DynamicObjectLibrary objectLibrary) {
-    NimClass stringClass = new NimClass(rootShape, "String");
+    NimClass stringClass = new NimClass(rootShape, "String", objectClass);
 
     defineBuiltinMethod(objectLibrary, stringClass, "upper", NStringUpperMethodNodeFactory.getInstance());
     defineBuiltinMethod(objectLibrary, stringClass, "index_of", NStringIndexOfMethodNodeFactory.getInstance());
@@ -99,7 +117,15 @@ public class NimbusLanguage extends TruffleLanguage<NimContext> {
   private DynamicObject createGlobalScope(DynamicObjectLibrary objectLibrary) {
     NGlobalScopeObject globalScope = new NGlobalScopeObject(rootShape);
 
+    // built-in functions
     defineBuiltinFunction(objectLibrary, globalScope, "abs", AbsBuiltinFunctionNodeFactory.getInstance());
+
+    // Object class
+    defineBuiltinMethod(objectLibrary, objectClass, "has_prop", NObjectHasPropMethodNodeFactory.getInstance());
+    defineBuiltinMethod(objectLibrary, objectClass, "to_string", NObjectToStringMethodNodeFactory.getInstance());
+
+    // global classes
+    objectLibrary.putConstant(globalScope, "Object", objectClass, 0);
 
     return globalScope;
   }
@@ -147,7 +173,7 @@ public class NimbusLanguage extends TruffleLanguage<NimContext> {
     Parser parser = new Parser(new Lexer(source));
     List<Stmt> statements = parser.parse();
 
-    var visitor = new NimTranslator(rootShape, listShape);
+    var visitor = new NimTranslator(rootShape, objectClass);
     var parseResult = visitor.translate(statements);
     return new NRootNode(this, parseResult.frameDescriptor, parseResult.node).getCallTarget();
   }
@@ -155,9 +181,5 @@ public class NimbusLanguage extends TruffleLanguage<NimContext> {
   @Override
   protected Object getScope(NimContext context) {
     return context.globalScope;
-  }
-
-  public static NimbusLanguage get(Node node) {
-    return REFERENCE.get(node);
   }
 }

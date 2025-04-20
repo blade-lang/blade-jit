@@ -11,7 +11,7 @@ public class ClassInstanceTest {
   public void test_class_instance_works_in_loop() {
     var value = Context.create().eval("nim", """
     class Counter {
-        Counter() {
+        @new() {
             self.count = 0
         }
         increment() {

@@ -13,10 +13,12 @@ public class NimContext {
 
   public final DynamicObject globalScope;
   public final NBuiltinClassesModel objectsModel;
+  public final NFunctionObject emptyFunction;
 
-  public NimContext(DynamicObject globalScope, NBuiltinClassesModel objectsModel) {
+  public NimContext(DynamicObject globalScope, NBuiltinClassesModel objectsModel, NFunctionObject emptyFunction) {
     this.globalScope = globalScope;
     this.objectsModel = objectsModel;
+    this.emptyFunction = emptyFunction;
   }
 
   public static NimContext get(Node node) {

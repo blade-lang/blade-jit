@@ -10,11 +10,11 @@ import org.nimbus.annotations.ObjectName;
 
 @ExportLibrary(InteropLibrary.class)
 @ObjectName("Class")
-public class NimClass extends DynamicObject {
+public class NimClass extends NimObject {
   public final String name;
 
-  public NimClass(Shape shape, String name) {
-    super(shape);
+  public NimClass(Shape shape, String name, DynamicObject classObject) {
+    super(shape, classObject);
     this.name = name;
   }
 
@@ -26,11 +26,6 @@ public class NimClass extends DynamicObject {
   @ExportMessage
   Object toDisplayString(@SuppressWarnings("unused") boolean allowSideEffects) {
     return toString();
-  }
-
-  @ExportMessage
-  boolean hasMetaObject() {
-    return true;
   }
 
   @ExportMessage

@@ -14,16 +14,16 @@ import org.nimbus.language.NimbusLanguage;
 
 @ExportLibrary(InteropLibrary.class)
 public class NimObject extends DynamicObject {
-  final NimClass classObject;
+  public final DynamicObject classObject;
 
-  public NimObject(Shape shape, NimClass classObject) {
+  public NimObject(Shape shape, DynamicObject classObject) {
     super(shape);
     this.classObject = classObject;
   }
 
   @Override
   public String toString() {
-    return String.format("<class %s instance at 0x%x>", classObject.name, classObject.hashCode());
+    return String.format("<class %s instance at 0x%x>", ((NimClass) classObject).name, classObject.hashCode());
   }
 
   @ExportMessage
@@ -59,36 +59,34 @@ public class NimObject extends DynamicObject {
   @ExportMessage
   boolean isMemberReadable(String member,
                            @CachedLibrary("this") DynamicObjectLibrary instanceObjectLibrary,
-                           @CachedLibrary("this.classObject") DynamicObjectLibrary classObjectLibrary) {
+                           @CachedLibrary("this.classObject") InteropLibrary classInteropLibrary) {
     return instanceObjectLibrary.containsKey(this, member) ||
-      classObjectLibrary.containsKey(classObject, member);
+      classInteropLibrary.isMemberReadable(classObject, member);
   }
 
   @ExportMessage
   boolean isMemberModifiable(String member,
                              @CachedLibrary("this") DynamicObjectLibrary instanceObjectLibrary,
-                             @CachedLibrary("this.classObject") DynamicObjectLibrary classObjectLibrary) {
-    return isMemberReadable(member, instanceObjectLibrary, classObjectLibrary);
+                             @CachedLibrary("this.classObject") InteropLibrary classInteropLibrary) {
+    return isMemberReadable(member, instanceObjectLibrary, classInteropLibrary);
   }
 
   @ExportMessage
   boolean isMemberInsertable(String member,
                              @CachedLibrary("this") DynamicObjectLibrary instanceObjectLibrary,
-                             @CachedLibrary("this.classObject") DynamicObjectLibrary classObjectLibrary) {
-    return !isMemberModifiable(member, instanceObjectLibrary, classObjectLibrary);
+                             @CachedLibrary("this.classObject") InteropLibrary classInteropLibrary) {
+    return !isMemberModifiable(member, instanceObjectLibrary, classInteropLibrary);
   }
 
   @ExportMessage
-  Object readMember(String member,
-                    @CachedLibrary("this") DynamicObjectLibrary instanceObjectLibrary,
-                    @CachedLibrary("this.classObject") DynamicObjectLibrary classObjectLibrary)
-    throws UnknownIdentifierException {
+  Object readMember(
+    String member,
+    @CachedLibrary("this") DynamicObjectLibrary instanceObjectLibrary,
+    @CachedLibrary("this.classObject") InteropLibrary classInteropLibrary
+  ) throws UnknownIdentifierException, UnsupportedMessageException {
     Object value = instanceObjectLibrary.getOrDefault(this, member, null);
     if (value == null) {
-      value = classObjectLibrary.getOrDefault(classObject, member, null);
-    }
-    if (value == null) {
-      throw UnknownIdentifierException.create(member);
+      value = classInteropLibrary.readMember(classObject, member);
     }
     return value;
   }
@@ -106,6 +104,6 @@ public class NimObject extends DynamicObject {
   }
 
   public String getClassName() {
-    return classObject.name;
+    return ((NimClass) classObject).name;
   }
 }
