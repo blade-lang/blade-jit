@@ -1,5 +1,6 @@
 package org.nimbus.language.runtime;
 
+import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.TruffleLanguage;
 import com.oracle.truffle.api.interop.InteropLibrary;
 import com.oracle.truffle.api.interop.UnknownIdentifierException;
@@ -103,6 +104,7 @@ public class NimObject extends DynamicObject {
     objectLibrary.put(this, member, value);
   }
 
+  @CompilerDirectives.TruffleBoundary
   public String getClassName() {
     return ((NimClass) classObject).name;
   }

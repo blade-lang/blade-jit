@@ -19,8 +19,8 @@ public class NBlockStmtNode extends NNode {
   @ExplodeLoop
   @Override
   public Object execute(VirtualFrame frame) {
-    /*Object result = RemNil.SINGLETON;
-    for(RNode node : nodes) {
+    /*Object result = NimNil.SINGLETON;
+    for(NNode node : nodes) {
       result = node.execute(frame);
     }
     return result;*/

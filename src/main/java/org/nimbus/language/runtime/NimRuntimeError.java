@@ -65,6 +65,6 @@ public class NimRuntimeError extends AbstractTruffleException {
     }
     result.append(")");
 
-    return NimRuntimeError.create(result.toString(), node);
+    return NimRuntimeError.create(NString.toString(result), node);
   }
 }

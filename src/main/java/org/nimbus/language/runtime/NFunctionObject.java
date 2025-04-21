@@ -4,6 +4,7 @@ import com.oracle.truffle.api.CallTarget;
 import com.oracle.truffle.api.interop.InteropLibrary;
 import com.oracle.truffle.api.library.ExportLibrary;
 import com.oracle.truffle.api.library.ExportMessage;
+import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.object.Shape;
 import com.oracle.truffle.api.strings.TruffleString;
 import org.nimbus.language.nodes.NimTypesGen;
@@ -52,6 +53,7 @@ public final class NFunctionObject extends NimObject {
     return String.format("<function %s() at 0x%x>", name, callTarget.hashCode());
   }
 
+  @ExplodeLoop
   @ExportMessage
   Object execute(Object[] arguments) {
     for (Object argument : arguments) {

@@ -11,7 +11,7 @@ public final class NBlockRootNode extends RootNode {
   @Child private NBlockStmtNode block;
 
   public NBlockRootNode(NimbusLanguage language, NBlockStmtNode block) {
-    this(language, null, block);
+    this(language, FrameDescriptor.newBuilder().build(), block);
   }
 
   public NBlockRootNode(NimbusLanguage language, FrameDescriptor frameDescriptor, NBlockStmtNode block) {
@@ -22,5 +22,10 @@ public final class NBlockRootNode extends RootNode {
   @Override
   public Object execute(VirtualFrame frame) {
     return block.execute(frame);
+  }
+
+  @Override
+  public String toString() {
+    return block.getDescription();
   }
 }

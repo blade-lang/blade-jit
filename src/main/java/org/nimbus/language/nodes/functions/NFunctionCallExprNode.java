@@ -1,5 +1,6 @@
 package org.nimbus.language.nodes.functions;
 
+import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.dsl.Executed;
 import com.oracle.truffle.api.dsl.Fallback;
 import com.oracle.truffle.api.dsl.Specialization;
@@ -24,6 +25,7 @@ public abstract class NFunctionCallExprNode extends NNode {
   @SuppressWarnings("FieldMayBeFinal")
   @Child private NFunctionDispatchNode dispatchNode = NFunctionDispatchNodeGen.create();
 
+  @CompilerDirectives.CompilationFinal
   protected final int argsPlus1;
 
   public NFunctionCallExprNode(NNode target, List<NNode> arguments) {

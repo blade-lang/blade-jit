@@ -3,9 +3,10 @@ package org.nimbus.language.nodes.statements.loops;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.RepeatingNode;
+import com.oracle.truffle.api.profiles.BranchProfile;
 import org.nimbus.language.nodes.NNode;
 
-public class NIterRepeatingLoopNode extends Node implements RepeatingNode {
+public final class NIterRepeatingLoopNode extends Node implements RepeatingNode {
   @SuppressWarnings("FieldMayBeFinal")
   @Child private NNode condition;
 
@@ -14,6 +15,9 @@ public class NIterRepeatingLoopNode extends Node implements RepeatingNode {
 
   @SuppressWarnings("FieldMayBeFinal")
   @Child private NNode body;
+
+  private final BranchProfile continueTaken = BranchProfile.create();
+  private final BranchProfile breakTaken = BranchProfile.create();
 
   public NIterRepeatingLoopNode(NNode condition, NNode iterator, NNode body) {
     this.condition = condition;
@@ -30,8 +34,10 @@ public class NIterRepeatingLoopNode extends Node implements RepeatingNode {
     try {
       body.execute(frame);
     } catch (NBreakException e) {
+      breakTaken.enter();
       return false;
     } catch (NContinueException ignored) {
+      continueTaken.enter();
     }
 
     if (iterator != null) {
@@ -39,5 +45,10 @@ public class NIterRepeatingLoopNode extends Node implements RepeatingNode {
     }
 
     return true;
+  }
+
+  @Override
+  public String toString() {
+    return "NIterRepeatingLoop";
   }
 }

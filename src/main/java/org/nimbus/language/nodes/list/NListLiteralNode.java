@@ -1,6 +1,7 @@
 package org.nimbus.language.nodes.list;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.nodes.ExplodeLoop;
 import org.nimbus.language.nodes.NNode;
 import org.nimbus.language.runtime.NListObject;
 import org.nimbus.language.runtime.NimContext;
@@ -9,12 +10,14 @@ import org.nimbus.language.shared.NBuiltinClassesModel;
 import java.util.List;
 
 public final class NListLiteralNode extends NNode {
+
   @Children private final NNode[] items;
 
   public NListLiteralNode(List<NNode> items) {
     this.items = items.toArray(new NNode[0]);
   }
 
+  @ExplodeLoop
   @Override
   public Object execute(VirtualFrame frame) {
     Object[] objects = new Object[items.length];

@@ -3,6 +3,7 @@ package org.nimbus.language.nodes.statements.loops;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.RepeatingNode;
+import com.oracle.truffle.api.profiles.BranchProfile;
 import org.nimbus.language.nodes.NNode;
 
 public final class NDoWhileRepeatingNode extends Node implements RepeatingNode {
@@ -11,6 +12,9 @@ public final class NDoWhileRepeatingNode extends Node implements RepeatingNode {
 
   @SuppressWarnings("FieldMayBeFinal")
   @Child private NNode body;
+
+  private final BranchProfile continueTaken = BranchProfile.create();
+  private final BranchProfile breakTaken = BranchProfile.create();
 
   public NDoWhileRepeatingNode(NNode condition, NNode body) {
     this.condition = condition;
@@ -22,8 +26,10 @@ public final class NDoWhileRepeatingNode extends Node implements RepeatingNode {
     try {
       body.execute(frame);
     } catch (NBreakException e) {
+      breakTaken.enter();
       return false;
     } catch (NContinueException ignored) {
+      continueTaken.enter();
     }
 
     return condition.executeBoolean(frame);

@@ -161,7 +161,7 @@ public class NimTranslator extends BaseVisitor<NNode> {
   public NNode visitUnaryExpr(Expr.Unary expr) {
     return switch (expr.op.type()) {
       case MINUS -> NNegateNodeGen.create(visitExpr(expr.right));
-      case BANG -> new NLogicalNotNode(visitExpr(expr.right));
+      case BANG -> NLogicalNotNodeGen.create(visitExpr(expr.right));
       case TILDE -> NBitNotNodeGen.create(visitExpr(expr.right));
       default -> throw new UnsupportedOperationException(expr.op.literal());
     };

@@ -7,6 +7,7 @@ import com.oracle.truffle.api.interop.UnknownIdentifierException;
 import com.oracle.truffle.api.library.CachedLibrary;
 import com.oracle.truffle.api.library.ExportLibrary;
 import com.oracle.truffle.api.library.ExportMessage;
+import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.object.DynamicObjectLibrary;
 import com.oracle.truffle.api.object.Shape;
 
@@ -99,14 +100,15 @@ public class NListObject extends NimObject {
     }
   }
 
+  @ExplodeLoop
   @Override
   public String toString() {
     List<String> builder = new ArrayList<>();
     for(Object item : items) {
-      builder.add(item.toString());
+      builder.add(NString.toString(item));
     }
 
-    String result = "[" + String.join(", ", builder) + "]";
+    String result = "[" + NString.join(", ", builder) + "]";
     builder.clear();
 
     return result;

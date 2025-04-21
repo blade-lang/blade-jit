@@ -11,7 +11,7 @@ public class NRootNode extends RootNode {
   private NNode stmtNode;
 
   public NRootNode(NimbusLanguage language, NNode stmtNode) {
-    this(language, null, stmtNode);
+    this(language, FrameDescriptor.newBuilder().build(), stmtNode);
     this.stmtNode = stmtNode;
   }
 
@@ -23,5 +23,10 @@ public class NRootNode extends RootNode {
   @Override
   public Object execute(VirtualFrame frame) {
     return stmtNode.execute(frame);
+  }
+
+  @Override
+  public String toString() {
+    return stmtNode.toString();
   }
 }

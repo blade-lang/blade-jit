@@ -14,8 +14,26 @@ public abstract class NNode extends NBaseNode {
   public abstract Object execute(VirtualFrame frame);
 
   public boolean executeBoolean(VirtualFrame frame) {
-    Object value = execute(frame);
+    return evaluateBoolean(execute(frame));
+  }
 
+  public long executeLong(VirtualFrame frame) throws UnexpectedResultException {
+    return NimTypesGen.expectLong(execute(frame));
+  }
+
+  public double executeDouble(VirtualFrame frame) throws UnexpectedResultException {
+    return NimTypesGen.expectDouble(execute(frame));
+  }
+
+  public Object evaluateReceiver(VirtualFrame frame) {
+    return NimNil.SINGLETON;
+  }
+
+  public Object evaluateFunction(VirtualFrame frame, Object receiver) {
+    return execute(frame);
+  }
+
+  public boolean evaluateBoolean(Object value) {
     if (value == NimNil.SINGLETON) {
       return false;
     } else if (value instanceof Boolean b) {
@@ -39,21 +57,5 @@ public abstract class NNode extends NBaseNode {
     // TODO: Handle dictionaries here...
 
     return true;
-  }
-
-  public long executeLong(VirtualFrame frame) throws UnexpectedResultException {
-    return NimTypesGen.expectLong(execute(frame));
-  }
-
-  public double executeDouble(VirtualFrame frame) throws UnexpectedResultException {
-    return NimTypesGen.expectDouble(execute(frame));
-  }
-
-  public Object evaluateReceiver(VirtualFrame frame) {
-    return NimNil.SINGLETON;
-  }
-
-  public Object evaluateFunction(VirtualFrame frame, Object receiver) {
-    return execute(frame);
   }
 }

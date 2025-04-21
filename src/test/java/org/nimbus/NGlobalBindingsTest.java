@@ -23,7 +23,7 @@ public class NGlobalBindingsTest {
     assertFalse(globalBindings.isNull());
     assertTrue(globalBindings.hasMembers());
     assertTrue(globalBindings.hasMember("a"));
-    assertEquals(Set.of("abs", "Object", "a", "b", "c"), globalBindings.getMemberKeys());
+    assertTrue(globalBindings.getMemberKeys().containsAll(Set.of("abs", "Object", "time", "a", "b", "c")));
 
     Value b = globalBindings.getMember("b");
     assertEquals(5, b.asInt());

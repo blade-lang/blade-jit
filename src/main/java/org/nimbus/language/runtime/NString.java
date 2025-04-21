@@ -4,6 +4,8 @@ import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.strings.TruffleString;
 import org.nimbus.language.NimbusLanguage;
 
+import java.util.List;
+
 public final class NString {
   public final static TruffleString EMPTY = fromJavaString("");
 
@@ -20,11 +22,11 @@ public final class NString {
   }
 
   public static TruffleString fromObject(Object object) {
-    return fromJavaString(object.toString());
+    return fromJavaString(toString(object));
   }
 
   public static TruffleString fromObject(TruffleString.FromJavaStringNode fromJavaStringNode, Object object) {
-    return fromJavaStringNode.execute(object.toString(), NimbusLanguage.ENCODING);
+    return fromJavaStringNode.execute(toString(object), NimbusLanguage.ENCODING);
   }
 
   public static boolean equals(TruffleString a, TruffleString b, TruffleString.EqualNode equalNode) {
@@ -62,5 +64,15 @@ public final class NString {
     return object instanceof String
       ? (String) object
       : toString(object);
+  }
+
+  @CompilerDirectives.TruffleBoundary
+  public static String toUpper(String string) {
+    return string.toUpperCase();
+  }
+
+  @CompilerDirectives.TruffleBoundary
+  public static String join(String joinString, List<String> items) {
+    return String.join(joinString, items);
   }
 }

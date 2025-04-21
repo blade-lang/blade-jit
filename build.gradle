@@ -1,5 +1,6 @@
 plugins {
     id 'me.champeau.jmh' version '0.7.3'
+    id 'org.graalvm.buildtools.native' version '0.10.6'
 }
 
 group = 'org.nimbus'
@@ -15,6 +16,7 @@ dependencies {
 
     implementation 'org.graalvm.truffle:truffle-api:24.2.0'
     implementation 'org.graalvm.polyglot:polyglot:24.2.0'
+    implementation 'org.graalvm.truffle:truffle-runtime:24.2.0'
 
     annotationProcessor 'org.graalvm.truffle:truffle-dsl-processor:24.2.0'
 
@@ -22,7 +24,6 @@ dependencies {
     jmh 'org.openjdk.jmh:jmh-generator-annprocess:1.36'
     jmhAnnotationProcessor 'org.openjdk.jmh:jmh-generator-annprocess:1.36'
     jmhRuntimeOnly 'org.graalvm.truffle:truffle-sl:24.2.0'
-    jmhRuntimeOnly 'org.graalvm.truffle:truffle-runtime:24.2.0'
     jmhRuntimeOnly 'org.graalvm.polyglot:polyglot:24.2.0'
     jmhRuntimeOnly 'org.graalvm.js:js:24.2.0'
 }
@@ -31,14 +32,40 @@ test {
     useJUnitPlatform()
 }
 
-jar {
-    duplicatesStrategy 'exclude'
-    manifest {
-        attributes(
-                'Main-Class': 'org.nimbus.Main'
-        )
+//jar {
+//    duplicatesStrategy 'exclude'
+//    manifest {
+//        attributes(
+//                'Main-Class': 'org.nimbus.Main'
+//        )
+//    }
+//    from {
+//        configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+//    }
+//}
+
+graalvmNative {
+    binaries.all {
+        // common options
+        verbose = true
+        resources.autodetect()
     }
-    from {
-        configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+
+    binaries.main {
+        // options to configure the main binary
+        imageName = 'nimbus'
+        mainClass = 'org.nimbus.Main'
+        buildArgs.add('-O3')
+        buildArgs.add('-H:+AddAllCharsets')
+        buildArgs.add('-H:MaxRuntimeCompileMethods=5400')
+        buildArgs.add('--initialize-at-build-time=org.nimbus')
+        buildArgs.add('--enable-native-access=org.graalvm.truffle')
+//        buildArgs.add('--enable-native-access=org.graalvm.polyglot')
+    }
+
+    binaries.test {
+        // options to configure the test binary
+        quickBuild = true
+        debug = true
     }
 }

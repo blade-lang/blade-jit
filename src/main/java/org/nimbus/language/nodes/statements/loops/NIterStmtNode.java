@@ -6,7 +6,7 @@ import com.oracle.truffle.api.nodes.LoopNode;
 import org.nimbus.language.nodes.NNode;
 import org.nimbus.language.runtime.NimNil;
 
-public class NIterStmtNode extends NNode {
+public final class NIterStmtNode extends NNode {
   @SuppressWarnings("FieldMayBeFinal")
   @Child private NNode initializer;
 

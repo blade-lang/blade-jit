@@ -19,7 +19,7 @@ public abstract class NStringUpperMethodNode extends NBuiltinFunctionNode {
     }
 
     return fromJavaStringNode.execute(
-      self.toJavaStringUncached().toUpperCase(),
+      NString.toUpper(self.toJavaStringUncached()),
       NimbusLanguage.ENCODING
     );
   }

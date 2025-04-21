@@ -14,6 +14,9 @@ import com.oracle.truffle.api.object.Shape;
 import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.strings.TruffleString;
 import org.nimbus.language.builtins.AbsBuiltinFunctionNodeFactory;
+import org.nimbus.language.builtins.MicroTimeBuiltinFunctionNodeFactory;
+import org.nimbus.language.builtins.TimeBuiltinFunctionNode;
+import org.nimbus.language.builtins.TimeBuiltinFunctionNodeFactory;
 import org.nimbus.language.builtins.object.NObjectHasPropMethodNodeFactory;
 import org.nimbus.language.builtins.object.NObjectToStringMethodNodeFactory;
 import org.nimbus.language.builtins.string.NStringIndexOfMethodNodeFactory;
@@ -119,6 +122,8 @@ public class NimbusLanguage extends TruffleLanguage<NimContext> {
 
     // built-in functions
     defineBuiltinFunction(objectLibrary, globalScope, "abs", AbsBuiltinFunctionNodeFactory.getInstance());
+    defineBuiltinFunction(objectLibrary, globalScope, "time", TimeBuiltinFunctionNodeFactory.getInstance());
+    defineBuiltinFunction(objectLibrary, globalScope, "microtime", MicroTimeBuiltinFunctionNodeFactory.getInstance());
 
     // Object class
     defineBuiltinMethod(objectLibrary, objectClass, "has_prop", NObjectHasPropMethodNodeFactory.getInstance());
