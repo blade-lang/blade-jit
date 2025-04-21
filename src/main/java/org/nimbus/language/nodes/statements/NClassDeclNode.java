@@ -1,5 +1,6 @@
 package org.nimbus.language.nodes.statements;
 
+import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 import org.nimbus.language.nodes.NNode;
@@ -11,6 +12,7 @@ public final class NClassDeclNode extends NNode {
   @Children
   private final NNode[] methods;
 
+  @CompilerDirectives.CompilationFinal
   private final NimClass classObject;
 
   public NClassDeclNode(List<NNode> methods, NimClass classObject) {

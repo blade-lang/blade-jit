@@ -10,10 +10,11 @@ import java.util.List;
 public final class NMethodCallExprNode extends NNode {
 
   @SuppressWarnings("FieldMayBeFinal")
-  @Child protected NNode target;
+  @Child
+  private NNode target;
 
   @Children
-  protected final NNode[] arguments;
+  private final NNode[] arguments;
 
   @SuppressWarnings("FieldMayBeFinal")
   @Child private NMethodDispatchNode dispatchNode;

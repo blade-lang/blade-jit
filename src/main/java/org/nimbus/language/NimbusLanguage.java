@@ -61,7 +61,6 @@ public class NimbusLanguage extends TruffleLanguage<NimContext> {
   // Shapes
   public final Shape rootShape = Shape.newBuilder().build();
   public final Shape listShape = createShape(NListObject.class);
-  private final DynamicObjectLibrary objectLibrary = DynamicObjectLibrary.getUncached();
   // models
   private final NObject objectClass = new NObject(rootShape);
   private final NimClass functionClass = new NimClass(rootShape, "Function", objectClass);

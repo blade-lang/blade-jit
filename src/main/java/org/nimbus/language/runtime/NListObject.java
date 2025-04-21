@@ -1,5 +1,6 @@
 package org.nimbus.language.runtime;
 
+import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.dsl.Fallback;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.interop.InteropLibrary;
@@ -18,6 +19,7 @@ import java.util.List;
 public class NListObject extends NimObject {
   static final String LENGTH_PROP = "length";
 
+  @CompilerDirectives.CompilationFinal(dimensions = 1)
   private Object[] items;
 
   // List properties...
@@ -67,10 +69,10 @@ public class NListObject extends NimObject {
   @ExportMessage
   Object readMember(String member,
                     @CachedLibrary("this") DynamicObjectLibrary objectLibrary) throws UnknownIdentifierException {
-    switch (member) {
-      case "length": return objectLibrary.getOrDefault(this, "length", 0);
-      default: throw UnknownIdentifierException.create(member);
-    }
+    return switch (member) {
+      case "length" -> objectLibrary.getOrDefault(this, "length", 0);
+      default -> throw UnknownIdentifierException.create(member);
+    };
   }
 
   @ExportMessage

@@ -1,5 +1,6 @@
 package org.nimbus.language.nodes.statements;
 
+import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import org.nimbus.language.nodes.NNode;
 import org.nimbus.language.nodes.NStmtNode;
@@ -9,6 +10,8 @@ public final class NExprStmtNode extends NStmtNode {
   @SuppressWarnings("FieldMayBeFinal")
   @Child
   private NNode expr;
+
+  @CompilerDirectives.CompilationFinal
   private final boolean discardValue;
 
   public NExprStmtNode(NNode expr) {
