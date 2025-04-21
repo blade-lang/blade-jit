@@ -48,7 +48,7 @@ public abstract class NReadStringPropertyNode extends NBaseNode {
     try {
       return interopLibrary.readMember(stringClass, NString.tryToString(property));
     } catch (UnsupportedMessageException e) {
-      throw new NimRuntimeError(e.getMessage());
+      throw NimRuntimeError.create(e.getMessage());
     } catch (UnknownIdentifierException e) {
       return NimNil.SINGLETON;
     }

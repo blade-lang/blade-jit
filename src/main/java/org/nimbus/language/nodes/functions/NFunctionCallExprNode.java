@@ -8,6 +8,7 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 import org.nimbus.language.nodes.NNode;
 import org.nimbus.language.runtime.NFunctionObject;
+import org.nimbus.language.runtime.NString;
 import org.nimbus.language.runtime.NimNil;
 import org.nimbus.language.runtime.NimRuntimeError;
 
@@ -26,15 +27,15 @@ public abstract class NFunctionCallExprNode extends NNode {
   @Child private NFunctionDispatchNode dispatchNode = NFunctionDispatchNodeGen.create();
 
   @CompilerDirectives.CompilationFinal
-  protected final int argsPlus1;
+  protected final int argsMinus1;
 
   public NFunctionCallExprNode(NNode target, List<NNode> arguments) {
     this.target = target;
     this.arguments = arguments.toArray(new NNode[0]);
-    argsPlus1 = this.arguments.length + 1;
+    argsMinus1 = this.arguments.length - 1;
   }
 
-  @Specialization(guards = "function.argumentsCount == argsPlus1")
+  @Specialization(guards = "function.argumentsCount == argsMinus1")
   protected Object doSameSize(VirtualFrame frame, NFunctionObject function) {
     return dispatchNode.executeDispatch(function, consumeArguments(frame));
   }
@@ -47,7 +48,7 @@ public abstract class NFunctionCallExprNode extends NNode {
   @Fallback
   protected Object instantiateNonConstructor(VirtualFrame frame, Object object) {
     consumeArguments(frame);
-    throw new NimRuntimeError("'" + object + "' is not a callable function");
+    throw NimRuntimeError.create("'", object, "' is not a callable function");
   }
 
   @ExplodeLoop

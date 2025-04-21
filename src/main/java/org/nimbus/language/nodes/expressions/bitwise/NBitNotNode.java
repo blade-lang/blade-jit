@@ -19,6 +19,6 @@ public abstract class NBitNotNode extends NUnaryNode {
 
   @Fallback
   protected double doUnsupported(Object left) {
-    throw new NimRuntimeError("operation ~ is undefined for object type");
+    throw NimRuntimeError.create("operation ~ is undefined for object type");
   }
 }

@@ -60,7 +60,7 @@ graalvmNative {
         buildArgs.add('-H:MaxRuntimeCompileMethods=5400')
         buildArgs.add('--initialize-at-build-time=org.nimbus')
         buildArgs.add('--enable-native-access=org.graalvm.truffle')
-//        buildArgs.add('--enable-native-access=org.graalvm.polyglot')
+        buildArgs.add('--enable-native-access=org.graalvm.polyglot')
     }
 
     binaries.test {

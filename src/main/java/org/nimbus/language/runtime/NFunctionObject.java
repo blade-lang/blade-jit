@@ -1,6 +1,7 @@
 package org.nimbus.language.runtime;
 
 import com.oracle.truffle.api.CallTarget;
+import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.interop.InteropLibrary;
 import com.oracle.truffle.api.library.ExportLibrary;
 import com.oracle.truffle.api.library.ExportMessage;
@@ -43,6 +44,7 @@ public final class NFunctionObject extends NimObject {
     return false;
   }
 
+  @CompilerDirectives.TruffleBoundary
   @ExportMessage
   Object toDisplayString(@SuppressWarnings("unused") boolean allowSideEffects) {
     return toString();
@@ -50,7 +52,7 @@ public final class NFunctionObject extends NimObject {
 
   @Override
   public String toString() {
-    return String.format("<function %s() at 0x%x>", name, callTarget.hashCode());
+    return NString.format("<function %s() at 0x%x>", name, callTarget.hashCode());
   }
 
   @ExplodeLoop
@@ -58,7 +60,7 @@ public final class NFunctionObject extends NimObject {
   Object execute(Object[] arguments) {
     for (Object argument : arguments) {
       if (!isRemValue(argument)) {
-        throw new NimRuntimeError("invalid function argument value '" + argument + "'");
+        throw NimRuntimeError.create("invalid function argument value '", argument, "'");
       }
     }
 

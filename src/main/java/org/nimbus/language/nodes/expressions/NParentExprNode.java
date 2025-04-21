@@ -39,7 +39,7 @@ public final class NParentExprNode extends NNode {
     try {
       return interopLibrary.readMember(nimClass.classObject, "@new");
     } catch (UnsupportedMessageException e) {
-      throw new NimRuntimeError(e.getMessage());
+      throw NimRuntimeError.create(e.getMessage());
     } catch (UnknownIdentifierException e) {
       return languageContext().emptyFunction;
     }

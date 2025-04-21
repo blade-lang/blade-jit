@@ -8,6 +8,7 @@ import com.oracle.truffle.api.object.DynamicObject;
 import com.oracle.truffle.api.object.DynamicObjectLibrary;
 import org.nimbus.language.nodes.NGlobalScopeObjectNode;
 import org.nimbus.language.nodes.NNode;
+import org.nimbus.language.runtime.NString;
 import org.nimbus.language.runtime.NimRuntimeError;
 
 @NodeChild(value = "globalScopeNode", type = NGlobalScopeObjectNode.class)
@@ -22,7 +23,7 @@ public abstract class NGlobalVarRefExprNode extends NNode {
 
     Object value = objectLibrary.getOrDefault(globalScope, name, null);
     if (value == null) {
-      throw new NimRuntimeError("'" + name + "' is not defined in this scope");
+      throw NimRuntimeError.create("'", name, "' is not defined in this scope");
     }
     return value;
   }

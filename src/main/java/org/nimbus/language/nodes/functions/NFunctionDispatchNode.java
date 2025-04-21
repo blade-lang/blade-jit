@@ -7,6 +7,7 @@ import com.oracle.truffle.api.nodes.DirectCallNode;
 import com.oracle.truffle.api.nodes.IndirectCallNode;
 import com.oracle.truffle.api.nodes.Node;
 import org.nimbus.language.runtime.NFunctionObject;
+import org.nimbus.language.runtime.NString;
 import org.nimbus.language.runtime.NimRuntimeError;
 
 @SuppressWarnings("truffle-inlining")
@@ -32,6 +33,6 @@ public abstract class NFunctionDispatchNode extends Node {
 
   @Fallback
   protected Object invalidFunctionCall(Object object, Object[] arguments) {
-    throw new NimRuntimeError("cannot call non-function '" + object + "'");
+    throw NimRuntimeError.create("cannot call non-function '", object, "'");
   }
 }

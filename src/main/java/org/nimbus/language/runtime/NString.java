@@ -1,6 +1,7 @@
 package org.nimbus.language.runtime;
 
 import com.oracle.truffle.api.CompilerDirectives;
+import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.strings.TruffleString;
 import org.nimbus.language.NimbusLanguage;
 
@@ -74,5 +75,23 @@ public final class NString {
   @CompilerDirectives.TruffleBoundary
   public static String join(String joinString, List<String> items) {
     return String.join(joinString, items);
+  }
+
+  @CompilerDirectives.TruffleBoundary
+  public static String format(String format, Object ...args) {
+    return String.format(format, args);
+  }
+
+  @CompilerDirectives.TruffleBoundary
+  @ExplodeLoop
+  public static String concatString(String original, Object ...others) {
+    StringBuilder builder = new StringBuilder();
+    builder.append(original);
+
+    for(Object o : others) {
+      builder.append(o.toString());
+    }
+
+    return builder.toString();
   }
 }

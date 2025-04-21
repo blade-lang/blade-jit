@@ -213,7 +213,7 @@ public class NimTranslator extends BaseVisitor<NNode> {
         } else {
           NFrameMember.LocalVariable local = (NFrameMember.LocalVariable) member;
           if (local.constant) {
-            throw new NimRuntimeError("Assignment to constant variable '" + name + "'");
+            throw NimRuntimeError.create("Assignment to constant variable '", name, "'");
           }
 
           return NLocalAssignNodeGen.create(value, local.index);
@@ -229,7 +229,7 @@ public class NimTranslator extends BaseVisitor<NNode> {
       }
     }
 
-    throw new NimRuntimeError("Invalid assignment expression");
+    throw NimRuntimeError.create("Invalid assignment expression");
   }
 
   @Override
@@ -278,7 +278,7 @@ public class NimTranslator extends BaseVisitor<NNode> {
     if (expr.arguments.size() == 1) {
       return NListIndexReadNodeGen.create(visitExpr(expr.callee), visitExpr(expr.arguments.getFirst()));
     }
-    throw new NimRuntimeError("Slices are not yet supported");
+    throw NimRuntimeError.create("Slices are not yet supported");
   }
 
   @Override
@@ -317,7 +317,7 @@ public class NimTranslator extends BaseVisitor<NNode> {
     String name = stmt.name.literal();
 
     if (isConstant && stmt.value == null) {
-      throw new NimRuntimeError("Constant '" + name + "' not initialized");
+      throw NimRuntimeError.create("Constant '", name, "' not initialized");
     }
 
     NNode value = stmt.value != null ? visitExpr(stmt.value) : new NNilLiteralNode();
@@ -326,7 +326,7 @@ public class NimTranslator extends BaseVisitor<NNode> {
       NLocalRefSlot slotId = new NLocalRefSlot(name, ++localsCount);
       int slot = frameDescriptor.addSlot(FrameSlotKind.Illegal, slotId, isConstant);
       if (localScopes.peek().putIfAbsent(name, new NFrameMember.LocalVariable(slot, isConstant)) != null) {
-        throw new NimRuntimeError("'" + name + "' already declared in this scope");
+        throw NimRuntimeError.create("'", name, "' already declared in this scope");
       }
 
       NLocalAssignNode assignment = NLocalAssignNodeGen.create(value, slot);
@@ -419,7 +419,7 @@ public class NimTranslator extends BaseVisitor<NNode> {
   @Override
   public NNode visitReturnStmt(Stmt.Return stmt) {
     if (state != ParserState.FUNC_DEF) {
-      throw new NimRuntimeError("`return` keyword is not allowed in this scope");
+      throw NimRuntimeError.create("`return` keyword is not allowed in this scope");
     }
 
     return new NReturnStmtNode(
@@ -432,7 +432,7 @@ public class NimTranslator extends BaseVisitor<NNode> {
   @Override
   public NNode visitClassStmt(Stmt.Class stmt) {
     if (state == ParserState.FUNC_DEF) {
-      throw new NimRuntimeError("Classes cannot be nested in functions");
+      throw NimRuntimeError.create("Classes cannot be nested in functions");
     }
 
     String className = stmt.name.literal();
@@ -446,7 +446,7 @@ public class NimTranslator extends BaseVisitor<NNode> {
       NimClass superClassObject = classMember.object;
       classObject = new NimClass(objectShape, className, superClassObject);
     } else {
-      throw new NimRuntimeError("Class '" + className + "' extends unknown class '" + superClass + "'");
+      throw NimRuntimeError.create("Class '", className, "' extends unknown class '", superClass, "'");
     }
 
     localScopes.getFirst().put(className, new NFrameMember.ClassObject(classObject));
@@ -479,7 +479,7 @@ public class NimTranslator extends BaseVisitor<NNode> {
   @Override
   public NNode visitSelfExpr(Expr.Self expr) {
     if(currentClass == null) {
-      throw new NimRuntimeError("`self` keyword not allowed outside a class");
+      throw NimRuntimeError.create("`self` keyword not allowed outside a class");
     }
 
     return new NSelfLiteralNode();
@@ -488,7 +488,7 @@ public class NimTranslator extends BaseVisitor<NNode> {
   @Override
   public NNode visitParentExpr(Expr.Parent expr) {
     if(currentClass == null) {
-      throw new NimRuntimeError("`parent` keyword not allowed outside a class");
+      throw NimRuntimeError.create("`parent` keyword not allowed outside a class");
     }
 
     return new NParentExprNode(currentClass);

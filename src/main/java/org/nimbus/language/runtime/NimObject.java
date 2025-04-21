@@ -22,11 +22,13 @@ public class NimObject extends DynamicObject {
     this.classObject = classObject;
   }
 
+  @CompilerDirectives.TruffleBoundary
   @Override
   public String toString() {
-    return String.format("<class %s instance at 0x%x>", ((NimClass) classObject).name, classObject.hashCode());
+    return NString.format("<class %s instance at 0x%x>", ((NimClass) classObject).name, hash());
   }
 
+  @CompilerDirectives.TruffleBoundary
   @ExportMessage
   Object toDisplayString(@SuppressWarnings("unused") boolean allowSideEffects) {
     return toString();
@@ -107,5 +109,10 @@ public class NimObject extends DynamicObject {
   @CompilerDirectives.TruffleBoundary
   public String getClassName() {
     return ((NimClass) classObject).name;
+  }
+
+  @CompilerDirectives.TruffleBoundary
+  protected long hash() {
+    return classObject.hashCode();
   }
 }

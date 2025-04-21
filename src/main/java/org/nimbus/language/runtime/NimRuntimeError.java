@@ -26,6 +26,16 @@ public class NimRuntimeError extends AbstractTruffleException {
   }
 
   @CompilerDirectives.TruffleBoundary
+  public static AbstractTruffleException create(String message) {
+    return new NimRuntimeError(message);
+  }
+
+  @CompilerDirectives.TruffleBoundary
+  public static AbstractTruffleException create(String message, Object ...others) {
+    return new NimRuntimeError(NString.concatString(message, others));
+  }
+
+  @CompilerDirectives.TruffleBoundary
   public static AbstractTruffleException argumentError(Node node, String operationName, Object... values) {
     StringBuilder result = new StringBuilder();
     result.append("Type error");
@@ -66,5 +76,15 @@ public class NimRuntimeError extends AbstractTruffleException {
     result.append(")");
 
     return NimRuntimeError.create(NString.toString(result), node);
+  }
+
+  @CompilerDirectives.TruffleBoundary
+  public static void error(Node node, String format, Object ...params) {
+    throw NimRuntimeError.create(String.format(format, params), node);
+  }
+
+  @CompilerDirectives.TruffleBoundary
+  public static void error(String format, Object ...params) {
+    throw NimRuntimeError.create(String.format(format, params));
   }
 }

@@ -34,14 +34,14 @@ public abstract class NSharedPropertyReaderNode extends NBaseNode {
     } catch (UnknownIdentifierException e) {
       return NimNil.SINGLETON;
     } catch (UnsupportedMessageException e) {
-      throw new NimRuntimeError(e.getMessage());
+      throw NimRuntimeError.create(e.getMessage());
     }
   }
 
   @Specialization(guards = "interopLibrary.isNull(target)", limit = "3")
   protected Object doNil(Object target, Object property,
                          @CachedLibrary("target") InteropLibrary interopLibrary) {
-    throw new NimRuntimeError("Cannot read properties of nil (reading '" + property + "')");
+    throw NimRuntimeError.create("Cannot read properties of nil (reading '", property, "')");
   }
 
   @Fallback

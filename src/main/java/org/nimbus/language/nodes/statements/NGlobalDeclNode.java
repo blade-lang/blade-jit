@@ -10,6 +10,7 @@ import com.oracle.truffle.api.object.DynamicObjectLibrary;
 import org.nimbus.language.nodes.NGlobalScopeObjectNode;
 import org.nimbus.language.nodes.NNode;
 import org.nimbus.language.nodes.NStmtNode;
+import org.nimbus.language.runtime.NString;
 import org.nimbus.language.runtime.NimNil;
 import org.nimbus.language.runtime.NimRuntimeError;
 
@@ -34,7 +35,7 @@ public abstract class NGlobalDeclNode extends NStmtNode {
       exists = false;
 
       if (objectLibrary.containsKey(globalScope, name)) {
-        throw new NimRuntimeError("'" + name + "' already declared in this scope");
+        throw NimRuntimeError.create("'", name, "' already declared in this scope");
       }
     }
 

@@ -19,6 +19,6 @@ public abstract class NNegateNode extends NUnaryNode {
 
   @Fallback
   protected double doUnsupported(Object value) {
-    throw new NimRuntimeError("operation - is undefined for object type");
+    throw NimRuntimeError.create("operation - is undefined for object type");
   }
 }

@@ -9,6 +9,7 @@ import com.oracle.truffle.api.object.DynamicObjectLibrary;
 import com.oracle.truffle.api.object.Property;
 import org.nimbus.language.nodes.NGlobalScopeObjectNode;
 import org.nimbus.language.nodes.NNode;
+import org.nimbus.language.runtime.NString;
 import org.nimbus.language.runtime.NimRuntimeError;
 
 @NodeChild(value = "globalScopeNode", type = NGlobalScopeObjectNode.class)
@@ -24,9 +25,9 @@ public abstract class NGlobalAssignExprNode extends NNode {
 
     Property property = objectLibrary.getProperty(globalScope, name);
     if (property == null) {
-      throw new NimRuntimeError("'" + name + "' is not defined in this scope");
+      throw NimRuntimeError.create("'", name, "' is not defined in this scope");
     } else if (property.getFlags() == 1) {
-      throw new NimRuntimeError("Assignment to constant variable '" + name + "'");
+      throw NimRuntimeError.create("Assignment to constant variable '", name, "'");
     }
 
     objectLibrary.put(globalScope, name, value);

@@ -23,7 +23,7 @@ public abstract class NListIndexWriteNode extends NNode {
     try {
       listLibrary.writeArrayElement(list, index, value);
     } catch (UnsupportedMessageException | InvalidArrayIndexException | UnsupportedTypeException e) {
-      throw new NimRuntimeError(e.getMessage());
+      throw NimRuntimeError.create(e.getMessage());
     }
 
     return value;
@@ -55,7 +55,7 @@ public abstract class NListIndexWriteNode extends NNode {
     Object list, long index, Object value,
     @CachedLibrary("list") InteropLibrary listLibrary
   ) {
-    throw new NimRuntimeError("Cannot set properties of " + list + " (reading '" + index + "')");
+    throw NimRuntimeError.create("Cannot set properties of " , list, " (reading '" , index, "')", this);
   }
 
   @Fallback
@@ -64,7 +64,7 @@ public abstract class NListIndexWriteNode extends NNode {
     @Cached @Cached.Shared("sharedPropertyWriterNode") NSharedPropertyWriterNode sharedPropertyWriterNode
   ) {
     if(index instanceof Long || index instanceof Double) {
-      throw new NimRuntimeError("List index " + index + " out of range");
+      throw NimRuntimeError.create("List index ", index," out of range");
     }
 
     return sharedPropertyWriterNode.executeWrite(target, NString.toString(index), value);

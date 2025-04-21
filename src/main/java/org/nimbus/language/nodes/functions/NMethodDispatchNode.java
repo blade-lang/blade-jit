@@ -6,6 +6,7 @@ import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.nodes.IndirectCallNode;
 import com.oracle.truffle.api.nodes.Node;
 import org.nimbus.language.runtime.NFunctionObject;
+import org.nimbus.language.runtime.NString;
 import org.nimbus.language.runtime.NimNil;
 import org.nimbus.language.runtime.NimRuntimeError;
 
@@ -35,7 +36,7 @@ public abstract class NMethodDispatchNode extends Node {
 
   @Fallback
   protected Object invalidFunctionCall(Object object, Object receiver, Object[] arguments) {
-    throw new NimRuntimeError("cannot call non-function '" + object + "'");
+    throw NimRuntimeError.create("cannot call non-function '", object, "'");
   }
 
   @ExplodeLoop

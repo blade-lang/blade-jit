@@ -26,6 +26,6 @@ public abstract class NStringUpperMethodNode extends NBuiltinFunctionNode {
 
   @Fallback
   protected Object upper(Object self) {
-    throw new NimRuntimeError("invalid call to string.upper()");
+    throw NimRuntimeError.create("invalid call to string.upper()");
   }
 }

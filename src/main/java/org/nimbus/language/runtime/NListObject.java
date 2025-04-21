@@ -80,7 +80,7 @@ public class NListObject extends NimObject {
     if (this.isArrayElementModifiable(index)) {
       items[(int) index] = value;
     } else {
-      throw new NimRuntimeError("List index " + index + " out of range");
+      throw NimRuntimeError.create("List index ", index, " out of range");
     }
   }
 
@@ -88,7 +88,7 @@ public class NListObject extends NimObject {
   static class WriteMember {
     @Specialization(guards = "LENGTH_PROP.equals(member)")
     static void writeLength(NListObject list, String member, Object value) {
-      throw new NimRuntimeError("Direct modification of list.length prohibited");
+      throw NimRuntimeError.create("Direct modification of list.length prohibited");
     }
 
     @Fallback

@@ -1,5 +1,6 @@
 package org.nimbus.language.runtime;
 
+import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.TruffleLanguage;
 import com.oracle.truffle.api.interop.InteropLibrary;
 import com.oracle.truffle.api.interop.UnknownIdentifierException;
@@ -90,4 +91,10 @@ public class NGlobalScopeObject extends DynamicObject {
 
   @ExportMessage
   Object toDisplayString(@SuppressWarnings("unused") boolean allowSideEffects) { return toString(); }
+
+  @CompilerDirectives.TruffleBoundary
+  @Override
+  public String toString() {
+    return super.toString();
+  }
 }

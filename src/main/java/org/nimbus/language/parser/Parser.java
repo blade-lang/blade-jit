@@ -186,7 +186,7 @@ public class Parser {
     match(INTERPOLATION);
 
     Expr expr = new Expr.Literal(
-      previous().copyToType(LITERAL, previous().literal().substring(1, previous().literal().length() - 1))
+      previous().copyToType(LITERAL, previous().literal())
     );
 
     do {

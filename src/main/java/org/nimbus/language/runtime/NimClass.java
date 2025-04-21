@@ -1,5 +1,6 @@
 package org.nimbus.language.runtime;
 
+import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.interop.InteropLibrary;
 import com.oracle.truffle.api.interop.UnsupportedMessageException;
 import com.oracle.truffle.api.library.ExportLibrary;
@@ -18,11 +19,13 @@ public class NimClass extends NimObject {
     this.name = name;
   }
 
+  @CompilerDirectives.TruffleBoundary
   @Override
   public String toString() {
     return "<class " + name + ">";
   }
 
+  @CompilerDirectives.TruffleBoundary
   @ExportMessage
   Object toDisplayString(@SuppressWarnings("unused") boolean allowSideEffects) {
     return toString();

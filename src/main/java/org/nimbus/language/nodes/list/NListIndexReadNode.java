@@ -60,7 +60,7 @@ public abstract class NListIndexReadNode extends NNode {
       try {
         return listLibrary.readArrayElement(list, index);
       } catch (UnsupportedMessageException | InvalidArrayIndexException e) {
-        throw new NimRuntimeError(e.getMessage());
+        throw NimRuntimeError.create(e.getMessage());
       }
     }
 
@@ -88,7 +88,7 @@ public abstract class NListIndexReadNode extends NNode {
     @Specialization(guards = "listLibrary.isNull(list)", limit = "3")
     protected Object doNil(Object list, long index,
                            @CachedLibrary("list") InteropLibrary listLibrary) {
-      throw new NimRuntimeError("Cannot read properties of nil (reading '" + index + "')");
+      throw NimRuntimeError.create("Cannot read properties of nil (reading '", index, "')");
     }
 
     @Specialization(guards = "interopLibrary.hasMembers(list)", limit = "3")
@@ -106,7 +106,7 @@ public abstract class NListIndexReadNode extends NNode {
       @Cached @Cached.Shared("propertyReaderNode") NSharedPropertyReaderNode propertyReaderNode
     ) {
       if(list instanceof NListObject && NimTypesGen.isImplicitDouble(index)) {
-        throw new NimRuntimeError("List index " + index +" out of range");
+        throw NimRuntimeError.create("List index ", index, " out of range");
       }
       return propertyReaderNode.executeRead(list, index);
     }

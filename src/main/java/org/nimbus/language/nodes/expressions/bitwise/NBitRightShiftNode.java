@@ -19,7 +19,7 @@ public abstract class NBitRightShiftNode extends NBinaryNode {
 
   @Fallback
   protected double doUnsupported(Object left, Object right) {
-    throw new NimRuntimeError("operation >> is undefined for object of types");
+    throw NimRuntimeError.create("operation >> is undefined for object of types");
   }
 
   private int toUInt32(long value) {

@@ -65,6 +65,7 @@ public final class NimType implements TruffleObject {
     return name;
   }
 
+  @CompilerDirectives.TruffleBoundary
   @Override
   public String toString() {
     return "RemType[" + name + "]";

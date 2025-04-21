@@ -1,5 +1,6 @@
 package org.nimbus.language.parser;
 
+import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.exception.AbstractTruffleException;
 import com.oracle.truffle.api.interop.ExceptionType;
 import com.oracle.truffle.api.interop.InteropLibrary;
@@ -41,6 +42,7 @@ public class ParserException extends AbstractTruffleException {
     return source != null;
   }
 
+  @CompilerDirectives.TruffleBoundary
   @ExportMessage(name = "getSourceLocation")
   SourceSection getSourceSection() throws UnsupportedMessageException {
     if (source == null) {
