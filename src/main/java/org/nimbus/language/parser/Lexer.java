@@ -2,6 +2,8 @@ package org.nimbus.language.parser;
 
 import com.oracle.truffle.api.source.Source;
 
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 import static org.nimbus.language.parser.TokenType.*;
@@ -252,7 +254,7 @@ public class Lexer {
         if (interpolating.size() < MAX_INTERPOLATION_NESTING) {
           interpolating.push(c);
           current++;
-          addToken(INTERPOLATION);
+          addToken(INTERPOLATION, getUnquotedString(c));
           current++;
           return;
         }
@@ -275,7 +277,7 @@ public class Lexer {
     }
 
     match(c);
-    addToken(LITERAL, sourceCharacters.subSequence(start + 1, current - 1).toString());
+    addToken(LITERAL, getUnquotedString(c));
   }
 
   /**
@@ -532,5 +534,26 @@ public class Lexer {
 
   public Source getSource() {
     return source;
+  }
+
+  private String getUnquotedString(char quote) {
+    Charset UTF_8 = StandardCharsets.UTF_8;
+
+    return new String(
+      sourceCharacters.subSequence(start + 1, current - 1).toString()
+        .replaceAll("\\\\0", "\0")
+        .replaceAll("\\\\$", "$")
+        .replaceAll("\\\\'", quote == '\'' || quote == '}' ? "'" : "\\'")
+        .replaceAll("\\\\\"", quote == '\"' || quote == '}' ? "'" : "\\\"")
+        .replaceAll("\\\\b", "\b")
+        .replaceAll("\\\\f", "\f")
+        .replaceAll("\\\\n", "\n")
+        .replaceAll("\\\\r", "\r")
+        .replaceAll("\\\\t", "\t")
+        .replaceAll("\\\\\\\\", "\\\\")
+        .replaceAll("\\n", "\n")
+        .getBytes(UTF_8),
+      UTF_8
+    );
   }
 }
