@@ -1,5 +1,6 @@
 package org.nimbus.language.runtime;
 
+import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.interop.InteropLibrary;
 import com.oracle.truffle.api.interop.InvalidArrayIndexException;
 import com.oracle.truffle.api.interop.TruffleObject;
@@ -12,10 +13,12 @@ import java.util.Set;
 
 @ExportLibrary(InteropLibrary.class)
 public final class NGlobalNamesObject implements TruffleObject {
-  private final List<String> names;
+
+  @CompilerDirectives.CompilationFinal(dimensions = 1)
+  private final String[] names;
 
   public NGlobalNamesObject(Set<String> names) {
-    this.names = new ArrayList<>(names);
+    this.names = names.toArray(new String[0]);
   }
 
   @ExportMessage
@@ -25,12 +28,12 @@ public final class NGlobalNamesObject implements TruffleObject {
 
   @ExportMessage
   long getArraySize() {
-    return names.size();
+    return names.length;
   }
 
   @ExportMessage
   boolean isArrayElementReadable(long index) {
-    return index >= 0 && index < names.size();
+    return index >= 0 && index < names.length;
   }
 
   @ExportMessage
@@ -38,6 +41,6 @@ public final class NGlobalNamesObject implements TruffleObject {
     if (!this.isArrayElementReadable(index)) {
       throw InvalidArrayIndexException.create(index);
     }
-    return names.get((int) index);
+    return names[(int) index];
   }
 }

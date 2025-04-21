@@ -11,6 +11,7 @@ import org.nimbus.language.runtime.NimClass;
 import org.nimbus.language.runtime.NimRuntimeError;
 
 public final class NParentExprNode extends NNode {
+  @CompilerDirectives.CompilationFinal
   private final NimClass nimClass;
 
   @SuppressWarnings("FieldMayBeFinal")

@@ -1,9 +1,11 @@
 package org.nimbus.language.nodes.literals;
 
+import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import org.nimbus.language.nodes.NNode;
 
 public final class NDoubleLiteralNode extends NNode {
+  @CompilerDirectives.CompilationFinal
   private final double value;
 
   public NDoubleLiteralNode(double value) {

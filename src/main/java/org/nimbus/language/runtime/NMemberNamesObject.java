@@ -1,5 +1,6 @@
 package org.nimbus.language.runtime;
 
+import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.interop.InteropLibrary;
 import com.oracle.truffle.api.interop.InvalidArrayIndexException;
 import com.oracle.truffle.api.interop.TruffleObject;
@@ -8,6 +9,7 @@ import com.oracle.truffle.api.library.ExportMessage;
 
 @ExportLibrary(InteropLibrary.class)
 public final class NMemberNamesObject implements TruffleObject {
+  @CompilerDirectives.CompilationFinal(dimensions = 1)
   private final Object[] names;
 
   public NMemberNamesObject(Object[] names) {

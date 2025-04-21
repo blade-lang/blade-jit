@@ -1,6 +1,7 @@
 package org.nimbus.language.runtime;
 
 import com.oracle.truffle.api.CallTarget;
+import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.interop.InteropLibrary;
 import com.oracle.truffle.api.library.ExportLibrary;
 import com.oracle.truffle.api.library.ExportMessage;
@@ -13,11 +14,19 @@ import org.nimbus.language.nodes.functions.NMethodDispatchNodeGen;
 
 @ExportLibrary(InteropLibrary.class)
 public final class NFunctionObject extends NimObject {
+  @CompilerDirectives.CompilationFinal
   private final NMethodDispatchNode dispatchNode;
 
+  @CompilerDirectives.CompilationFinal
   public final String name;
+
+  @CompilerDirectives.CompilationFinal
   public final Object methodTarget;
+
+  @CompilerDirectives.CompilationFinal
   public CallTarget callTarget;
+
+  @CompilerDirectives.CompilationFinal
   public final int argumentsCount;
 
   public NFunctionObject(Shape shape, NimClass classObject, String name, CallTarget target, int argumentsCount) {

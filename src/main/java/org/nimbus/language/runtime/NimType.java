@@ -26,7 +26,10 @@ public final class NimType implements TruffleObject {
   @CompilerDirectives.CompilationFinal(dimensions = 1)
   public static final NimType[] PRECEDENCE = new NimType[]{NIL, BOOLEAN, NUMBER, STRING, LIST, FUNCTION, CLASS, OBJECT};
 
+  @CompilerDirectives.CompilationFinal
   private final String name;
+
+  @CompilerDirectives.CompilationFinal
   private final TypeCheck isInstance;
 
   private NimType(String name, TypeCheck isInstance) {
