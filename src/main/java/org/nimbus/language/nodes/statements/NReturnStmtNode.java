@@ -4,7 +4,7 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import org.nimbus.language.nodes.NNode;
 import org.nimbus.language.nodes.NStmtNode;
 
-public class NReturnStmtNode extends NStmtNode {
+public final class NReturnStmtNode extends NStmtNode {
   @SuppressWarnings("FieldMayBeFinal")
   @Child private NNode value;
 

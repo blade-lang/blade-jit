@@ -24,9 +24,7 @@ public final class NFunctionBodyNode extends NNode {
   public Object execute(VirtualFrame frame) {
     for (NNode node : nodes) {
       try {
-        if (node != null) {
-          node.execute(frame);
-        }
+        node.execute(frame);
       } catch (NReturnException e) {
         exceptionTaken.enter();
         return e.value;

@@ -8,4 +8,9 @@ public final class NSelfLiteralNode extends NNode {
   public Object execute(VirtualFrame frame) {
     return frame.getArguments()[0];
   }
+
+  @Override
+  public boolean executeBoolean(VirtualFrame frame) {
+    return true;
+  }
 }

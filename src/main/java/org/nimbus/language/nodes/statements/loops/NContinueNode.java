@@ -6,6 +6,6 @@ import org.nimbus.language.nodes.NNode;
 public final class NContinueNode extends NNode {
   @Override
   public Object execute(VirtualFrame frame) {
-    throw new NContinueException();
+    throw NContinueException.SINGLETON;
   }
 }

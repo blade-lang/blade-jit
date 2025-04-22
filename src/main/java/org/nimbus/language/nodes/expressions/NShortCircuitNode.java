@@ -7,7 +7,10 @@ import org.nimbus.language.nodes.NNode;
 import org.nimbus.language.runtime.NimRuntimeError;
 
 public abstract class NShortCircuitNode extends NNode {
+  @SuppressWarnings("FieldMayBeFinal")
   @Child private NNode left;
+
+  @SuppressWarnings("FieldMayBeFinal")
   @Child private NNode right;
 
   protected abstract boolean isEvaluateRight(boolean leftValue);

@@ -1,6 +1,7 @@
 package org.nimbus.language.nodes.functions;
 
 import com.oracle.truffle.api.CompilerDirectives;
+import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.Executed;
 import com.oracle.truffle.api.dsl.Fallback;
 import com.oracle.truffle.api.dsl.Specialization;
@@ -36,13 +37,15 @@ public abstract class NFunctionCallExprNode extends NNode {
   }
 
   @Specialization(guards = "function.argumentsCount == argsMinus1")
-  protected Object doSameSize(VirtualFrame frame, NFunctionObject function) {
-    return dispatchNode.executeDispatch(function, consumeArguments(frame));
+  protected Object doSameSize(VirtualFrame frame, NFunctionObject function,
+                              @Cached("function") NFunctionObject cachedFunction) {
+    return dispatchNode.executeDispatch(cachedFunction, consumeArguments(frame));
   }
 
   @Specialization(replaces = "doSameSize")
-  protected Object doNotSameSize(VirtualFrame frame, NFunctionObject function) {
-    return dispatchNode.executeDispatch(function, extendArguments(function, consumeArguments(frame)));
+  protected Object doNotSameSize(VirtualFrame frame, NFunctionObject function,
+                                 @Cached("function") NFunctionObject cachedFunction) {
+    return dispatchNode.executeDispatch(cachedFunction, extendArguments(function, consumeArguments(frame)));
   }
 
   @Fallback

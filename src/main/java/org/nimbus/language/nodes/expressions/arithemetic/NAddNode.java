@@ -57,7 +57,7 @@ public abstract class NAddNode extends NBinaryNode {
 
   @Fallback
   protected double doUnsupported(Object left, Object right) {
-    throw NimRuntimeError.create("operation + is undefined for object of types");
+    throw NimRuntimeError.argumentError(this,"operation +", left, right);
   }
 
   protected static boolean isString(Object left, Object right) {

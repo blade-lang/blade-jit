@@ -6,6 +6,6 @@ import org.nimbus.language.nodes.NNode;
 public final class NBreakNode extends NNode {
   @Override
   public Object execute(VirtualFrame frame) {
-    throw new NBreakException();
+    throw NBreakException.SINGLETON;
   }
 }
