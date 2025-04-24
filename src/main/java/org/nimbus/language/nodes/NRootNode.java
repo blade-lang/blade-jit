@@ -10,14 +10,17 @@ public class NRootNode extends RootNode {
   @Child
   private NNode stmtNode;
 
-  public NRootNode(NimbusLanguage language, NNode stmtNode) {
-    this(language, FrameDescriptor.newBuilder().build(), stmtNode);
+  private final String name;
+
+  public NRootNode(NimbusLanguage language, NNode stmtNode, String name) {
+    this(language, FrameDescriptor.newBuilder().build(), stmtNode, name);
     this.stmtNode = stmtNode;
   }
 
-  public NRootNode(NimbusLanguage language, FrameDescriptor frameDescriptor, NNode stmtNode) {
+  public NRootNode(NimbusLanguage language, FrameDescriptor frameDescriptor, NNode stmtNode, String name) {
     super(language, frameDescriptor);
     this.stmtNode = stmtNode;
+    this.name = name;
   }
 
   @Override
@@ -28,5 +31,10 @@ public class NRootNode extends RootNode {
   @Override
   public String toString() {
     return stmtNode.toString();
+  }
+
+  @Override
+  public String getName() {
+    return name;
   }
 }

@@ -85,6 +85,7 @@ public enum TokenType {
   RETURN,  // return token
   SELF,  // self token
   STATIC,  // static token
+  THEN,  // then token
   TRUE,  // true token
   USING,  // using token
   VAR,  // var token

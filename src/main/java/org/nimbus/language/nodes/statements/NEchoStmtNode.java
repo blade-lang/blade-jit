@@ -15,7 +15,8 @@ public final class NEchoStmtNode extends NNode {
 
   @Override
   public Object execute(VirtualFrame frame) {
-    NimUtils.print(object.execute(frame));
-    return NimNil.SINGLETON;
+    Object value = object.execute(frame);
+    NimUtils.print(value);
+    return value;
   }
 }

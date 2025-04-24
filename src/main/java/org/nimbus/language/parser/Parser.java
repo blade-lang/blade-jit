@@ -1,5 +1,8 @@
 package org.nimbus.language.parser;
 
+import com.oracle.truffle.api.source.SourceSection;
+import org.nimbus.language.nodes.NNode;
+import org.nimbus.language.parser.ast.AST;
 import org.nimbus.language.parser.ast.Expr;
 import org.nimbus.language.parser.ast.Stmt;
 
@@ -45,7 +48,7 @@ public class Parser {
     LSHIFT, GREATER, RSHIFT, URSHIFT, PERCENT, AMP, BAR,
     TILDE, XOR,
   };
-  private final Lexer lexer;
+  public final Lexer lexer;
   private final List<Token> tokens;
   private int blockCount = 0;
   private int current = 0;
@@ -207,6 +210,8 @@ public class Parser {
     List<Expr> arguments = new ArrayList<>();
 
     consume(LPAREN, "'(' expected after new class instance");
+    ignoreNewlines();
+
     if (!check(RPAREN)) {
       arguments.add(expression());
 
@@ -474,7 +479,7 @@ public class Parser {
   }
 
   private Expr expression() {
-    return assignment();
+    return (Expr) wrap(this::assignment);
   }
 
   private Expr dict() {
@@ -707,16 +712,28 @@ public class Parser {
   private Stmt catchStatement() {
     consume(LBRACE, "'{' expected after catch");
     Stmt.Block body = block();
+    Stmt.Block asBody = null;
+    Stmt.Block thenBody = null;
 
     Expr.Identifier exception_var = null;
     if (match(AS)) {
-      if (check(IDENTIFIER)) {
-        consume(IDENTIFIER, "exception variable expected");
-        exception_var = new Expr.Identifier(previous());
+      consume(IDENTIFIER, "exception variable expected");
+      exception_var = new Expr.Identifier(previous());
+
+      ignoreNewlines();
+      if(check(LBRACE)) {
+        consume(LBRACE, "'{' expected after variable name");
+        asBody = block();
       }
     }
 
-    return new Stmt.Catch(body, exception_var);
+    if(match(THEN)) {
+      ignoreNewlines();
+      consume(LBRACE, "'{' expected after then");
+      thenBody = block();
+    }
+
+    return new Stmt.Catch(body, asBody, thenBody, exception_var);
   }
 
   private Stmt iterStatement() {
@@ -759,47 +776,49 @@ public class Parser {
   }
 
   private Stmt statement() {
-    ignoreNewlines();
+    return (Stmt) wrap(() -> {
+      ignoreNewlines();
 
-    Stmt result;
+      Stmt result;
 
-    if (match(ECHO)) {
-      result = echoStatement();
-    } else if (match(IF)) {
-      result = ifStatement();
-    } else if (match(WHILE)) {
-      result = whileStatement();
-    } else if (match(DO)) {
-      result = doWhileStatement();
-    } else if (match(ITER)) {
-      result = iterStatement();
-    } else if (match(FOR)) {
-      result = forStatement();
-    } else if (match(USING)) {
-      result = usingStatement();
-    } else if (match(CONTINUE)) {
-      result = new Stmt.Continue();
-    } else if (match(BREAK)) {
-      result = new Stmt.Break();
-    } else if (match(RETURN)) {
-      result = new Stmt.Return(expression());
-    } else if (match(ASSERT)) {
-      result = assertStatement();
-    } else if (match(RAISE)) {
-      result = new Stmt.Raise(expression());
-    } else if (match(LBRACE)) {
-      result = block();
-    } else if (match(IMPORT)) {
-      result = importStatement();
-    } else if (match(CATCH)) {
-      result = catchStatement();
-    } else {
-      result = expressionStatement(false);
-    }
+      if (match(ECHO)) {
+        result = echoStatement();
+      } else if (match(IF)) {
+        result = ifStatement();
+      } else if (match(WHILE)) {
+        result = whileStatement();
+      } else if (match(DO)) {
+        result = doWhileStatement();
+      } else if (match(ITER)) {
+        result = iterStatement();
+      } else if (match(FOR)) {
+        result = forStatement();
+      } else if (match(USING)) {
+        result = usingStatement();
+      } else if (match(CONTINUE)) {
+        result = new Stmt.Continue();
+      } else if (match(BREAK)) {
+        result = new Stmt.Break();
+      } else if (match(RETURN)) {
+        result = new Stmt.Return(expression());
+      } else if (match(ASSERT)) {
+        result = assertStatement();
+      } else if (match(RAISE)) {
+        result = new Stmt.Raise(expression());
+      } else if (match(LBRACE)) {
+        result = block();
+      } else if (match(IMPORT)) {
+        result = importStatement();
+      } else if (match(CATCH)) {
+        result = catchStatement();
+      } else {
+        result = expressionStatement(false);
+      }
 
-    ignoreNewlines();
+      ignoreNewlines();
 
-    return result;
+      return result;
+    });
   }
 
   private Stmt varDeclaration(boolean isConstant) {
@@ -1001,30 +1020,32 @@ public class Parser {
   }
 
   private Stmt declaration() {
-    ignoreNewlines();
+    return (Stmt) wrap(() -> {
+      ignoreNewlines();
 
-    Stmt result;
+      Stmt result;
 
-    if (match(VAR)) {
-      result = varDeclaration(false);
-    } else if (match(CONST)) {
-      result = varDeclaration(true);
-    } else if (match(DEF)) {
-      result = defDeclaration();
-    } else if (match(CLASS)) {
-      result = classDeclaration();
-    } else if (match(LBRACE)) {
-      if (!check(NEWLINE) && blockCount == 0) {
-        result = new Stmt.Expression(dict());
+      if (match(VAR)) {
+        result = varDeclaration(false);
+      } else if (match(CONST)) {
+        result = varDeclaration(true);
+      } else if (match(DEF)) {
+        result = defDeclaration();
+      } else if (match(CLASS)) {
+        result = classDeclaration();
+      } else if (match(LBRACE)) {
+        if (!check(NEWLINE) && blockCount == 0) {
+          result = new Stmt.Expression(dict());
+        } else {
+          result = block();
+        }
       } else {
-        result = block();
+        result = statement();
       }
-    } else {
-      result = statement();
-    }
 
-    ignoreNewlines();
-    return result;
+      ignoreNewlines();
+      return result;
+    });
   }
 
   public List<Stmt> parse() {
@@ -1045,5 +1066,33 @@ public class Parser {
       lexer.getSource().getPath(),
       tokens.size()
     );
+  }
+
+  private Object wrap(Callback callback) {
+    int startLine = peek().line();
+    int startOffset = peek().offset();
+
+    AST result = callback.run();
+
+    if(result != null) {
+      int endLine = previous().line();
+      int endOffset = previous().offset();
+
+      result.startLine = startLine;
+      result.endLine = endLine;
+      result.startColumn = startOffset - lexer.source.getLineStartOffset(startLine);
+      result.endColumn = endOffset - lexer.source.getLineStartOffset(endLine);
+
+      if(result.endColumn == -1) {
+        result.endLine--;
+        result.endColumn = lexer.source.getLineLength(result.endLine);
+      }
+    }
+
+    return result;
+  }
+
+  interface Callback {
+    AST run();
   }
 }

@@ -7,23 +7,20 @@ import com.oracle.truffle.api.interop.InteropLibrary;
 import com.oracle.truffle.api.interop.UnknownIdentifierException;
 import com.oracle.truffle.api.interop.UnsupportedMessageException;
 import com.oracle.truffle.api.library.CachedLibrary;
-import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.object.DynamicObjectLibrary;
 import com.oracle.truffle.api.strings.TruffleString;
 import org.nimbus.language.nodes.string.NReadStringPropertyNode;
-import org.nimbus.language.runtime.NObject;
-import org.nimbus.language.runtime.NString;
-import org.nimbus.language.runtime.NimNil;
-import org.nimbus.language.runtime.NimRuntimeError;
+import org.nimbus.language.runtime.*;
+import org.nimbus.language.shared.NBuiltinClassesModel;
 
-@SuppressWarnings("truffle-inlining")
+@SuppressWarnings({"truffle-inlining", "truffle-unused"})
 public abstract class NSharedPropertyReaderNode extends NBaseNode {
   public abstract Object executeRead(Object object, Object property);
 
   @Specialization
   protected Object doString(TruffleString string, Object property,
                             @Cached NReadStringPropertyNode stringPropertyReader) {
-    return  stringPropertyReader.executeProperty(string, property);
+    return stringPropertyReader.executeProperty(string, property);
   }
 
   @Specialization(guards = "interopLibrary.hasMembers(target)", limit = "3")
@@ -39,17 +36,21 @@ public abstract class NSharedPropertyReaderNode extends NBaseNode {
   }
 
   @Specialization(guards = "interopLibrary.isNull(target)", limit = "3")
-  protected Object doNil(Object target, Object property,
-                         @CachedLibrary("target") InteropLibrary interopLibrary) {
-    throw NimRuntimeError.create("Cannot read properties of nil (reading '", property, "')");
+  protected Object doNil(
+    Object target, Object property,
+    @CachedLibrary("target") InteropLibrary interopLibrary,
+    @CachedLibrary(limit = "3") @Cached.Shared("objectLibrary") DynamicObjectLibrary objectLibrary,
+    @Cached(value = "languageContext().objectsModel", neverDefault = true) NBuiltinClassesModel classesModel
+  ) {
+    throw NimRuntimeError.typeError(this, NString.concatString("Cannot read properties of nil (reading '", property, "')"));
   }
 
   @Fallback
   protected Object doUnknown(
     @SuppressWarnings("unused") Object target,
     @SuppressWarnings("unused") Object property,
-    @Cached("languageContext().objectsModel.objectObject") NObject objectObject,
-    @CachedLibrary(limit = "3") DynamicObjectLibrary dynamicObjectLibrary
+    @Cached(value = "languageContext().objectsModel.objectObject", neverDefault = true) NObject objectObject,
+    @CachedLibrary(limit = "3") @Cached.Shared("objectLibrary") DynamicObjectLibrary dynamicObjectLibrary
   ) {
     return dynamicObjectLibrary.getOrDefault(objectObject, NString.toString(property), NimNil.SINGLETON);
   }

@@ -3,6 +3,7 @@ package org.nimbus.language.translator;
 import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.FrameSlotKind;
 import com.oracle.truffle.api.object.Shape;
+import com.oracle.truffle.api.source.SourceSection;
 import org.nimbus.language.nodes.NDynamicObjectRefNode;
 import org.nimbus.language.nodes.NGlobalScopeObjectNode;
 import org.nimbus.language.nodes.NGlobalScopeObjectNodeGen;
@@ -20,16 +21,20 @@ import org.nimbus.language.nodes.statements.*;
 import org.nimbus.language.nodes.statements.loops.*;
 import org.nimbus.language.nodes.string.NStringLiteralNode;
 import org.nimbus.language.parser.BaseVisitor;
+import org.nimbus.language.parser.Parser;
+import org.nimbus.language.parser.ast.AST;
 import org.nimbus.language.parser.ast.Expr;
 import org.nimbus.language.parser.ast.Stmt;
-import org.nimbus.language.runtime.NObject;
 import org.nimbus.language.runtime.NimClass;
 import org.nimbus.language.runtime.NimRuntimeError;
+import org.nimbus.language.shared.NBuiltinClassesModel;
 import org.nimbus.language.shared.NLocalRefSlot;
 
 import java.util.*;
 
 public class NimTranslator extends BaseVisitor<NNode> {
+  private final Parser parser;
+
   private final Shape objectShape;
   private final NGlobalScopeObjectNode globalScopeNode = NGlobalScopeObjectNodeGen.create();
   private FrameDescriptor.Builder frameDescriptor = FrameDescriptor.newBuilder();
@@ -40,14 +45,17 @@ public class NimTranslator extends BaseVisitor<NNode> {
   private Stack<Map<String, NFrameMember>> localScopes = new Stack<>();
   private NimClass currentClass = null;
 
-  public NimTranslator(Shape objectShape, NObject objectClass) {
-    this.objectShape = objectShape;
+  public NimTranslator(Parser parser, NBuiltinClassesModel classesModel) {
+    this.parser = parser;
+    this.objectShape = classesModel.rootShape;
 
     // Put the Object class into the local scope so that every class, function, and module
     // is aware that it exists.
-    Map<String, NFrameMember> objectClassPrototype = new HashMap<>();
-    objectClassPrototype.put("Object", new NFrameMember.ClassObject(objectClass));
-    localScopes.push(objectClassPrototype);
+    Map<String, NFrameMember> objectClasses = new HashMap<>();
+    for (Map.Entry<String, NimClass> classEntry : classesModel.builtinClasses.entrySet()) {
+      objectClasses.put(classEntry.getKey(), new NFrameMember.ClassObject(classEntry.getValue()));
+    }
+    localScopes.push(objectClasses);
   }
 
   public NTranslateResult translate(List<Stmt> stmtList) {
@@ -298,7 +306,7 @@ public class NimTranslator extends BaseVisitor<NNode> {
   @Override
   public NNode visitExpressionStmt(Stmt.Expression stmt) {
     assert stmt.expression != null;
-    return visitExpr(stmt.expression);
+    return new NExprStmtNode(visitExpr(stmt.expression), sourceSection(stmt.expression));
   }
 
   @Override
@@ -326,11 +334,11 @@ public class NimTranslator extends BaseVisitor<NNode> {
       NLocalRefSlot slotId = new NLocalRefSlot(name, ++localsCount);
       int slot = frameDescriptor.addSlot(FrameSlotKind.Illegal, slotId, isConstant);
       if (localScopes.peek().putIfAbsent(name, new NFrameMember.LocalVariable(slot, isConstant)) != null) {
-        throw NimRuntimeError.create("'", name, "' already declared in this scope");
+        throw NimRuntimeError.create("'", name, "' is already declared in this scope");
       }
 
       NLocalAssignNode assignment = NLocalAssignNodeGen.create(value, slot);
-      return new NExprStmtNode(assignment, true);
+      return new NExprStmtNode(assignment, sourceSection(stmt), true);
     }
 
     // default to global value
@@ -399,6 +407,7 @@ public class NimTranslator extends BaseVisitor<NNode> {
   @Override
   public NNode visitFunctionStmt(Stmt.Function stmt) {
     return translateFunction(
+      stmt,
       stmt.name.literal(),
       stmt.parameters,
       stmt.body,
@@ -409,6 +418,7 @@ public class NimTranslator extends BaseVisitor<NNode> {
   @Override
   public NNode visitMethodStmt(Stmt.Method stmt) {
     return translateFunction(
+      stmt,
       stmt.name.literal(),
       stmt.parameters,
       stmt.body,
@@ -425,7 +435,8 @@ public class NimTranslator extends BaseVisitor<NNode> {
     return new NReturnStmtNode(
       stmt.value == null ?
         new NNilLiteralNode() :
-        visitExpr(stmt.value)
+        visitExpr(stmt.value),
+      sourceSection(stmt)
     );
   }
 
@@ -458,6 +469,7 @@ public class NimTranslator extends BaseVisitor<NNode> {
 
     for (Stmt.Method method : stmt.methods) {
       methods.add(translateFunction(
+        method,
         method.name.literal(),
         method.parameters,
         method.body,
@@ -494,7 +506,34 @@ public class NimTranslator extends BaseVisitor<NNode> {
     return new NParentExprNode(currentClass);
   }
 
-  private NNode translateFunction(String name, List<Expr.Identifier> parameters, Stmt.Block body, NNode root) {
+  @Override
+  public NNode visitRaiseStmt(Stmt.Raise stmt) {
+    return NRaiseStmtNodeGen.create(visitExpr(stmt.exception), sourceSection(stmt));
+  }
+
+  @Override
+  public NNode visitCatchStmt(Stmt.Catch stmt) {
+    NNode body = visitBlockStmt(stmt.body);
+    NNode thenBody = stmt.thenBody == null ? null : visitBlockStmt(stmt.thenBody);
+    NNode asBody = null;
+    int slot = -1;
+
+    if(stmt.name != null) {
+      String errorName = stmt.name.token.literal();
+      NLocalRefSlot slotId = new NLocalRefSlot(errorName, ++localsCount);
+      slot = frameDescriptor.addSlot(FrameSlotKind.Object, slotId, 1);
+      if (localScopes.peek().putIfAbsent(errorName, new NFrameMember.LocalVariable(slot, true)) != null) {
+        throw NimRuntimeError.create("'", errorName, "' is already declared in this scope");
+      }
+
+      // parse the 'catch' statement block
+      asBody = visitBlockStmt(stmt.asBody);
+    }
+
+    return new NCatchStmtNode(body, slot, asBody, thenBody);
+  }
+
+  private NNode translateFunction(Stmt source, String name, List<Expr.Identifier> parameters, Stmt.Block body, NNode root) {
     FrameDescriptor.Builder previousFrameDescriptor = frameDescriptor;
     ParserState previousState = state;
     var previousLocalScopes = localScopes;
@@ -521,7 +560,8 @@ public class NimTranslator extends BaseVisitor<NNode> {
       name,
       frameDescriptor,
       new NFunctionBodyNode(statements),
-      parameters.size()
+      parameters.size(),
+      sourceSection(source)
     );
   }
 
@@ -556,6 +596,18 @@ public class NimTranslator extends BaseVisitor<NNode> {
 
   // State management
   private enum ParserState {TOP_LEVEL, NESTED_TOP_LEVEL, FUNC_DEF}
+
+  private SourceSection sourceSection(Object object) {
+    if(object instanceof AST ast) {
+//      System.out.println("SL = " +ast.startLine+", EL = " +ast.endLine+", SC = " + ast.startColumn + ", EC = " +ast.endColumn);
+      return parser.lexer.source.createSection(
+        ast.startLine, ast.startColumn + 1,
+        ast.endLine, ast.endColumn + 1
+      );
+    }
+
+    return parser.lexer.source.createSection(1);
+  }
 
   interface Callback {
     NNode run();

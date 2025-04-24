@@ -2,22 +2,51 @@ package org.nimbus.language.runtime;
 
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.exception.AbstractTruffleException;
-import com.oracle.truffle.api.interop.InteropLibrary;
 import com.oracle.truffle.api.nodes.Node;
-import com.oracle.truffle.api.source.SourceSection;
 import org.nimbus.annotations.NAnnotationHelper;
-
-import static com.oracle.truffle.api.CompilerDirectives.shouldNotReachHere;
+import org.nimbus.language.nodes.NNode;
 
 public class NimRuntimeError extends AbstractTruffleException {
-  public NimRuntimeError(String message) {
-    super(message);
+  public final Object value;
+
+  public NimRuntimeError(Object value) {
+    this.value = value;
   }
 
-  private static final InteropLibrary UNCACHED_LIB = InteropLibrary.getFactory().getUncached();
-
-  NimRuntimeError(String message, Node node) {
+  public NimRuntimeError(String message, Node node) {
     super(message, node);
+    this.value = null;
+  }
+
+  public NimRuntimeError(Object value, Node node) {
+    super(NString.toString(value), node);
+    this.value = value;
+  }
+
+  public NimRuntimeError(NErrorObject value, Node node) {
+    super(value.type + ": " + value.message, node);
+    this.value = value;
+  }
+
+  public NimRuntimeError(String message) {
+    this(message, null);
+  }
+
+//  private static final InteropLibrary UNCACHED_LIB = InteropLibrary.getFactory().getUncached();
+
+  public NimRuntimeError(Object name, Object message, NimObject value, NNode node) {
+    super(NString.toString(name) + ": " + NString.toString(message), node);
+    this.value = value;
+  }
+
+  @CompilerDirectives.TruffleBoundary
+  public static AbstractTruffleException create(Object value, Node location) {
+    return new NimRuntimeError(value, location);
+  }
+
+  @CompilerDirectives.TruffleBoundary
+  public static AbstractTruffleException create(NErrorObject value, Node location) {
+    return new NimRuntimeError(value, location);
   }
 
   @CompilerDirectives.TruffleBoundary
@@ -35,22 +64,27 @@ public class NimRuntimeError extends AbstractTruffleException {
     return new NimRuntimeError(NString.concatString(message, others));
   }
 
+
+  public static AbstractTruffleException error(Node node, String message, Object ...values) {
+    return create(NErrorObject.create(node, "Error", NString.concatString(message, values)), node);
+  }
+
+  public static AbstractTruffleException typeError(Node node, String message, Object ...values) {
+    return create(NErrorObject.create(node, "TypeError", NString.concatString(message, values)), node);
+  }
+
+  public static AbstractTruffleException valueError(Node node, String message) {
+    return create(NErrorObject.create(node, "ValueError", message), node);
+  }
+
   @CompilerDirectives.TruffleBoundary
-  public static AbstractTruffleException argumentError(Node node, String operationName, Object... values) {
+  public static AbstractTruffleException argumentError(Node node, String operation, Object ...values) {
     StringBuilder result = new StringBuilder();
-    result.append("Type error");
 
-    AbstractTruffleException ex = NimRuntimeError.create("", node);
-    if (node != null) {
-      SourceSection ss = ex.getEncapsulatingSourceSection();
-      if (ss != null && ss.isAvailable()) {
-        result.append(" at ").append(ss.getSource().getName()).append(" line ").append(ss.getStartLine()).append(" col ").append(ss.getStartColumn());
-      }
-    }
-
-    result.append(": ");
-    if (node != null) {
-      result.append(" \"").append(operationName).append("\"");
+    if (operation != null) {
+      result.append("\"").append(operation).append("\"");
+    } else {
+      result.append("operation");
     }
 
     result.append(" is not defined for call signature");
@@ -75,16 +109,6 @@ public class NimRuntimeError extends AbstractTruffleException {
     }
     result.append(")");
 
-    return NimRuntimeError.create(NString.toString(result), node);
-  }
-
-  @CompilerDirectives.TruffleBoundary
-  public static void error(Node node, String format, Object ...params) {
-    throw NimRuntimeError.create(String.format(format, params), node);
-  }
-
-  @CompilerDirectives.TruffleBoundary
-  public static void error(String format, Object ...params) {
-    throw NimRuntimeError.create(String.format(format, params));
+    return create(NErrorObject.create(node, "ArgumentError", result.toString()), node);
   }
 }

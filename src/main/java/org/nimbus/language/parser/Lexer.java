@@ -12,13 +12,12 @@ public class Lexer {
   private final static int MAX_INTERPOLATION_NESTING = 8;
 
   private int line = 1;
-  private int lineStart = 0;
   private int current = 0;
   private int start = 0;
   private final Stack<Character> interpolating = new Stack<>();
   private final CharSequence sourceCharacters;
 
-  private final Source source;
+  public final Source source;
   private final List<Token> tokens = new ArrayList<>();
 
   public Lexer(Source source) {
@@ -58,6 +57,7 @@ public class Lexer {
         put("return", RETURN);
         put("self", SELF);
         put("static", STATIC);
+        put("then", THEN);
         put("true", TRUE);
         put("using", USING);
         put("var", VAR);
@@ -113,12 +113,12 @@ public class Lexer {
    */
   private char advance() {
     char val = sourceCharacters.charAt(current);
+    current++;
+
     if (val == '\n') {
       line++;
-      lineStart = current;
     }
 
-    current++;
     return val;
   }
 
@@ -128,13 +128,12 @@ public class Lexer {
   private boolean match(char c) {
     if (isAtEnd()) return false;
     if (sourceCharacters.charAt(current) != c) return false;
+    current++;
 
     if (c == '\n') {
       line++;
-      lineStart = current;
     }
 
-    current++;
     return true;
   }
 
@@ -169,15 +168,14 @@ public class Lexer {
    * Adds a new token to the list of tokens
    */
   private void addToken(TokenType type) {
-    String literal = sourceCharacters.subSequence(start, current).toString().trim();
-    tokens.add(new Token(type, literal, line, current - lineStart));
+    addToken(type, sourceCharacters.subSequence(start, current).toString().trim());
   }
 
   /**
    * Adds a new token to the list of tokens
    */
   private void addToken(TokenType type, String literal) {
-    tokens.add(new Token(type, literal, line, current - lineStart));
+    tokens.add(new Token(type, literal, line, start, current - start));
   }
 
   /**
@@ -186,7 +184,9 @@ public class Lexer {
   private void skipBlockComments() {
     int nesting = 1;
     while (nesting > 0) {
-      if (isAtEnd()) return;
+      if (isAtEnd()) {
+        throw new LexerException(source, line, current, 1, true, "Unclosed block comment");
+      }
 
       // internal comment open
       if (peek() == '/' && next() == '*') {
@@ -223,11 +223,19 @@ public class Lexer {
 
         // single line comment
         case '#': {
-          do advance();
-          while (peek() != '\n' && !isAtEnd());
-          advance();
-          start = current;
+          while (peek() != '\n' && !isAtEnd()) advance();
           break;
+        }
+
+        case '/': {
+          if (next() == '*') {
+            advance();
+            advance();
+            skipBlockComments();
+            break;
+          } else {
+            return;
+          }
         }
 
         default:
@@ -271,7 +279,7 @@ public class Lexer {
 
     if (isAtEnd()) {
       throw new LexerException(
-        source, line, current, 0, true,
+        source, line, current, 1, true,
         String.format("Unterminated string on line %d", line)
       );
     }
@@ -334,6 +342,9 @@ public class Lexer {
    * The private scanning helper
    */
   private void scan() throws LexerException {
+    skipWhitespace();
+    start = current;
+
     if (isAtEnd()) {
       return;
     }
@@ -422,11 +433,6 @@ public class Lexer {
       case '/': {
         if (match('/')) {
           addToken(match('=') ? FLOOR_EQ : FLOOR);
-        } else if (match('*')) {
-          boolean isDoc = match('*');
-          advance();
-          skipBlockComments();
-          start = current;
         } else {
           addToken(match('=') ? DIVIDE_EQ : DIVIDE);
         }
@@ -523,12 +529,10 @@ public class Lexer {
     while (!isAtEnd()) {
       skipWhitespace();
 
-      // scan tokens here...
-      start = current;
       scan();
     }
 
-    addToken(EOF, "end of file");
+    addToken(EOF, "");
     return tokens;
   }
 
@@ -537,7 +541,7 @@ public class Lexer {
   }
 
   private String getUnquotedString(char quote) {
-    Charset UTF_8 = StandardCharsets.UTF_8;
+    Charset UTF_16 = StandardCharsets.UTF_16;
 
     return new String(
       sourceCharacters.subSequence(start + 1, current - 1).toString()
@@ -552,8 +556,8 @@ public class Lexer {
         .replaceAll("\\\\t", "\t")
         .replaceAll("\\\\\\\\", "\\\\")
         .replaceAll("\\n", "\n")
-        .getBytes(UTF_8),
-      UTF_8
+        .getBytes(UTF_16),
+      UTF_16
     );
   }
 }

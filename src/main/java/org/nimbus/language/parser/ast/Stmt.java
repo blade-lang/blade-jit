@@ -5,10 +5,7 @@ package org.nimbus.language.parser.ast;
 import org.nimbus.language.parser.Token;
 import java.util.List;
 
-public abstract class Stmt {
-  protected int start = 0;
-  protected int end = 0;
-
+public abstract class Stmt extends AST {
   public abstract<T> T accept(Visitor<T> visitor);
 
   public interface Visitor<T> {
@@ -232,10 +229,14 @@ public abstract class Stmt {
 
   public static class Catch extends Stmt {
     public final Block body;
+    public final Block asBody;
+    public final Block thenBody;
     public final Expr.Identifier name;
 
-    public Catch(Block body, Expr.Identifier name) {
+    public Catch(Block body, Block asBody, Block thenBody, Expr.Identifier name) {
       this.body = body;
+      this.asBody = asBody;
+      this.thenBody = thenBody;
       this.name = name;
     }
 

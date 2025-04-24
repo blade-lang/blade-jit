@@ -1,44 +1,48 @@
-const N = 21
+def run(N) {
+   const maxDepth = N
 
-def make_tree(depth) {
-  if depth <= 0 return [nil, nil]
-  depth -= 1
-  return [make_tree(depth), make_tree(depth)]
+   const stretchDepth = maxDepth + 1
+   const check = itemCheck(bottomUpTree(stretchDepth))
+   echo 'stretch tree of depth ${stretchDepth}\t check: ${check}'
+
+   const longLivedTree = bottomUpTree(maxDepth)
+
+   iter var depth = 4; depth <= maxDepth; depth += 2 {
+       const iterations = 1 << maxDepth - depth + 4
+       work(iterations, depth)
+   }
+
+   echo 'long lived tree of depth ${maxDepth}\t check: ${itemCheck(longLivedTree)}'
 }
 
-def check_tree(node) {
-  var left = node[0], right = node[1]
-  if !left return 1
-  return 1 + check_tree(left) + check_tree(right)
+def work(iterations, depth) {
+   var check = 0
+   iter var i = 0; i < iterations; i++ {
+       check += itemCheck(bottomUpTree(depth))
+   }
+   echo '${iterations}\t trees of depth ${depth}\t check: ${check}'
 }
 
-def max(a, b) {
-  return a > b ? a : b
+class TreeNode {
+   @new(left, right) {
+      self.left = left
+      self.right = right
+   }
 }
 
-var start = time()
-
-var min_depth = 4
-var max_depth = max(min_depth + 2, N)
-var stretch_depth = max_depth + 1
-
-var stretch_tree = make_tree(stretch_depth)
-
-echo 'stretch tree of depth ${stretch_depth}\t check: ${check_tree(stretch_tree)}'
-stretch_tree = nil
-
-var long_lived_tree = make_tree(max_depth)
-
-iter var depth = min_depth; depth < stretch_depth; depth += 2 {
-  var iterations = 2 ** (max_depth - depth + min_depth)
-
-  var check = 0
-  iter var i = 1; i < iterations + 1; i++ {
-    check += check_tree(make_tree(depth))
-  }
-
-  echo '${iterations}\t trees of depth ${depth}\t check: ${check}'
+def itemCheck(node) {
+   if node.left == nil {
+       return 1
+   }
+   return 1 + itemCheck(node.left) + itemCheck(node.right)
 }
 
-echo 'long lived tree of depth ${max_depth}\t check: ${check_tree(long_lived_tree)}'
-echo 'Total time taken: ${time() - start}'
+def bottomUpTree(depth) {
+   return depth > 0 ?
+       new TreeNode(bottomUpTree(depth - 1), bottomUpTree(depth - 1)) :
+       new TreeNode(nil, nil)
+}
+
+var start = microtime()
+run(21)
+echo 'Total time taken: ${(microtime() - start) / 1.0e+6}s'

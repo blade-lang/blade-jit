@@ -3,6 +3,7 @@ package org.nimbus.language.runtime;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.strings.TruffleString;
+import com.oracle.truffle.api.strings.TruffleStringBuilder;
 import org.nimbus.language.NimbusLanguage;
 
 import java.util.List;
@@ -93,5 +94,9 @@ public final class NString {
     }
 
     return builder.toString();
+  }
+
+  public static TruffleStringBuilder builder() {
+    return TruffleStringBuilder.create(NimbusLanguage.ENCODING);
   }
 }

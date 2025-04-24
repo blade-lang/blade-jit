@@ -10,13 +10,16 @@ public final class NBlockRootNode extends RootNode {
   @SuppressWarnings("FieldMayBeFinal")
   @Child private NBlockStmtNode block;
 
-  public NBlockRootNode(NimbusLanguage language, NBlockStmtNode block) {
-    this(language, FrameDescriptor.newBuilder().build(), block);
+  private final String name;
+
+  public NBlockRootNode(NimbusLanguage language, NBlockStmtNode block, String name) {
+    this(language, FrameDescriptor.newBuilder().build(), block, name);
   }
 
-  public NBlockRootNode(NimbusLanguage language, FrameDescriptor frameDescriptor, NBlockStmtNode block) {
+  public NBlockRootNode(NimbusLanguage language, FrameDescriptor frameDescriptor, NBlockStmtNode block, String name) {
     super(language, frameDescriptor);
     this.block = block;
+    this.name = name;
   }
 
   @Override
@@ -27,5 +30,10 @@ public final class NBlockRootNode extends RootNode {
   @Override
   public String toString() {
     return block.getDescription();
+  }
+
+  @Override
+  public String getName() {
+    return name;
   }
 }

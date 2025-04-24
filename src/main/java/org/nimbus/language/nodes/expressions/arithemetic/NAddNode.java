@@ -57,7 +57,7 @@ public abstract class NAddNode extends NBinaryNode {
 
   @Fallback
   protected double doUnsupported(Object left, Object right) {
-    throw NimRuntimeError.argumentError(this,"operation +", left, right);
+    throw NimRuntimeError.argumentError(this,"+", left, right);
   }
 
   protected static boolean isString(Object left, Object right) {

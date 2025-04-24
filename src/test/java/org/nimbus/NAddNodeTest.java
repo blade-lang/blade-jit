@@ -22,7 +22,7 @@ public class NAddNodeTest {
     NNode exprNode = NAddNodeGen.create(
         new NLongLiteralNode(12),
         new NLongLiteralNode(34));
-    var rootNode = new NRootNode(null, exprNode);
+    var rootNode = new NRootNode(null, exprNode, ":program");
     CallTarget callTarget = rootNode.getCallTarget();
 
     var result = callTarget.call();
@@ -35,7 +35,7 @@ public class NAddNodeTest {
     NNode exprNode = NAddNodeGen.create(
         new NLongLiteralNode(Long.MAX_VALUE),
         new NLongLiteralNode(1));
-    var rootNode = new NRootNode(null, exprNode);
+    var rootNode = new NRootNode(null, exprNode, ":program");
     CallTarget callTarget = rootNode.getCallTarget();
 
     var result = callTarget.call();
@@ -48,14 +48,15 @@ public class NAddNodeTest {
     try {
       var source = Source.newBuilder(NimbusLanguage.ID, "2 + 2", "<script>").build();
 
-      var visitor = new NimTranslator(Shape.newBuilder().build(), new NObject(Shape.newBuilder().build()));
-      var parseResult = new Parser(new Lexer(source))
-          .parse();
+      var parser = new Parser(new Lexer(source));
+      var parseResult = parser.parse();
       assertEquals(1, parseResult.size());
 
+      var visitor = new NimTranslator(parser, new NimbusLanguage().builtinObjects);
       var callTarget = new NRootNode(null,
         parseResult.getFirst()
-              .accept(visitor)
+              .accept(visitor),
+        ":program"
       ).getCallTarget();
 
       var result = callTarget.call();

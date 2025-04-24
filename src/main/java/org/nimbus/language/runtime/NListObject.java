@@ -1,10 +1,12 @@
 package org.nimbus.language.runtime;
 
 import com.oracle.truffle.api.CompilerDirectives;
+import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.Fallback;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.interop.InteropLibrary;
 import com.oracle.truffle.api.interop.UnknownIdentifierException;
+import com.oracle.truffle.api.interop.UnsupportedMessageException;
 import com.oracle.truffle.api.library.CachedLibrary;
 import com.oracle.truffle.api.library.ExportLibrary;
 import com.oracle.truffle.api.library.ExportMessage;
@@ -20,7 +22,7 @@ public class NListObject extends NimObject {
   static final String LENGTH_PROP = "length";
 
   @CompilerDirectives.CompilationFinal(dimensions = 1)
-  private Object[] items;
+  public Object[] items;
 
   // List properties...
   @DynamicField private long length;
@@ -68,10 +70,11 @@ public class NListObject extends NimObject {
 
   @ExportMessage
   Object readMember(String member,
-                    @CachedLibrary("this") DynamicObjectLibrary objectLibrary) throws UnknownIdentifierException {
+                    @CachedLibrary("this") DynamicObjectLibrary objectLibrary,
+                    @CachedLibrary("this.classObject") InteropLibrary classInteropLibrary) throws UnsupportedMessageException, UnknownIdentifierException {
     return switch (member) {
       case "length" -> objectLibrary.getOrDefault(this, "length", 0);
-      default -> throw UnknownIdentifierException.create(member);
+      default -> super.readMember(member, objectLibrary, classInteropLibrary);
     };
   }
 
@@ -119,6 +122,17 @@ public class NListObject extends NimObject {
   private void setArrayElements(Object[] items, DynamicObjectLibrary objectLibrary) {
     this.items = items;
     writeMember(LENGTH_PROP, items.length, objectLibrary);
+  }
+
+  @ExplodeLoop
+  public void resize(long length, DynamicObjectLibrary objectLibrary) {
+    Object[] newItems = new Object[(int) length];
+    for (int i = 0; i < length; i++) {
+      newItems[i] = i < this.items.length
+        ? this.items[i]
+        : NimNil.SINGLETON;
+    }
+    this.setArrayElements(newItems, objectLibrary);
   }
 
   private long effectiveIndex(long index) {

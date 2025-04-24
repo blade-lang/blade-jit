@@ -5,10 +5,7 @@ package org.nimbus.language.parser.ast;
 import org.nimbus.language.parser.Token;
 import java.util.List;
 
-public abstract class Expr {
-  protected int start = 0;
-  protected int end = 0;
-
+public abstract class Expr extends AST {
   public abstract<T> T accept(Visitor<T> visitor);
 
   public interface Visitor<T> {

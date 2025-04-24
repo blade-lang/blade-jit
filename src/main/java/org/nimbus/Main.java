@@ -76,12 +76,12 @@ public class Main {
 
         return 0;
       } catch (PolyglotException e) {
-        if (e.isInternalError()) {
+//        if (e.isInternalError()) {
           // for internal errors we print the full stack trace
           e.printStackTrace();
-        } else {
-          System.err.println(e.getMessage());
-        }
+//        } else {
+//          System.err.println(e.getMessage());
+//        }
       }
     } catch (IllegalArgumentException e) {
       System.err.println(e.getMessage());

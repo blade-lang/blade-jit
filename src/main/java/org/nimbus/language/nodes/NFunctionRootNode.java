@@ -10,9 +10,12 @@ public final class NFunctionRootNode extends RootNode {
   @SuppressWarnings("FieldMayBeFinal")
   @Child private NFunctionBodyNode block;
 
-  public NFunctionRootNode(NimbusLanguage language, FrameDescriptor frameDescriptor, NFunctionBodyNode block) {
+  private final String name;
+
+  public NFunctionRootNode(NimbusLanguage language, FrameDescriptor frameDescriptor, NFunctionBodyNode block, String name) {
     super(language, frameDescriptor);
     this.block = block;
+    this.name = name;
   }
 
   @Override
@@ -23,5 +26,10 @@ public final class NFunctionRootNode extends RootNode {
   @Override
   public String toString() {
     return "NFunctionRootNode";
+  }
+
+  @Override
+  public String getName() {
+    return name;
   }
 }

@@ -69,7 +69,7 @@ public class GenerateAst {
       "Assert     : Expr expression, Expr message",
       "Using      : Expr expression, List<Expr> caseLabels, List<Stmt> caseBodies, Stmt defaultCase",
       "Import     : String path, List<Token> elements, boolean all",
-      "Catch      : Block body, Expr.Identifier name",
+      "Catch      : Block body, Block asBody, Block thenBody, Expr.Identifier name",
       "Block      : List<Stmt> body",
       "Assign     : Expr expression, Token type, Expr value",
       "Var        : Token name, Expr value, boolean isConstant",
@@ -92,12 +92,9 @@ public class GenerateAst {
     writer.println("import org.nimbus.language.parser.Token;");
     writer.println("import java.util.List;");
     writer.println();
-    writer.println("public abstract class " + baseName + " {");
+    writer.println("public abstract class " + baseName + " extends AST {");
 
     // The base accept method.
-    writer.println("  protected int start = 0;");
-    writer.println("  protected int end = 0;");
-    writer.println();
     writer.println("  public abstract<T> T accept(Visitor<T> visitor);");
 
     defineVisitor(writer, baseName, types);

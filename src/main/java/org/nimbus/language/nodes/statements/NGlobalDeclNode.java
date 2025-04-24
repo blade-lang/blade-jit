@@ -40,6 +40,6 @@ public abstract class NGlobalDeclNode extends NStmtNode {
     }
 
     objectLibrary.putWithFlags(globalScope, name, value, getIsConst() ? 1 : 0);
-    return NimNil.SINGLETON;
+    return value;
   }
 }
