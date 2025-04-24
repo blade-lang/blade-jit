@@ -59,6 +59,7 @@ public final class NString {
 
   @CompilerDirectives.TruffleBoundary
   public static String toString(Object object) {
+    if(object == null) return "nil";
     return object.toString();
   }
 

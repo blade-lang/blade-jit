@@ -11,16 +11,17 @@ public final class NErrorObject extends NimObject {
 //  private static final InteropLibrary UNCACHED_LIB = InteropLibrary.getFactory().getUncached();
   private static final DynamicObjectLibrary UNCACHED_OBJ = DynamicObjectLibrary.getUncached();
 
-  public NErrorObject(
-    String type, String message, DynamicObjectLibrary objectLibrary,
-    Shape shape, NimClass prototype
-  ) {
+  public NErrorObject(String message, DynamicObjectLibrary objectLibrary, Shape shape, NimClass prototype) {
     super(shape, prototype);
 
-    this.type = type;
+    this.type = prototype.name;
     this.message = message;
-    objectLibrary.put(this, "type", NString.fromJavaString(type));
+    objectLibrary.put(this, "type", prototype.name);
     objectLibrary.put(this, "message", NString.fromJavaString(message));
+  }
+
+  public NErrorObject(String message, Shape shape, NimClass prototype) {
+    this(message, UNCACHED_OBJ, shape, prototype);
   }
 
   @CompilerDirectives.TruffleBoundary
@@ -28,9 +29,7 @@ public final class NErrorObject extends NimObject {
     NimContext context = NimContext.get(node);
 
     return new NErrorObject(
-      type,
       message,
-      UNCACHED_OBJ,
       context.objectsModel.rootShape,
       switch (type) {
         case "ArgumentError" -> context.objectsModel.errorsModel.argumentError;

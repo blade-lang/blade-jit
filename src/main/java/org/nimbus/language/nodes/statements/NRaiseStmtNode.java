@@ -7,6 +7,7 @@ import com.oracle.truffle.api.dsl.Executed;
 import com.oracle.truffle.api.dsl.Fallback;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.library.CachedLibrary;
+import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.RootNode;
 import com.oracle.truffle.api.object.DynamicObjectLibrary;
@@ -32,11 +33,10 @@ public abstract class NRaiseStmtNode extends NNode {
 
   @Specialization(limit = "3")
   protected Object doValidError(NimObject value,
-                                   @CachedLibrary("value") DynamicObjectLibrary typeLibrary,
                                    @CachedLibrary("value") DynamicObjectLibrary messageLibrary,
                                    @CachedLibrary("value") DynamicObjectLibrary traceLibrary) {
-    Object type = typeLibrary.getOrDefault(value, "type", ((NimClass)value.classObject).name);
-    Object message = messageLibrary.getOrDefault(value, "message", null);
+    Object type = ((NimClass)value.classObject).name;
+    Object message = messageLibrary.getOrDefault(value, "message", "");
     NimRuntimeError error = new NimRuntimeError(type, message, value, this);
     traceLibrary.putConstant(value, "stacktrace", formStackTrace(type, message, error), 0);
     throw error;
@@ -52,6 +52,7 @@ public abstract class NRaiseStmtNode extends NNode {
     return source;
   }
 
+  @ExplodeLoop
   @CompilerDirectives.TruffleBoundary
   private TruffleString formStackTrace(Object type, Object message, NimRuntimeError easyScriptException) {
     TruffleStringBuilder sb = NString.builder();

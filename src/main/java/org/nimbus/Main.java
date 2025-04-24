@@ -1,10 +1,15 @@
 package org.nimbus;
 
+import com.oracle.truffle.api.TruffleStackTrace;
+import com.oracle.truffle.api.TruffleStackTraceElement;
+import com.oracle.truffle.api.nodes.Node;
+import com.oracle.truffle.api.nodes.RootNode;
 import org.graalvm.polyglot.*;
 import org.nimbus.language.NimbusLanguage;
 
 import java.io.*;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class Main {
@@ -23,38 +28,41 @@ public class Main {
     }
 
     Engine engine = Engine.newBuilder()
-//      .logHandler(new OutputStream() {
-//        @Override
-//        public void write(int b) throws IOException {
-//          // DO NOTHING...
-//        }
-//      })
+      .logHandler(new OutputStream() {
+        @Override
+        public void write(int b) throws IOException {
+          // DO NOTHING...
+        }
+      })
       .allowExperimentalOptions(true)
       .options(options)
       .build();
 
-    Context defaultContext = Context.newBuilder(NimbusLanguage.ID)
-      .engine(engine)
-      .allowAllAccess(true)
-      .build();
+    try(
+      Context defaultContext = Context.newBuilder(NimbusLanguage.ID)
+        .engine(engine)
+        .allowAllAccess(true)
+        .build()
+    ) {
+      if (file != null) {
+        System.exit(runSource(defaultContext, getSource(file), false));
+      } else {
+        while (true) {
+          InputStreamReader input = new InputStreamReader(System.in);
+          BufferedReader reader = new BufferedReader(input);
 
+          System.out.print("%> ");
 
-    if (file != null) {
-      System.exit(runSource(defaultContext, getSource(file), false));
-    } else {
-      while (true) {
-        InputStreamReader input = new InputStreamReader(System.in);
-        BufferedReader reader = new BufferedReader(input);
+          String line = reader.readLine();
+          if(line.equals(".exit")) {
+            break;
+          }
 
-        System.out.print("%> ");
-
-        String line = reader.readLine();
-        if(line.equals(".exit")) {
-          break;
+          runSource(defaultContext, createSource(line), true);
         }
-
-        runSource(defaultContext, createSource(line), true);
       }
+    } finally {
+      engine.close();
     }
   }
 
@@ -76,12 +84,12 @@ public class Main {
 
         return 0;
       } catch (PolyglotException e) {
-//        if (e.isInternalError()) {
-          // for internal errors we print the full stack trace
+        if (e.isInternalError()) {
+//           for internal errors we print the full stack trace
           e.printStackTrace();
-//        } else {
-//          System.err.println(e.getMessage());
-//        }
+        } else {
+          printStackTrace(e.getMessage(), e.getStackTrace());
+        }
       }
     } catch (IllegalArgumentException e) {
       System.err.println(e.getMessage());
@@ -115,5 +123,21 @@ public class Main {
     }
     options.put(key, value);
     return true;
+  }
+
+  private static void printStackTrace(String message, StackTraceElement[] elements) {
+    System.err.println(message);
+    for (StackTraceElement element : elements) {
+      if(element.getClassName().equals("<" +NimbusLanguage .ID+ ">")) {
+        String fileName = element.getFileName();
+        String funcName = element.getMethodName();
+        if(funcName.equals(":program")) {
+          funcName = "@.script";
+        }
+        int lineNo = element.getLineNumber();
+
+        System.err.println("\tat "+fileName+":"+lineNo+" -> "+funcName+"()");
+      }
+    }
   }
 }

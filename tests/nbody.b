@@ -7,13 +7,10 @@
  * contributed by Richard Ore
 */
 
-const PI = 3.141592653589793
-const SOLAR_MASS = 4 * PI * PI
-const DAYS_PER_YEAR = 365.24
+var PI = 3.141592653589793
+var SOLAR_MASS = 4 * PI * PI
+var DAYS_PER_YEAR = 365.24
 
-/**
- * Hello
- */
 class Body {
   @new(x, y, z, vx, vy, vz, mass) {
     self.x = x
@@ -26,7 +23,7 @@ class Body {
   }
 }
 
-const Jupiter = new Body(
+var Jupiter = new Body(
   4.84143144246472090e+00,
   -1.16032004402742839e+00,
   -1.03622044471123109e-01,
@@ -36,7 +33,7 @@ const Jupiter = new Body(
   9.54791938424326609e-04 * SOLAR_MASS
 )
 
-const Saturn = new Body(
+var Saturn = new Body(
   8.34336671824457987e+00,
   4.12479856412430479e+00,
   -4.03523417114321381e-01,
@@ -46,7 +43,7 @@ const Saturn = new Body(
   2.85885980666130812e-04 * SOLAR_MASS
 )
 
-const Uranus = new Body(
+var Uranus = new Body(
   1.28943695621391310e+01,
   -1.51111514016986312e+01,
   -2.23307578892655734e-01,
@@ -56,7 +53,7 @@ const Uranus = new Body(
   4.36624404335156298e-05 * SOLAR_MASS
 )
 
-const Neptune = new Body(
+var Neptune = new Body(
   1.53796971148509165e+01,
   -2.59193146099879641e+01,
   1.79258772950371181e-01,
@@ -66,7 +63,7 @@ const Neptune = new Body(
   5.15138902046611451e-05 * SOLAR_MASS
 )
 
-const Sun = new Body(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, SOLAR_MASS)
+var Sun = new Body(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, SOLAR_MASS)
 
 var bodies = [Sun, Jupiter, Saturn, Uranus, Neptune]
 
@@ -74,8 +71,8 @@ def offsetMomentum() {
   var px = 0, py = 0, pz = 0
 
   iter var i = 0; i < bodies.length; i++ {
-    const body = bodies[i]
-    const mass = body.mass
+    var body = bodies[i]
+    var mass = body.mass
 
     px += body.vx * mass
     py += body.vy * mass
@@ -144,27 +141,28 @@ def energy() {
 
     iter var j = i + 1; j < size; j++ {
       var bodyj = bodies[j]
-      const dx = bodyi.x - bodyj.x
-      const dy = bodyi.y - bodyj.y
-      const dz = bodyi.z - bodyj.z
+      var dx = bodyi.x - bodyj.x
+      var dy = bodyi.y - bodyj.y
+      var dz = bodyi.z - bodyj.z
 
-      const distance = (dx**2 + dy**2 + dz**2) ** 0.5
+      var distance = (dx**2 + dy**2 + dz**2) ** 0.5
       e -= (bodyi.mass * bodyj.mass) / distance
     }
   }
+
   return e
 }
 
-def run(n) {
-  offsetMomentum()
+var n = 50000000
 
-  echo energy()
-  iter var i = 0; i < n; i++ {
-    advance(0.01)
-  }
-  echo energy()
+var start = microtime()
+
+offsetMomentum()
+
+echo energy()
+iter var i = 0; i < n; i++ {
+  advance(0.01)
 }
+echo energy()
 
-const start = microtime()
-run(50000000)
-echo 'Total time taken: ${(microtime() - start) / 1.0e+6}s'
+echo 'Time taken: ${(microtime() - start) / 1000000}'

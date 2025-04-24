@@ -2,6 +2,7 @@
   <configuration default="false" name="Main" type="Application" factoryName="Application" activateToolWindowBeforeRun="false" nameIsGenerated="true">
     <option name="MAIN_CLASS_NAME" value="org.nimbus.Main" />
     <module name="nimbus.main" />
+    <option name="PROGRAM_PARAMETERS" value="$PROJECT_DIR$/src/test/resources/exceptions.b" />
     <option name="VM_PARAMETERS" value="--enable-native-access=ALL-UNNAMED --sun-misc-unsafe-memory-access=allow" />
     <extension name="coverage">
       <pattern>

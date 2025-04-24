@@ -710,6 +710,8 @@ public class Parser {
   }
 
   private Stmt catchStatement() {
+    ignoreNewlines();
+
     consume(LBRACE, "'{' expected after catch");
     Stmt.Block body = block();
     Stmt.Block asBody = null;

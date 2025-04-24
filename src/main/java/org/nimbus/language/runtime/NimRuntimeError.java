@@ -64,7 +64,6 @@ public class NimRuntimeError extends AbstractTruffleException {
     return new NimRuntimeError(NString.concatString(message, others));
   }
 
-
   public static AbstractTruffleException error(Node node, String message, Object ...values) {
     return create(NErrorObject.create(node, "Error", NString.concatString(message, values)), node);
   }
