@@ -29,17 +29,25 @@ public final class NFunctionObject extends NimObject {
   @CompilerDirectives.CompilationFinal
   public final int argumentsCount;
 
+  @CompilerDirectives.CompilationFinal
+  public final boolean variadic;
+
   public NFunctionObject(Shape shape, NimClass classObject, String name, CallTarget target, int argumentsCount) {
     this(shape, classObject, name, target, argumentsCount, null);
   }
 
   public NFunctionObject(Shape shape, NimClass classObject, String name, CallTarget target, int argumentsCount, Object object) {
+    this(shape, classObject, name, target, argumentsCount, false, object);
+  }
+
+  public NFunctionObject(Shape shape, NimClass classObject, String name, CallTarget target, int argumentsCount, boolean variadic, Object object) {
     super(shape, classObject);
     callTarget = target;
     dispatchNode = NMethodDispatchNodeGen.create();
     this.name = name;
     this.argumentsCount = argumentsCount;
     this.methodTarget = object;
+    this.variadic = variadic;
   }
 
   @ExportMessage

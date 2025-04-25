@@ -24,11 +24,8 @@ public abstract class NRaiseStmtNode extends NNode {
   @Executed
   @Child protected NNode error;
 
-  private final SourceSection source;
-
-  public NRaiseStmtNode(NNode error, SourceSection source) {
+  public NRaiseStmtNode(NNode error) {
     this.error = error;
-    this.source = source;
   }
 
   @Specialization(limit = "3")
@@ -45,11 +42,6 @@ public abstract class NRaiseStmtNode extends NNode {
   @Specialization
   protected Object doInvalidError(Object value) {
     throw NimRuntimeError.create(value, this);
-  }
-
-  @Override
-  public SourceSection getSourceSection() {
-    return source;
   }
 
   @ExplodeLoop

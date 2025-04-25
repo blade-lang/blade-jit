@@ -4,6 +4,7 @@ import com.oracle.truffle.api.dsl.TypeSystemReference;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.UnexpectedResultException;
+import com.oracle.truffle.api.source.SourceSection;
 import com.oracle.truffle.api.strings.TruffleString;
 import org.nimbus.language.runtime.NListObject;
 import org.nimbus.language.runtime.NimContext;
@@ -11,6 +12,8 @@ import org.nimbus.language.runtime.NimNil;
 
 @TypeSystemReference(NimTypes.class)
 public abstract class NNode extends NBaseNode {
+  private SourceSection sourceSection = null;
+
   public abstract Object execute(VirtualFrame frame);
 
   public boolean executeBoolean(VirtualFrame frame) {
@@ -57,5 +60,15 @@ public abstract class NNode extends NBaseNode {
     // TODO: Handle dictionaries here...
 
     return true;
+  }
+
+  public NNode setSourceSection(SourceSection sourceSection) {
+    this.sourceSection = sourceSection;
+    return this;
+  }
+
+  @Override
+  public SourceSection getSourceSection() {
+    return sourceSection;
   }
 }

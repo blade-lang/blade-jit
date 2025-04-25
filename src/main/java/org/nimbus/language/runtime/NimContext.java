@@ -1,5 +1,6 @@
 package org.nimbus.language.runtime;
 
+import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.TruffleLanguage;
 import com.oracle.truffle.api.dsl.Bind;
 import com.oracle.truffle.api.nodes.Node;
@@ -33,5 +34,10 @@ public class NimContext {
 
   public static NimContext get(Node node) {
     return REFERENCE.get(node);
+  }
+
+  @CompilerDirectives.TruffleBoundary
+  public void flushOutput() {
+    output.flush();
   }
 }

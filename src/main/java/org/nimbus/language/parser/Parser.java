@@ -1,7 +1,5 @@
 package org.nimbus.language.parser;
 
-import com.oracle.truffle.api.source.SourceSection;
-import org.nimbus.language.nodes.NNode;
 import org.nimbus.language.parser.ast.AST;
 import org.nimbus.language.parser.ast.Expr;
 import org.nimbus.language.parser.ast.Stmt;
@@ -118,7 +116,7 @@ public class Parser {
 
     consume(NEWLINE, "end of statement expected");
 
-    while (match(NEWLINE, SEMICOLON));
+    while (match(NEWLINE, SEMICOLON)) ;
   }
 
   private void ignoreNewlinesNoSemi() {
@@ -130,655 +128,768 @@ public class Parser {
   }
 
   private Expr.Grouping grouping() {
-    ignoreNewlines();
-    var expr = expression();
-    ignoreNewlines();
-    consume(RPAREN, "')' Expected after expression");
-    return new Expr.Grouping(expr);
+    return (Expr.Grouping) wrapExpr(() -> {
+      ignoreNewlines();
+      var expr = expression();
+      ignoreNewlines();
+      consume(RPAREN, "')' Expected after expression");
+      return new Expr.Grouping(expr);
+    });
   }
 
   private Expr.Call finishCall(Expr callee) {
-    ignoreNewlines();
-    List<Expr> args = new ArrayList<>();
+    return (Expr.Call) wrapExpr(() -> {
+      ignoreNewlines();
+      List<Expr> args = new ArrayList<>();
 
-    if (!check(RPAREN)) {
-      args.add(expression());
-
-      while (match(COMMA)) {
-        ignoreNewlines();
+      if (!check(RPAREN)) {
         args.add(expression());
-      }
-    }
 
-    ignoreNewlines();
-    consume(RPAREN, "')' expected after args");
-    return new Expr.Call(callee, args);
+        while (match(COMMA)) {
+          ignoreNewlines();
+          args.add(expression());
+        }
+      }
+
+      ignoreNewlines();
+      consume(RPAREN, "')' expected after args");
+      return new Expr.Call(callee, args);
+    });
   }
 
   private Expr.Index finishIndex(Expr callee) {
-    ignoreNewlines();
-    List<Expr> args = new ArrayList<>();
-    args.add(expression());
-
-    if (match(COMMA)) {
+    return (Expr.Index) wrapExpr(() -> {
       ignoreNewlines();
+      List<Expr> args = new ArrayList<>();
       args.add(expression());
-    }
 
-    ignoreNewlines();
-    consume(RBRACKET, "']' expected at end of indexer");
-    return new Expr.Index(callee, args);
+      if (match(COMMA)) {
+        ignoreNewlines();
+        args.add(expression());
+      }
+
+      ignoreNewlines();
+      consume(RBRACKET, "']' expected at end of indexer");
+      return new Expr.Index(callee, args);
+    });
   }
 
-  private Expr finishDot(Expr expr) {
-    ignoreNewlines();
-    var prop = new Expr.Identifier(
-      consume(IDENTIFIER, "property name expected")
-    );
+  private Expr finishDot(Expr e) {
+    return (Expr) wrap((expr) -> {
+      ignoreNewlines();
+      var prop = new Expr.Identifier(
+        consume(IDENTIFIER, "property name expected")
+      );
 
-    if (match(ASSIGNERS)) {
-      expr = new Expr.Set(expr, prop, expression());
-    } else {
-      expr = new Expr.Get(expr, prop);
-    }
+      if (match(ASSIGNERS)) {
+        Token token = previous();
+        if (token.type() == EQUAL) {
+          expr = new Expr.Set((Expr) expr, prop, expression());
+        } else {
+          expr = new Expr.Set(
+            (Expr) expr,
+            prop,
+            new Expr.Binary(
+              new Expr.Get((Expr) expr, prop),
+              previous().copyToType(ASSIGNER_ALTS.get(token.type()), previous().literal()),
+              assignment()
+            )
+          );
+        }
+      } else {
+        expr = new Expr.Get((Expr) expr, prop);
+      }
 
-    return expr;
+      return expr;
+    }, e);
   }
 
   private Expr interpolation() {
-    match(INTERPOLATION);
+    return wrapExpr(() -> {
+      match(INTERPOLATION);
 
-    Expr expr = new Expr.Literal(
-      previous().copyToType(LITERAL, previous().literal())
-    );
+      Expr expr = wrapExpr(() -> new Expr.Literal(
+        previous().copyToType(LITERAL, previous().literal())
+      ));
 
-    do {
-      expr = new Expr.Binary(
-        expr,
-        previous().copyToType(PLUS, "+"),
-        expression()
-      );
+      do {
+        expr = new Expr.Binary(
+          expr,
+          previous().copyToType(PLUS, "+"),
+          expression()
+        );
 
-    } while ((check(INTERPOLATION) || check(LITERAL)) && !isAtEnd());
-    match(INTERPOLATION, LITERAL);
+      } while ((check(INTERPOLATION) || check(LITERAL)) && !isAtEnd());
+      match(INTERPOLATION, LITERAL);
 
-    return expr;
+      return expr;
+    });
   }
 
   private Expr newStatement() {
-    Expr expr = primary();
-    List<Expr> arguments = new ArrayList<>();
+    return wrapExpr(() -> {
+      Expr expr = primary();
+      List<Expr> arguments = new ArrayList<>();
 
-    consume(LPAREN, "'(' expected after new class instance");
-    ignoreNewlines();
+      consume(LPAREN, "'(' expected after new class instance");
+      ignoreNewlines();
 
-    if (!check(RPAREN)) {
-      arguments.add(expression());
-
-      while (match(COMMA)) {
-        ignoreNewlines();
+      if (!check(RPAREN)) {
         arguments.add(expression());
+
+        while (match(COMMA)) {
+          ignoreNewlines();
+          arguments.add(expression());
+        }
       }
-    }
 
-    ignoreNewlines();
-    consume(RPAREN, "')' expected after new class instance arguments");
+      ignoreNewlines();
+      consume(RPAREN, "')' expected after new class instance arguments");
 
-    return new Expr.New(expr, arguments);
+      return new Expr.New(expr, arguments);
+    });
+  }
+
+  private Expr literal() {
+    return wrapExpr(() -> new Expr.Literal(previous()));
   }
 
   private Expr primary() {
-    if (match(FALSE)) return new Expr.Boolean(false);
-    if (match(TRUE)) return new Expr.Boolean(true);
-    if (match(NIL)) return new Expr.Nil();
-    if (match(SELF)) return new Expr.Self();
-    if (match(PARENT)) return new Expr.Parent();
-    if (match(NEW)) return newStatement();
+    return wrapExpr(() -> {
+      if (match(FALSE)) return new Expr.Boolean(false);
+      if (match(TRUE)) return new Expr.Boolean(true);
+      if (match(NIL)) return new Expr.Nil();
+      if (match(SELF)) return new Expr.Self();
+      if (match(PARENT)) return new Expr.Parent();
+      if (match(NEW)) return newStatement();
 
-    if (check(INTERPOLATION)) return interpolation();
+      if (check(INTERPOLATION)) return interpolation();
 
-    if (match(BIN_NUMBER, HEX_NUMBER, OCT_NUMBER, REG_NUMBER)) {
-      return new Expr.Number(previous());
-    }
+      if (match(BIN_NUMBER, HEX_NUMBER, OCT_NUMBER, REG_NUMBER)) {
+        return new Expr.Number(previous());
+      }
 
-    if (match(LITERAL)) {
-      return new Expr.Literal(previous());
-    }
+      if (match(LITERAL)) {
+        return literal();
+      }
 
-    if (match(IDENTIFIER)) return new Expr.Identifier(previous());
+      if (match(IDENTIFIER)) return new Expr.Identifier(previous());
 
-    if (match(LPAREN)) return grouping();
-    if (match(LBRACE)) return dict();
-    if (match(LBRACKET)) return list();
-    if (match(AT)) return anonymous();
+      if (match(LPAREN)) return grouping();
+      if (match(LBRACE)) return dict();
+      if (match(LBRACKET)) return list();
+      if (match(AT)) return anonymous();
 
-    return null;
+      return null;
+    });
   }
 
   private Expr call() {
-    var expr = primary();
+    return wrapExpr(() -> {
+      var expr = primary();
 
-    while (true) {
-      if (match(DOT)) {
-        expr = finishDot(expr);
-      } else if (match(LPAREN)) {
-        expr = finishCall(expr);
-      } else if (match(LBRACKET)) {
-        expr = finishIndex(expr);
-      } else {
-        break;
+      while (true) {
+        if (match(DOT)) {
+          expr = finishDot(expr);
+        } else if (match(LPAREN)) {
+          expr = finishCall(expr);
+        } else if (match(LBRACKET)) {
+          expr = finishIndex(expr);
+        } else {
+          break;
+        }
       }
-    }
 
-    return expr;
+      return expr;
+    });
   }
 
   private Expr assignExpr() {
-    Expr expr = call();
+    return wrapExpr(() -> {
+      Expr expr = call();
 
-    if (match(INCREMENT)) {
-      expr = new Expr.Assign(
-        expr,
-        new Expr.Binary(
-          expr,
-          previous().copyToType(PLUS, "+"),
-          new Expr.Number(previous().copyToType(REG_NUMBER, "1"))
-        )
-      );
-    } else if (match(DECREMENT)) {
-      expr = new Expr.Assign(
-        expr,
-        new Expr.Binary(
-          expr,
-          previous().copyToType(MINUS, "-"),
-          new Expr.Number(previous().copyToType(REG_NUMBER, "1"))
-        )
-      );
-    }
+      if (match(INCREMENT)) {
+        if(expr instanceof Expr.Get get) {
+          expr = new Expr.Set(
+            get.expression,
+            get.name,
+            new Expr.Binary(
+              get,
+              previous().copyToType(PLUS, "+"),
+              new Expr.Number(previous().copyToType(REG_NUMBER, "1"))
+            )
+          );
+        } else {
+          expr = new Expr.Assign(
+            expr,
+            new Expr.Binary(
+              expr,
+              previous().copyToType(PLUS, "+"),
+              new Expr.Number(previous().copyToType(REG_NUMBER, "1"))
+            )
+          );
+        }
+      } else if (match(DECREMENT)) {
+        if(expr instanceof Expr.Get get) {
+          expr = new Expr.Set(
+            get.expression,
+            get.name,
+            new Expr.Binary(
+              get,
+              previous().copyToType(MINUS, "-"),
+              new Expr.Number(previous().copyToType(REG_NUMBER, "1"))
+            )
+          );
+        } else {
+          expr = new Expr.Assign(
+            expr,
+            new Expr.Binary(
+              expr,
+              previous().copyToType(MINUS, "-"),
+              new Expr.Number(previous().copyToType(REG_NUMBER, "1"))
+            )
+          );
+        }
+      }
 
-    return expr;
+      return expr;
+    });
   }
 
   private Expr unary() {
-    if (match(BANG, MINUS, TILDE)) {
-      Token op = previous();
-      ignoreNewlines();
-      return new Expr.Unary(op, assignExpr());
-    }
+    return wrapExpr(() -> {
+      if (match(BANG, MINUS, TILDE)) {
+        Token op = previous();
+        ignoreNewlines();
+        return new Expr.Unary(op, assignExpr());
+      }
 
-    return assignExpr();
+      return assignExpr();
+    });
   }
 
   private Expr factor() {
-    Expr expr = unary();
+    return wrapExpr(() -> {
+      Expr expr = unary();
 
-    while (match(MULTIPLY, DIVIDE, PERCENT, POW, FLOOR)) {
-      Token op = previous();
-      ignoreNewlines();
-      expr = new Expr.Binary(expr, op, unary());
-    }
+      while (match(MULTIPLY, DIVIDE, PERCENT, POW, FLOOR)) {
+        Token op = previous();
+        ignoreNewlines();
+        expr = new Expr.Binary(expr, op, unary());
+      }
 
-    return expr;
+      return expr;
+    });
   }
 
   private Expr term() {
-    Expr expr = factor();
+    return wrapExpr(() -> {
+      Expr expr = factor();
 
-    while (match(PLUS, MINUS)) {
-      Token op = previous();
-      ignoreNewlines();
-      expr = new Expr.Binary(expr, op, factor());
-    }
+      while (match(PLUS, MINUS)) {
+        Token op = previous();
+        ignoreNewlines();
+        expr = new Expr.Binary(expr, op, factor());
+      }
 
-    return expr;
+      return expr;
+    });
   }
 
   private Expr range() {
-    Expr expr = term();
+    return wrapExpr(() -> {
+      Expr expr = term();
 
-    while (match(RANGE)) {
-      ignoreNewlines();
-      expr = new Expr.Range(expr, term());
-    }
+      while (match(RANGE)) {
+        ignoreNewlines();
+        expr = new Expr.Range(expr, term());
+      }
 
-    return expr;
+      return expr;
+    });
   }
 
   private Expr shift() {
-    Expr expr = range();
+    return wrapExpr(() -> {
+      Expr expr = range();
 
-    while (match(LSHIFT, RSHIFT, URSHIFT)) {
-      var op = previous();
-      ignoreNewlines();
-      expr = new Expr.Binary(expr, op, range());
-    }
+      while (match(LSHIFT, RSHIFT, URSHIFT)) {
+        var op = previous();
+        ignoreNewlines();
+        expr = new Expr.Binary(expr, op, range());
+      }
 
-    return expr;
+      return expr;
+    });
   }
 
   private Expr bitAnd() {
-    Expr expr = shift();
+    return wrapExpr(() -> {
+      Expr expr = shift();
 
-    while (match(AMP)) {
-      var op = previous();
-      ignoreNewlines();
-      expr = new Expr.Binary(expr, op, shift());
-    }
+      while (match(AMP)) {
+        var op = previous();
+        ignoreNewlines();
+        expr = new Expr.Binary(expr, op, shift());
+      }
 
-    return expr;
+      return expr;
+    });
   }
 
   private Expr bitXor() {
-    Expr expr = bitAnd();
+    return wrapExpr(() -> {
+      Expr expr = bitAnd();
 
-    while (match(XOR)) {
-      var op = previous();
-      ignoreNewlines();
-      expr = new Expr.Binary(expr, op, bitAnd());
-    }
+      while (match(XOR)) {
+        var op = previous();
+        ignoreNewlines();
+        expr = new Expr.Binary(expr, op, bitAnd());
+      }
 
-    return expr;
+      return expr;
+    });
   }
 
   private Expr bitOr() {
-    Expr expr = bitXor();
+    return wrapExpr(() -> {
+      Expr expr = bitXor();
 
-    while (match(BAR)) {
-      var op = previous();
-      ignoreNewlines();
-      expr = new Expr.Binary(expr, op, bitXor());
-    }
+      while (match(BAR)) {
+        var op = previous();
+        ignoreNewlines();
+        expr = new Expr.Binary(expr, op, bitXor());
+      }
 
-    return expr;
+      return expr;
+    });
   }
 
   private Expr comparison() {
-    Expr expr = bitOr();
+    return wrapExpr(() -> {
+      Expr expr = bitOr();
 
-    while (match(GREATER, GREATER_EQ, LESS, LESS_EQ)) {
-      Token op = previous();
-      ignoreNewlines();
-      expr = new Expr.Logical(expr, op, bitOr());
-    }
+      while (match(GREATER, GREATER_EQ, LESS, LESS_EQ)) {
+        Token op = previous();
+        ignoreNewlines();
+        expr = new Expr.Logical(expr, op, bitOr());
+      }
 
-    return expr;
+      return expr;
+    });
   }
 
   private Expr equality() {
-    Expr expr = comparison();
+    return wrapExpr(() -> {
+      Expr expr = comparison();
 
-    while (match(BANG_EQ, EQUAL_EQ)) {
-      Token op = previous();
-      ignoreNewlines();
-      expr = new Expr.Logical(expr, op, comparison());
-    }
+      while (match(BANG_EQ, EQUAL_EQ)) {
+        Token op = previous();
+        ignoreNewlines();
+        expr = new Expr.Logical(expr, op, comparison());
+      }
 
-    return expr;
+      return expr;
+    });
   }
 
   private Expr and() {
-    Expr expr = equality();
+    return wrapExpr(() -> {
+      Expr expr = equality();
 
-    while (match(AND)) {
-      Token op = previous();
-      ignoreNewlines();
-      expr = new Expr.Logical(expr, op, equality());
-    }
+      while (match(AND)) {
+        Token op = previous();
+        ignoreNewlines();
+        expr = new Expr.Logical(expr, op, equality());
+      }
 
-    return expr;
+      return expr;
+    });
   }
 
   private Expr or() {
-    Expr expr = and();
+    return wrapExpr(() -> {
+      Expr expr = and();
 
-    while (match(OR)) {
-      Token op = previous();
-      ignoreNewlines();
-      expr = new Expr.Logical(expr, op, and());
-    }
+      while (match(OR)) {
+        Token op = previous();
+        ignoreNewlines();
+        expr = new Expr.Logical(expr, op, and());
+      }
 
-    return expr;
+      return expr;
+    });
   }
 
   private Expr conditional() {
-    Expr expr = or();
+    return wrapExpr(() -> {
+      Expr expr = or();
 
-    if (match(QUESTION)) {
-      ignoreNewlines();
-      var truth = conditional();
-      consume(COLON, "':' expected in ternary operation");
-      ignoreNewlines();
-      expr = new Expr.Condition(expr, truth, conditional());
-    }
+      if (match(QUESTION)) {
+        ignoreNewlines();
+        var truth = conditional();
+        consume(COLON, "':' expected in ternary operation");
+        ignoreNewlines();
+        expr = new Expr.Condition(expr, truth, conditional());
+      }
 
-    return expr;
+      return expr;
+    });
   }
 
   private Expr assignment() {
-    Expr expr = conditional();
+    return wrapExpr(() -> {
+      Expr expr = conditional();
 
-    if (match(ASSIGNERS)) {
-      var type = previous();
-      ignoreNewlines();
+      if (match(ASSIGNERS)) {
+        var type = previous();
+        ignoreNewlines();
 
-      if (type.type() == EQUAL) {
-        expr = new Expr.Assign(expr, assignment());
-      } else {
-        expr = new Expr.Assign(
-          expr,
-          new Expr.Binary(
+        if (type.type() == EQUAL) {
+          expr = new Expr.Assign(expr, assignment());
+        } else {
+          expr = new Expr.Assign(
             expr,
-            previous().copyToType(ASSIGNER_ALTS.get(type.type()), previous().literal()),
-            assignment()
-          )
-        );
+            new Expr.Binary(
+              expr,
+              previous().copyToType(ASSIGNER_ALTS.get(type.type()), previous().literal()),
+              assignment()
+            )
+          );
+        }
       }
-    }
 
-    return expr;
+      return expr;
+    });
   }
 
   private Expr expression() {
-    return (Expr) wrap(this::assignment);
+    return wrapExpr(this::assignment);
   }
 
   private Expr dict() {
-    ignoreNewlines();
-    List<Expr> keys = new ArrayList<>();
-    List<Expr> values = new ArrayList<>();
+    return wrapExpr(() -> {
+      ignoreNewlines();
+      List<Expr> keys = new ArrayList<>();
+      List<Expr> values = new ArrayList<>();
 
-    if (!check(RBRACE)) {
-      do {
-        ignoreNewlines();
-
-        if (!check(RBRACE)) {
-          if (match(IDENTIFIER)) {
-            keys.add(new Expr.Literal(previous()));
-          } else {
-            keys.add(expression());
-          }
+      if (!check(RBRACE)) {
+        do {
           ignoreNewlines();
 
-          if (!match(COLON)) {
-            values.add(new Expr.Literal(previous()));
-          } else {
+          if (!check(RBRACE)) {
+            if (match(IDENTIFIER)) {
+              keys.add(literal());
+            } else {
+              keys.add(expression());
+            }
             ignoreNewlines();
-            values.add(expression());
+
+            if (!match(COLON)) {
+              values.add(literal());
+            } else {
+              ignoreNewlines();
+              values.add(expression());
+            }
+
+            ignoreNewlines();
           }
+        } while (match(COMMA));
+      }
 
-          ignoreNewlines();
-        }
-      } while (match(COMMA));
-    }
-
-    ignoreNewlines();
-    consume(RBRACE, "'}' expected after dictionary");
-    return new Expr.Dict(keys, values);
+      ignoreNewlines();
+      consume(RBRACE, "'}' expected after dictionary");
+      return new Expr.Dict(keys, values);
+    });
   }
 
   private Expr list() {
-    ignoreNewlines();
-    List<Expr> items = new ArrayList<>();
+    return wrapExpr(() -> {
+      ignoreNewlines();
+      List<Expr> items = new ArrayList<>();
 
-    if (!check(RBRACKET)) {
-      do {
-        ignoreNewlines();
-
-        if (!check(RBRACKET)) {
-          items.add(expression());
+      if (!check(RBRACKET)) {
+        do {
           ignoreNewlines();
-        }
-      } while (match(COMMA));
-    }
 
-    ignoreNewlines();
-    consume(RBRACKET, "expected ']' at the end of list");
-    return new Expr.Array(items);
+          if (!check(RBRACKET)) {
+            items.add(expression());
+            ignoreNewlines();
+          }
+        } while (match(COMMA));
+      }
+
+      ignoreNewlines();
+      consume(RBRACKET, "expected ']' at the end of list");
+      return new Expr.Array(items);
+    });
   }
 
   private Stmt echoStatement() {
-    Expr val = expression();
-    endStatement();
-    return new Stmt.Echo(val);
+    return wrapStmt(() -> {
+      Expr val = expression();
+      endStatement();
+      return new Stmt.Echo(val);
+    });
   }
 
   private Stmt.Expression expressionStatement(boolean is_iter) {
-    Expr val = expression();
-    if (!is_iter) endStatement();
-    return new Stmt.Expression(val);
+    return (Stmt.Expression) wrapStmt(() -> {
+      Expr val = expression();
+      if (!is_iter) endStatement();
+      return new Stmt.Expression(val);
+    });
   }
 
   private Stmt.Block block() {
-    blockCount++;
+    return (Stmt.Block) wrapStmt(() -> {
+      blockCount++;
 
-    List<Stmt> val = new ArrayList<>();
-    ignoreNewlines();
+      List<Stmt> val = new ArrayList<>();
+      ignoreNewlines();
 
-    while (!check(RBRACE) && !isAtEnd()) {
-      val.add(declaration());
-    }
+      while (!check(RBRACE) && !isAtEnd()) {
+        val.add(declaration());
+      }
 
-    consume(RBRACE, "'}' expected after block");
-    blockCount--;
+      consume(RBRACE, "'}' expected after block");
+      blockCount--;
 
-    return new Stmt.Block(val);
+      return new Stmt.Block(val);
+    });
   }
 
   private Stmt ifStatement() {
-    Expr expr = expression();
-    Stmt body = statement();
+    return wrapStmt(() -> {
+      Expr expr = expression();
+      Stmt body = statement();
 
-    if (match(ELSE)) {
-      return new Stmt.If(expr, body, statement());
-    }
+      if (match(ELSE)) {
+        return new Stmt.If(expr, body, statement());
+      }
 
-    return new Stmt.If(expr, body, null);
+      return new Stmt.If(expr, body, null);
+    });
   }
 
   private Stmt whileStatement() {
-    return new Stmt.While(expression(), statement());
+    return wrapStmt(() -> new Stmt.While(expression(), statement()));
   }
 
   private Stmt doWhileStatement() {
-    Stmt body = statement();
-    consume(WHILE, "'while' expected after do body");
-    return new Stmt.DoWhile(body, expression());
+    return wrapStmt(() -> {
+      Stmt body = statement();
+      consume(WHILE, "'while' expected after do body");
+      return new Stmt.DoWhile(body, expression());
+    });
   }
 
   private Stmt forStatement() {
-    List<Expr.Identifier> vars = new ArrayList<>();
-    vars.add(
-      new Expr.Identifier(consume(IDENTIFIER, "variable name expected"))
-    );
-
-    if (match(COMMA)) {
+    return wrapStmt(() -> {
+      List<Expr.Identifier> vars = new ArrayList<>();
       vars.add(
         new Expr.Identifier(consume(IDENTIFIER, "variable name expected"))
       );
-    }
 
-    consume(IN, "'in' expected after for statement variables");
+      if (match(COMMA)) {
+        vars.add(
+          new Expr.Identifier(consume(IDENTIFIER, "variable name expected"))
+        );
+      }
 
-    return new Stmt.For(vars, expression(), statement());
+      consume(IN, "'in' expected after for statement variables");
+
+      return new Stmt.For(vars, expression(), statement());
+    });
   }
 
   private Stmt assertStatement() {
-    Expr message = null;
-    Expr expr = expression();
+    return wrapStmt(() -> {
+      Expr message = null;
+      Expr expr = expression();
 
-    if (match(COMMA)) message = expression();
-    return new Stmt.Assert(expr, message);
+      if (match(COMMA)) message = expression();
+      return new Stmt.Assert(expr, message);
+    });
   }
 
   private Stmt usingStatement() {
-    Expr expr = expression();
-    List<Expr> caseLabels = new ArrayList<>();
-    List<Stmt> caseBodies = new ArrayList<>();
-    Stmt defaultCase = null;
+    return wrapStmt(() -> {
+      Expr expr = expression();
+      List<Expr> caseLabels = new ArrayList<>();
+      List<Stmt> caseBodies = new ArrayList<>();
+      Stmt defaultCase = null;
 
-    consume(LBRACE, "'{' expected after using expression");
-    ignoreNewlines();
+      consume(LBRACE, "'{' expected after using expression");
+      ignoreNewlines();
 
-    var state = 0;
+      var state = 0;
 
-    while (!match(RBRACE) && !check(EOF)) {
-      if (match(WHEN, DEFAULT, NEWLINE)) {
-        if (state == 1) {
-          throw new ParserException(
-            lexer.getSource(),
-            previous(), false, "'when' cannot exist after a default"
-          );
-        }
-
-        if (previous().type() == NEWLINE) {
-        } else if (previous().type() == WHEN) {
-          List<Expr> tmp_cases = new ArrayList<>();
-          do {
-            ignoreNewlines();
-            tmp_cases.add(expression());
-          } while (match(COMMA));
-
-          var stmt = statement();
-
-          for (Expr tmp : tmp_cases) {
-            caseLabels.add(tmp);
-            caseBodies.add(stmt);
-          }
-        } else {
-          state = 1;
-          defaultCase = statement();
-        }
-      } else {
-        throw new ParserException(
-          lexer.getSource(),
-          previous(), false, "Invalid using statement"
-        );
-      }
-    }
-
-    return new Stmt.Using(expr, caseLabels, caseBodies, defaultCase);
-  }
-
-  private Stmt importStatement() {
-    List<String> path = new ArrayList<>();
-    List<Token> elements = new ArrayList<>();
-
-    while (!match(NEWLINE, EOF, LBRACE)) {
-      advance();
-      path.add(previous().literal());
-    }
-
-    Token importsAll = null;
-    int selectCount = 0;
-
-    if (previous().type() == LBRACE) {
-      var scan = true;
-
-      while (!check(RBRACE) && scan) {
-        ignoreNewlines();
-        elements.add(consumeAny("identifier expected", IDENTIFIER, MULTIPLY));
-
-        selectCount++;
-        if (previous().type() == MULTIPLY) {
-          if (importsAll != null) {
+      while (!match(RBRACE) && !check(EOF)) {
+        if (match(WHEN, DEFAULT, NEWLINE)) {
+          if (state == 1) {
             throw new ParserException(
               lexer.getSource(),
-              importsAll, false, "cannot repeat select all"
+              previous(), false, "'when' cannot exist after a default"
             );
           }
 
-          importsAll = previous();
-        }
+          if (previous().type() == NEWLINE) {
+          } else if (previous().type() == WHEN) {
+            List<Expr> tmp_cases = new ArrayList<>();
+            do {
+              ignoreNewlines();
+              tmp_cases.add(expression());
+            } while (match(COMMA));
 
-        if (!match(COMMA)) {
-          scan = false;
+            var stmt = statement();
+
+            for (Expr tmp : tmp_cases) {
+              caseLabels.add(tmp);
+              caseBodies.add(stmt);
+            }
+          } else {
+            state = 1;
+            defaultCase = statement();
+          }
+        } else {
+          throw new ParserException(
+            lexer.getSource(),
+            previous(), false, "Invalid using statement"
+          );
         }
-        ignoreNewlines();
       }
 
-      consume(RBRACE, "'}' expected at end of selective import");
-    }
+      return new Stmt.Using(expr, caseLabels, caseBodies, defaultCase);
+    });
+  }
 
-    if (importsAll != null && selectCount > 1) {
-      throw new ParserException(
-        lexer.getSource(),
-        importsAll, false, "cannot import selected items and all at the same time"
-      );
-    }
+  private Stmt importStatement() {
+    return wrapStmt(() -> {
+      List<String> path = new ArrayList<>();
+      List<Token> elements = new ArrayList<>();
 
-    return new Stmt.Import(String.join("", path), elements, false);
+      while (!match(NEWLINE, EOF, LBRACE)) {
+        advance();
+        path.add(previous().literal());
+      }
+
+      Token importsAll = null;
+      int selectCount = 0;
+
+      if (previous().type() == LBRACE) {
+        var scan = true;
+
+        while (!check(RBRACE) && scan) {
+          ignoreNewlines();
+          elements.add(consumeAny("identifier expected", IDENTIFIER, MULTIPLY));
+
+          selectCount++;
+          if (previous().type() == MULTIPLY) {
+            if (importsAll != null) {
+              throw new ParserException(
+                lexer.getSource(),
+                importsAll, false, "cannot repeat select all"
+              );
+            }
+
+            importsAll = previous();
+          }
+
+          if (!match(COMMA)) {
+            scan = false;
+          }
+          ignoreNewlines();
+        }
+
+        consume(RBRACE, "'}' expected at end of selective import");
+      }
+
+      if (importsAll != null && selectCount > 1) {
+        throw new ParserException(
+          lexer.getSource(),
+          importsAll, false, "cannot import selected items and all at the same time"
+        );
+      }
+
+      return new Stmt.Import(String.join("", path), elements, false);
+    });
   }
 
   private Stmt catchStatement() {
-    ignoreNewlines();
-
-    consume(LBRACE, "'{' expected after catch");
-    Stmt.Block body = block();
-    Stmt.Block asBody = null;
-    Stmt.Block thenBody = null;
-
-    Expr.Identifier exception_var = null;
-    if (match(AS)) {
-      consume(IDENTIFIER, "exception variable expected");
-      exception_var = new Expr.Identifier(previous());
-
+    return wrapStmt(() -> {
       ignoreNewlines();
-      if(check(LBRACE)) {
-        consume(LBRACE, "'{' expected after variable name");
-        asBody = block();
+
+      consume(LBRACE, "'{' expected after catch");
+      Stmt.Block body = block();
+      Stmt.Block asBody = null;
+      Stmt.Block thenBody = null;
+
+      Expr.Identifier exception_var = null;
+      if (match(AS)) {
+        consume(IDENTIFIER, "exception variable expected");
+        exception_var = new Expr.Identifier(previous());
+
+        ignoreNewlines();
+        if (check(LBRACE)) {
+          consume(LBRACE, "'{' expected after variable name");
+          asBody = block();
+        }
       }
-    }
 
-    if(match(THEN)) {
-      ignoreNewlines();
-      consume(LBRACE, "'{' expected after then");
-      thenBody = block();
-    }
+      if (match(THEN)) {
+        ignoreNewlines();
+        consume(LBRACE, "'{' expected after then");
+        thenBody = block();
+      }
 
-    return new Stmt.Catch(body, asBody, thenBody, exception_var);
+      return new Stmt.Catch(body, asBody, thenBody, exception_var);
+    });
   }
 
   private Stmt iterStatement() {
-    if(check(LPAREN)) {
-      match(LPAREN);
-    }
-
-    Stmt decl = null;
-    if (!check(SEMICOLON)) {
-      if (check(VAR)) {
-        consume(VAR, "variable declaration expected");
+    return wrapStmt(() -> {
+      if (check(LPAREN)) {
+        match(LPAREN);
       }
-      decl = varDeclaration(false);
-    }
-    consume(SEMICOLON, "';' expected");
-    ignoreNewlinesNoSemi();
 
-    Expr condition = null;
-    if (!check(SEMICOLON)) {
-      condition = expression();
-    }
-    consume(SEMICOLON, "';' expected");
-    ignoreNewlinesNoSemi();
+      Stmt decl = null;
+      if (!check(SEMICOLON)) {
+        if (check(VAR)) {
+          consume(VAR, "variable declaration expected");
+        }
+        decl = varDeclaration(false);
+      }
+      consume(SEMICOLON, "';' expected");
+      ignoreNewlinesNoSemi();
 
-    Stmt.Expression iterator = null;
-    if (!check(LBRACE) && !check(RPAREN)) {
-      do {
-        iterator = expressionStatement(true);
-        ignoreNewlines();
-      } while (match(COMMA));
-    }
+      Expr condition = null;
+      if (!check(SEMICOLON)) {
+        condition = expression();
+      }
+      consume(SEMICOLON, "';' expected");
+      ignoreNewlinesNoSemi();
 
-    if(check(RPAREN)) {
-      match(RPAREN);
-    }
+      Stmt.Expression iterator = null;
+      if (!check(LBRACE) && !check(RPAREN)) {
+        do {
+          iterator = expressionStatement(true);
+          ignoreNewlines();
+        } while (match(COMMA));
+      }
 
-    consume(LBRACE, "'{' expected after catch");
-    Stmt.Block body = block();
-    return new Stmt.Iter(decl, condition, iterator, body);
+      if (check(RPAREN)) {
+        match(RPAREN);
+      }
+
+      consume(LBRACE, "'{' expected after catch");
+      Stmt.Block body = block();
+      return new Stmt.Iter(decl, condition, iterator, body);
+    });
   }
 
   private Stmt statement() {
-    return (Stmt) wrap(() -> {
+    return wrapStmt(() -> {
       ignoreNewlines();
 
       Stmt result;
@@ -824,55 +935,94 @@ public class Parser {
   }
 
   private Stmt varDeclaration(boolean isConstant) {
-    consume(IDENTIFIER, "variable name expected");
-    Token nameToken = previous();
+    return wrapStmt(() -> {
+      consume(IDENTIFIER, "variable name expected");
+      Token nameToken = previous();
 
-    Stmt decl;
-    if (match(EQUAL)) {
-      decl = new Stmt.Var(nameToken, expression(), isConstant);
-    } else {
-      if (isConstant) {
-        throw new ParserException(lexer.getSource(), peek(), false, "constant value not declared");
-      }
-      decl = new Stmt.Var(nameToken, null, false);
-    }
-
-    if (check(COMMA)) {
-      List<Stmt> declarations = new ArrayList<>();
-      declarations.add(decl);
-
-      while (match(COMMA)) {
-        ignoreNewlines();
-        consume(IDENTIFIER, "variable name expected");
-        nameToken = previous();
-
-        if (match(EQUAL)) {
-          declarations.add(new Stmt.Var(nameToken, expression(), isConstant));
-        } else {
-          if (isConstant) {
-            throw new ParserException(lexer.getSource(), peek(), false, "constant value not declared");
-          }
-          declarations.add(new Stmt.Var(nameToken, null, false));
+      Stmt decl;
+      if (match(EQUAL)) {
+        decl = new Stmt.Var(nameToken, expression(), isConstant);
+      } else {
+        if (isConstant) {
+          throw new ParserException(lexer.getSource(), peek(), false, "constant value not declared");
         }
+        decl = new Stmt.Var(nameToken, null, false);
       }
 
-      return new Stmt.VarList(declarations);
-    }
+      if (check(COMMA)) {
+        List<Stmt> declarations = new ArrayList<>();
+        declarations.add(decl);
 
-    return decl;
+        while (match(COMMA)) {
+          ignoreNewlines();
+          consume(IDENTIFIER, "variable name expected");
+          nameToken = previous();
+
+          if (match(EQUAL)) {
+            declarations.add(new Stmt.Var(nameToken, expression(), isConstant));
+          } else {
+            if (isConstant) {
+              throw new ParserException(lexer.getSource(), peek(), false, "constant value not declared");
+            }
+            declarations.add(new Stmt.Var(nameToken, null, false));
+          }
+        }
+
+        return new Stmt.VarList(declarations);
+      }
+
+      return decl;
+    });
   }
 
   private Expr anonymous() {
-    Token nameCompatToken = previous();
+    return wrapExpr(() -> {
+      Token nameCompatToken = previous();
 
-    List<Expr.Identifier> params = new ArrayList<>();
-    boolean isVariadic = false;
+      List<Expr.Identifier> params = new ArrayList<>();
+      boolean isVariadic = false;
 
-    if (check(LPAREN)) {
-      consume(LPAREN, "expected '(' at start of anonymous function");
+      if (check(LPAREN)) {
+        consume(LPAREN, "expected '(' at start of anonymous function");
 
-      while (!check(RPAREN)) {
-        consumeAny("parameter name expected", IDENTIFIER, TRI_DOT);
+        while (!check(RPAREN)) {
+          consumeAny("parameter name expected", IDENTIFIER, TRI_DOT);
+          if (previous().type() == TRI_DOT) {
+            isVariadic = true;
+            break;
+          }
+
+          params.add(new Expr.Identifier(previous()));
+
+          if (!check(RPAREN)) {
+            consume(COMMA, "',' expected between function params");
+          }
+        }
+
+        consume(RPAREN, "expected ')' after anonymous function parameters");
+      }
+
+      consume(LBRACE, "'{' expected after function declaration");
+      var body = block();
+
+      return new Expr.Anonymous(
+        new Stmt.Function(
+          nameCompatToken.copyToType(IDENTIFIER, "@anon" + (anonymousCount++)),
+          params, body, isVariadic
+        )
+      );
+    });
+  }
+
+  private Stmt defDeclaration() {
+    return wrapStmt(() -> {
+      consume(IDENTIFIER, "function name expected");
+      Token name = previous();
+      List<Expr.Identifier> params = new ArrayList<>();
+      boolean isVariadic = false;
+
+      consume(LPAREN, "'(' expected after function name");
+      while (match(IDENTIFIER, TRI_DOT)) {
         if (previous().type() == TRI_DOT) {
           isVariadic = true;
           break;
@@ -881,148 +1031,127 @@ public class Parser {
         params.add(new Expr.Identifier(previous()));
 
         if (!check(RPAREN)) {
-          consume(COMMA, "',' expected between function params");
+          consume(COMMA, "',' expected between function arguments");
+          ignoreNewlines();
         }
       }
 
-      consume(RPAREN, "expected ')' after anonymous function parameters");
-    }
+      consume(RPAREN, "')' expected after function arguments");
 
-    consume(LBRACE, "'{' expected after function declaration");
-    var body = block();
+      ignoreNewlines();
+      consume(LBRACE, "'{' expected after function declaration");
+      var body = block();
 
-    return new Expr.Anonymous(
-      new Stmt.Function(
-        nameCompatToken.copyToType(IDENTIFIER, "@anon" + (anonymousCount++)),
-        params, body, isVariadic
-      )
-    );
-  }
-
-  private Stmt defDeclaration() {
-    consume(IDENTIFIER, "function name expected");
-    Token name = previous();
-    List<Expr.Identifier> params = new ArrayList<>();
-    boolean isVariadic = false;
-
-    consume(LPAREN, "'(' expected after function name");
-    while (match(IDENTIFIER, TRI_DOT)) {
-      if (previous().type() == TRI_DOT) {
-        isVariadic = true;
-        break;
-      }
-
-      params.add(new Expr.Identifier(previous()));
-
-      if (!check(RPAREN)) {
-        consume(COMMA, "',' expected between function arguments");
-        ignoreNewlines();
-      }
-    }
-
-    consume(RPAREN, "')' expected after function arguments");
-    consume(LBRACE, "'{' expected after function declaration");
-    var body = block();
-
-    return new Stmt.Function(name, params, body, isVariadic);
+      return new Stmt.Function(name, params, body, isVariadic);
+    });
   }
 
   private Stmt.Property classField(boolean isStatic, boolean isConst) {
-    consume(IDENTIFIER, "class property name expected");
-    Token name = previous();
+    return (Stmt.Property) wrapStmt(() -> {
+      consume(IDENTIFIER, "class property name expected");
+      Token name = previous();
 
-    Expr value = null;
-    if (match(EQUAL)) value = expression();
+      Expr value = null;
+      if (match(EQUAL)) value = expression();
 
-    endStatement();
-    ignoreNewlines();
+      endStatement();
+      ignoreNewlines();
 
-    return new Stmt.Property(name, value, isStatic, isConst);
+      return new Stmt.Property(name, value, isStatic, isConst);
+    });
   }
 
   private Stmt.Method classOperator() {
-    consumeAny("non-assignment operator expected", OPERATORS);
-    var name = previous();
+    return (Stmt.Method) wrapStmt(() -> {
+      consumeAny("non-assignment operator expected", OPERATORS);
+      var name = previous();
 
-    consume(LBRACE, "'{' expected after operator declaration");
-    var body = block();
+      consume(LBRACE, "'{' expected after operator declaration");
+      var body = block();
 
-    return new Stmt.Method(name, new ArrayList<>(), body, false, false);
+      return new Stmt.Method(name, new ArrayList<>(), body, false, false);
+    });
   }
 
   private Stmt.Method method(boolean isStatic) {
-    consumeAny("method name expected", IDENTIFIER, DECORATOR);
-    Token name = previous();
+    return (Stmt.Method) wrapStmt(() -> {
+      consumeAny("method name expected", IDENTIFIER, DECORATOR);
+      Token name = previous();
 
-    List<Expr.Identifier> params = new ArrayList<>();
-    boolean isVariadic = false;
+      List<Expr.Identifier> params = new ArrayList<>();
+      boolean isVariadic = false;
 
-    consume(LPAREN, "'(' expected after method name");
-    while (match(IDENTIFIER, TRI_DOT)) {
-      if (previous().type() == TRI_DOT) {
-        isVariadic = true;
-        break;
+      consume(LPAREN, "'(' expected after method name");
+      while (match(IDENTIFIER, TRI_DOT)) {
+        if (previous().type() == TRI_DOT) {
+          isVariadic = true;
+          break;
+        }
+
+        params.add(new Expr.Identifier(previous()));
+
+        if (!check(RPAREN)) {
+          consume(COMMA, "',' expected between method arguments");
+          ignoreNewlines();
+        }
       }
 
-      params.add(new Expr.Identifier(previous()));
+      consume(RPAREN, "')' expected after method arguments");
 
-      if (!check(RPAREN)) {
-        consume(COMMA, "',' expected between method arguments");
-        ignoreNewlines();
-      }
-    }
+      ignoreNewlines();
+      consume(LBRACE, "'{' expected after method declaration");
+      var body = block();
 
-    consume(RPAREN, "')' expected after method arguments");
-    consume(LBRACE, "'{' expected after method declaration");
-    var body = block();
-
-    return new Stmt.Method(name, params, body, isStatic, isVariadic);
+      return new Stmt.Method(name, params, body, isStatic, isVariadic);
+    });
   }
 
   private Stmt classDeclaration() {
-    List<Stmt.Property> properties = new ArrayList<>();
-    List<Stmt.Method> methods = new ArrayList<>();
-    List<Stmt.Method> operators = new ArrayList<>();
+    return wrapStmt(() -> {
+      List<Stmt.Property> properties = new ArrayList<>();
+      List<Stmt.Method> methods = new ArrayList<>();
+      List<Stmt.Method> operators = new ArrayList<>();
 
-    consume(IDENTIFIER, "class name expected");
-    Token name = previous();
-    Expr.Identifier superclass = null;
+      consume(IDENTIFIER, "class name expected");
+      Token name = previous();
+      Expr.Identifier superclass = null;
 
-    if (match(LESS)) {
-      consume(IDENTIFIER, "super class name expected");
-      superclass = new Expr.Identifier(previous());
-    }
-
-    ignoreNewlines();
-    consume(LBRACE, "'{' expected after class declaration");
-    ignoreNewlines();
-
-    while (!check(RBRACE) && !check(EOF)) {
-      boolean is_static = false;
+      if (match(LESS)) {
+        consume(IDENTIFIER, "super class name expected");
+        superclass = new Expr.Identifier(previous());
+      }
 
       ignoreNewlines();
+      consume(LBRACE, "'{' expected after class declaration");
+      ignoreNewlines();
 
-      if (match(STATIC)) is_static = true;
+      while (!check(RBRACE) && !check(EOF)) {
+        boolean is_static = false;
 
-      if (match(VAR)) {
-        properties.add(classField(is_static, false));
-      } else if (match(CONST)) {
-        properties.add(classField(is_static, true));
-      } else if (match(DEF)) {
-        operators.add(classOperator());
         ignoreNewlines();
-      } else {
-        methods.add(method(is_static));
-        ignoreNewlines();
+
+        if (match(STATIC)) is_static = true;
+
+        if (match(VAR)) {
+          properties.add(classField(is_static, false));
+        } else if (match(CONST)) {
+          properties.add(classField(is_static, true));
+        } else if (match(DEF)) {
+          operators.add(classOperator());
+          ignoreNewlines();
+        } else {
+          methods.add(method(is_static));
+          ignoreNewlines();
+        }
       }
-    }
 
-    consume(RBRACE, "'{' expected at end of class definition");
-    return new Stmt.Class(name, superclass, properties, methods, operators);
+      consume(RBRACE, "'{' expected at end of class definition");
+      return new Stmt.Class(name, superclass, properties, methods, operators);
+    });
   }
 
   private Stmt declaration() {
-    return (Stmt) wrap(() -> {
+    return wrapStmt(() -> {
       ignoreNewlines();
 
       Stmt result;
@@ -1054,8 +1183,7 @@ public class Parser {
     List<Stmt> result = new ArrayList<>();
 
     while (!isAtEnd()) {
-      Stmt declaration = declaration();
-      result.add(declaration);
+      result.add(declaration());
     }
 
     return result;
@@ -1070,13 +1198,13 @@ public class Parser {
     );
   }
 
-  private Object wrap(Callback callback) {
+  private AST wrap(Callback callback, AST ast) {
     int startLine = peek().line();
     int startOffset = peek().offset();
 
-    AST result = callback.run();
+    AST result = callback.run(ast);
 
-    if(result != null) {
+    if (result != null && !result.wrapped) {
       int endLine = previous().line();
       int endOffset = previous().offset();
 
@@ -1085,16 +1213,43 @@ public class Parser {
       result.startColumn = startOffset - lexer.source.getLineStartOffset(startLine);
       result.endColumn = endOffset - lexer.source.getLineStartOffset(endLine);
 
-      if(result.endColumn == -1) {
+      if (result.endColumn == -1) {
         result.endLine--;
         result.endColumn = lexer.source.getLineLength(result.endLine);
       }
+
+      if (result.startColumn == -1) {
+        result.startLine--;
+        result.startColumn = lexer.source.getLineLength(result.startLine);
+      }
+
+      if (result.startColumn > result.endColumn && result.startLine == result.endLine) {
+        result.startColumn = result.endColumn - (result.startColumn - result.endColumn);
+        if(result.startColumn < 0) {
+          result.startColumn = 0;
+        }
+      }
+
+      // mark ad wrapped
+      result.wrapped = true;
     }
 
     return result;
   }
 
-  interface Callback {
+  private Expr wrapExpr(FlatCallback callback) {
+    return (Expr) wrap((ignore) -> callback.run(), null);
+  }
+
+  private Stmt wrapStmt(FlatCallback callback) {
+    return (Stmt) wrap((ignore) -> callback.run(), null);
+  }
+
+  interface FlatCallback {
     AST run();
+  }
+
+  interface Callback {
+    AST run(AST ast);
   }
 }

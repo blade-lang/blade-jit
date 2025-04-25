@@ -15,15 +15,12 @@ public final class NExprStmtNode extends NStmtNode {
   @CompilerDirectives.CompilationFinal
   private final boolean discardValue;
 
-  private final SourceSection source;
-
-  public NExprStmtNode(NNode expr, SourceSection source) {
-    this(expr, source, false);
+  public NExprStmtNode(NNode expr) {
+    this(expr, false);
   }
 
-  public NExprStmtNode(NNode expr, SourceSection source, boolean discardValue) {
+  public NExprStmtNode(NNode expr, boolean discardValue) {
     this.expr = expr;
-    this.source = source;
     this.discardValue = discardValue;
   }
 
@@ -31,10 +28,5 @@ public final class NExprStmtNode extends NStmtNode {
   public Object execute(VirtualFrame frame) {
     Object result = expr.execute(frame);
     return discardValue ? NimNil.SINGLETON : result;
-  }
-
-  @Override
-  public SourceSection getSourceSection() {
-    return source;
   }
 }

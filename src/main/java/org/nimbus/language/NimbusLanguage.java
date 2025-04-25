@@ -15,6 +15,7 @@ import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.strings.TruffleString;
 import org.nimbus.language.builtins.AbsBuiltinFunctionNodeFactory;
 import org.nimbus.language.builtins.MicroTimeBuiltinFunctionNodeFactory;
+import org.nimbus.language.builtins.PrintBuiltinFunctionNodeFactory;
 import org.nimbus.language.builtins.TimeBuiltinFunctionNodeFactory;
 import org.nimbus.language.builtins.list.NListAppendMethodNodeFactory;
 import org.nimbus.language.builtins.object.NObjectHasPropMethodNodeFactory;
@@ -134,6 +135,7 @@ public class NimbusLanguage extends TruffleLanguage<NimContext> {
     defineBuiltinFunction(objectLibrary, globalScope, "abs", AbsBuiltinFunctionNodeFactory.getInstance());
     defineBuiltinFunction(objectLibrary, globalScope, "time", TimeBuiltinFunctionNodeFactory.getInstance());
     defineBuiltinFunction(objectLibrary, globalScope, "microtime", MicroTimeBuiltinFunctionNodeFactory.getInstance());
+    defineBuiltinFunction(objectLibrary, globalScope, "print", PrintBuiltinFunctionNodeFactory.getInstance(), true);
 
     // Object class
     defineBuiltinMethod(objectLibrary, objectClass, "has_prop", NObjectHasPropMethodNodeFactory.getInstance());
@@ -171,13 +173,13 @@ public class NimbusLanguage extends TruffleLanguage<NimContext> {
                 new NSelfLiteralNode(),
                 new NReadFunctionArgsExprNode(1),
                 "message"
-              ), null),
+              )),
               // this.type = <type>;
               new NExprStmtNode(NSetPropertyNodeGen.create(
                 new NSelfLiteralNode(),
                 new NStringLiteralNode(entry.getKey()),
                 "type"
-              ), null)
+              ))
             )),
             "@new"
           ).getCallTarget(),
@@ -190,14 +192,21 @@ public class NimbusLanguage extends TruffleLanguage<NimContext> {
 
   private void defineBuiltinFunction(
     DynamicObjectLibrary objectLibrary, NGlobalScopeObject globalScope, String name,
-    NodeFactory<? extends NBuiltinFunctionNode> factory
+    NodeFactory<? extends NBuiltinFunctionNode> factory, boolean variadic
   ) {
     objectLibrary.putConstant(
       globalScope,
       name,
-      new NFunctionObject(rootShape, functionClass, name, createCallTarget(factory, true), factory.getExecutionSignature().size()),
+      new NFunctionObject(rootShape, functionClass, name, createCallTarget(factory, true), factory.getExecutionSignature().size(), variadic, null),
       0
     );
+  }
+
+  private void defineBuiltinFunction(
+    DynamicObjectLibrary objectLibrary, NGlobalScopeObject globalScope, String name,
+    NodeFactory<? extends NBuiltinFunctionNode> factory
+  ) {
+    defineBuiltinFunction(objectLibrary, globalScope, name, factory, false);
   }
 
   private void defineBuiltinMethod(

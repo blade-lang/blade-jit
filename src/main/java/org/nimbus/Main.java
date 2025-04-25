@@ -41,6 +41,8 @@ public class Main {
     try(
       Context defaultContext = Context.newBuilder(NimbusLanguage.ID)
         .engine(engine)
+        .in(System.in)
+        .out(System.out)
         .allowAllAccess(true)
         .build()
     ) {
@@ -61,8 +63,6 @@ public class Main {
           runSource(defaultContext, createSource(line), true);
         }
       }
-    } finally {
-      engine.close();
     }
   }
 

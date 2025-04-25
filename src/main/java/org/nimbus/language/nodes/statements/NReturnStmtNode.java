@@ -9,20 +9,12 @@ public final class NReturnStmtNode extends NStmtNode {
   @SuppressWarnings("FieldMayBeFinal")
   @Child private NNode value;
 
-  private final SourceSection source;
-
-  public NReturnStmtNode(NNode value, SourceSection source) {
+  public NReturnStmtNode(NNode value) {
     this.value = value;
-    this.source = source;
   }
 
   @Override
   public Object execute(VirtualFrame frame) {
     throw new NReturnException(value.execute(frame));
-  }
-
-  @Override
-  public SourceSection getSourceSection() {
-    return source;
   }
 }

@@ -83,7 +83,7 @@ public class NimTranslator extends BaseVisitor<NNode> {
   @Override
   public NNode visitStmt(Stmt stmt) {
     if (stmt != null) {
-      return stmt.accept(this);
+      return sourceSection(stmt.accept(this), stmt);
     }
 
     return null;
@@ -92,7 +92,7 @@ public class NimTranslator extends BaseVisitor<NNode> {
   @Override
   public NNode visitExpr(Expr expr) {
     if (expr != null) {
-      return expr.accept(this);
+      return sourceSection(expr.accept(this), expr);
     }
 
     return null;
@@ -100,12 +100,12 @@ public class NimTranslator extends BaseVisitor<NNode> {
 
   @Override
   public NNode visitNilExpr(Expr.Nil expr) {
-    return new NNilLiteralNode();
+    return sourceSection(new NNilLiteralNode(), expr);
   }
 
   @Override
   public NNode visitBooleanExpr(Expr.Boolean expr) {
-    return new NBooleanLiteralNode(expr.value);
+    return sourceSection(new NBooleanLiteralNode(expr.value), expr);
   }
 
   @Override
@@ -113,17 +113,17 @@ public class NimTranslator extends BaseVisitor<NNode> {
     String number = expr.token.literal();
 
     try {
-      return new NLongLiteralNode(Integer.parseInt(number));
+      return sourceSection(new NLongLiteralNode(Integer.parseInt(number)), expr);
     } catch (NumberFormatException e) {
       // it's possible that the integer literal is too big to fit in a 32-bit Java `int` -
       // in that case, fall back to a double literal
-      return new NDoubleLiteralNode(Double.parseDouble(number));
+      return sourceSection(new NDoubleLiteralNode(Double.parseDouble(number)), expr);
     }
   }
 
   @Override
   public NNode visitLiteralExpr(Expr.Literal expr) {
-    return new NStringLiteralNode(expr.token.literal());
+    return sourceSection(new NStringLiteralNode(expr.token.literal()), expr);
   }
 
   @Override
@@ -132,22 +132,25 @@ public class NimTranslator extends BaseVisitor<NNode> {
     NFrameMember member = findFrameMember(id);
 
     if (member == null || member instanceof NFrameMember.ClassObject) {
-      return NGlobalVarRefExprNodeGen.create(globalScopeNode, id);
+      return sourceSection(NGlobalVarRefExprNodeGen.create(globalScopeNode, id), expr);
     } else {
-      return member instanceof NFrameMember.FunctionArgument argument
-        ? new NReadFunctionArgsExprNode(argument.index)
-        : NLocalRefNodeGen.create(((NFrameMember.LocalVariable) member).index);
+      return sourceSection(
+        member instanceof NFrameMember.FunctionArgument argument
+          ? new NReadFunctionArgsExprNode(argument.index)
+          : NLocalRefNodeGen.create(((NFrameMember.LocalVariable) member).index),
+        expr);
     }
   }
 
   @Override
   public NNode visitBinaryExpr(Expr.Binary expr) {
-    return switch (expr.op.type()) {
+    return sourceSection(switch (expr.op.type()) {
       case PLUS -> NAddNodeGen.create(visitExpr(expr.left), visitExpr(expr.right));
       case MINUS -> NSubtractNodeGen.create(visitExpr(expr.left), visitExpr(expr.right));
       case MULTIPLY -> NMultiplyNodeGen.create(visitExpr(expr.left), visitExpr(expr.right));
       case DIVIDE -> NDivideNodeGen.create(visitExpr(expr.left), visitExpr(expr.right));
       case FLOOR -> NFloorDivideNodeGen.create(visitExpr(expr.left), visitExpr(expr.right));
+      case PERCENT -> NModuloNodeGen.create(visitExpr(expr.left), visitExpr(expr.right));
       case POW -> NPowNodeGen.create(visitExpr(expr.left), visitExpr(expr.right));
       case EQUAL_EQ -> NEqualNodeGen.create(visitExpr(expr.left), visitExpr(expr.right));
       case BANG_EQ -> NNotEqualNodeGen.create(visitExpr(expr.left), visitExpr(expr.right));
@@ -162,22 +165,22 @@ public class NimTranslator extends BaseVisitor<NNode> {
       case RSHIFT -> NBitRightShiftNodeGen.create(visitExpr(expr.left), visitExpr(expr.right));
       case URSHIFT -> NBitUnsignedRightShiftNodeGen.create(visitExpr(expr.left), visitExpr(expr.right));
       default -> throw new UnsupportedOperationException(expr.op.literal());
-    };
+    }, expr);
   }
 
   @Override
   public NNode visitUnaryExpr(Expr.Unary expr) {
-    return switch (expr.op.type()) {
+    return sourceSection(switch (expr.op.type()) {
       case MINUS -> NNegateNodeGen.create(visitExpr(expr.right));
       case BANG -> NLogicalNotNodeGen.create(visitExpr(expr.right));
       case TILDE -> NBitNotNodeGen.create(visitExpr(expr.right));
       default -> throw new UnsupportedOperationException(expr.op.literal());
-    };
+    }, expr);
   }
 
   @Override
   public NNode visitLogicalExpr(Expr.Logical expr) {
-    return switch (expr.op.type()) {
+    return sourceSection(switch (expr.op.type()) {
       case EQUAL_EQ -> NEqualNodeGen.create(visitExpr(expr.left), visitExpr(expr.right));
       case BANG_EQ -> NNotEqualNodeGen.create(visitExpr(expr.left), visitExpr(expr.right));
       case LESS -> NLessThanNodeGen.create(visitExpr(expr.left), visitExpr(expr.right));
@@ -187,7 +190,7 @@ public class NimTranslator extends BaseVisitor<NNode> {
       case AND -> new NLogicalAndNode(visitExpr(expr.left), visitExpr(expr.right));
       case OR -> new NLogicalOrNode(visitExpr(expr.left), visitExpr(expr.right));
       default -> throw new UnsupportedOperationException(expr.op.literal());
-    };
+    }, expr);
   }
 
   @Override
@@ -197,11 +200,11 @@ public class NimTranslator extends BaseVisitor<NNode> {
 
   @Override
   public NNode visitConditionExpr(Expr.Condition expr) {
-    return new NConditionalNode(
+    return sourceSection(new NConditionalNode(
       visitExpr(expr.expression),
       visitExpr(expr.truth),
       visitExpr(expr.falsy)
-    );
+    ), expr);
   }
 
   @Override
@@ -215,25 +218,25 @@ public class NimTranslator extends BaseVisitor<NNode> {
         return NGlobalAssignExprNodeGen.create(globalScopeNode, value, name);
       } else {
         if (member instanceof NFrameMember.FunctionArgument memberValue) {
-          return new NWriteFunctionArgExprNode(value, memberValue.index);
+          return sourceSection(new NWriteFunctionArgExprNode(value, memberValue.index), expr);
         } else if (member instanceof NFrameMember.ClassObject memberValue) {
-          return NGlobalAssignExprNodeGen.create(globalScopeNode, value, memberValue.object.name);
+          return sourceSection(NGlobalAssignExprNodeGen.create(globalScopeNode, value, memberValue.object.name), expr);
         } else {
           NFrameMember.LocalVariable local = (NFrameMember.LocalVariable) member;
           if (local.constant) {
             throw NimRuntimeError.create("Assignment to constant variable '", name, "'");
           }
 
-          return NLocalAssignNodeGen.create(value, local.index);
+          return sourceSection(NLocalAssignNodeGen.create(value, local.index), expr);
         }
       }
     } else if (expr.expression instanceof Expr.Index index) {
       if (index.arguments.size() == 1) {
-        return NListIndexWriteNodeGen.create(
+        return sourceSection(NListIndexWriteNodeGen.create(
           visitExpr(index.callee),
           visitExpr(index.arguments.getFirst()),
           visitExpr(expr.value)
-        );
+        ), expr);
       }
     }
 
@@ -247,7 +250,7 @@ public class NimTranslator extends BaseVisitor<NNode> {
       arguments.add(visitExpr(arg));
     }
 
-    return NNewExprNodeGen.create(visitExpr(expr.expression), arguments);
+    return sourceSection(NNewExprNodeGen.create(visitExpr(expr.expression), arguments), expr);
   }
 
   @Override
@@ -262,29 +265,29 @@ public class NimTranslator extends BaseVisitor<NNode> {
     }
 
     if (expr.callee instanceof Expr.Identifier) {
-      return NFunctionCallExprNodeGen.create(visitExpr(expr.callee), arguments);
+      return sourceSection(NFunctionCallExprNodeGen.create(visitExpr(expr.callee), arguments), expr);
     }
-    return new NMethodCallExprNode(visitExpr(expr.callee), arguments);
+    return sourceSection(new NMethodCallExprNode(visitExpr(expr.callee), arguments), expr);
   }
 
   @Override
   public NNode visitSetExpr(Expr.Set expr) {
-    return NSetPropertyNodeGen.create(
+    return sourceSection(NSetPropertyNodeGen.create(
       visitExpr(expr.expression),
       visitExpr(expr.value),
       expr.name.token.literal()
-    );
+    ), expr);
   }
 
   @Override
   public NNode visitGetExpr(Expr.Get expr) {
-    return NGetPropertyNodeGen.create(visitExpr(expr.expression), expr.name.token.literal());
+    return sourceSection(NGetPropertyNodeGen.create(visitExpr(expr.expression), expr.name.token.literal()), expr);
   }
 
   @Override
   public NNode visitIndexExpr(Expr.Index expr) {
     if (expr.arguments.size() == 1) {
-      return NListIndexReadNodeGen.create(visitExpr(expr.callee), visitExpr(expr.arguments.getFirst()));
+      return sourceSection(NListIndexReadNodeGen.create(visitExpr(expr.callee), visitExpr(expr.arguments.getFirst())), expr);
     }
     throw NimRuntimeError.create("Slices are not yet supported");
   }
@@ -295,18 +298,18 @@ public class NimTranslator extends BaseVisitor<NNode> {
     for (Expr e : expr.items) {
       nodes.add(visitExpr(e));
     }
-    return new NListLiteralNode(nodes);
+    return sourceSection(new NListLiteralNode(nodes), expr);
   }
 
   @Override
   public NNode visitEchoStmt(Stmt.Echo stmt) {
-    return new NEchoStmtNode(visitExpr(stmt.value));
+    return sourceSection(new NEchoStmtNode(visitExpr(stmt.value)), stmt);
   }
 
   @Override
   public NNode visitExpressionStmt(Stmt.Expression stmt) {
     assert stmt.expression != null;
-    return new NExprStmtNode(visitExpr(stmt.expression), sourceSection(stmt.expression));
+    return sourceSection(new NExprStmtNode(visitExpr(stmt.expression)), stmt);
   }
 
   @Override
@@ -316,7 +319,7 @@ public class NimTranslator extends BaseVisitor<NNode> {
       nodes.add(visitStmt(stmt));
     }
 
-    return new NBlockStmtNode(nodes);
+    return sourceSection(new NBlockStmtNode(nodes), varList);
   }
 
   @Override
@@ -338,11 +341,11 @@ public class NimTranslator extends BaseVisitor<NNode> {
       }
 
       NLocalAssignNode assignment = NLocalAssignNodeGen.create(value, slot);
-      return new NExprStmtNode(assignment, sourceSection(stmt), true);
+      return sourceSection(new NExprStmtNode(assignment, true), stmt);
     }
 
     // default to global value
-    return NGlobalDeclNodeGen.create(globalScopeNode, value, name, isConstant);
+    return sourceSection(NGlobalDeclNodeGen.create(globalScopeNode, value, name, isConstant), stmt);
   }
 
   @Override
@@ -355,53 +358,53 @@ public class NimTranslator extends BaseVisitor<NNode> {
         }
       }
 
-      return new NBlockStmtNode(nodes);
+      return sourceSection(new NBlockStmtNode(nodes), stmt);
     });
   }
 
   @Override
   public NNode visitIfStmt(Stmt.If stmt) {
-    return new NIfStmtNode(
+    return sourceSection(new NIfStmtNode(
       visitExpr(stmt.condition),
       visitStmt(stmt.thenBranch),
       visitStmt(stmt.elseBranch)
-    );
+    ), stmt);
   }
 
   @Override
   public NNode visitBreakStmt(Stmt.Break stmt) {
-    return new NBreakNode();
+    return sourceSection(new NBreakNode(), stmt);
   }
 
   @Override
   public NNode visitContinueStmt(Stmt.Continue stmt) {
-    return new NContinueNode();
+    return sourceSection(new NContinueNode(), stmt);
   }
 
   @Override
   public NNode visitWhileStmt(Stmt.While stmt) {
-    return new NWhileStmtNode(
+    return sourceSection(new NWhileStmtNode(
       visitExpr(stmt.condition),
       visitStmt(stmt.body)
-    );
+    ), stmt);
   }
 
   @Override
   public NNode visitDoWhileStmt(Stmt.DoWhile stmt) {
-    return new NDoWhileStmtNode(
+    return sourceSection(new NDoWhileStmtNode(
       visitExpr(stmt.condition),
       visitStmt(stmt.body)
-    );
+    ), stmt);
   }
 
   @Override
   public NNode visitIterStmt(Stmt.Iter stmt) {
-    return newLocalScope(() -> new NIterStmtNode(
+    return newLocalScope(() -> sourceSection(new NIterStmtNode(
       stmt.declaration != null ? visitStmt(stmt.declaration) : null,
       stmt.condition != null ? visitExpr(stmt.condition) : null,
       stmt.interation != null ? visitExpressionStmt(stmt.interation) : null,
       visitStmt(stmt.body)
-    ));
+    ), stmt));
   }
 
   @Override
@@ -432,12 +435,11 @@ public class NimTranslator extends BaseVisitor<NNode> {
       throw NimRuntimeError.create("`return` keyword is not allowed in this scope");
     }
 
-    return new NReturnStmtNode(
+    return sourceSection(new NReturnStmtNode(
       stmt.value == null ?
         new NNilLiteralNode() :
-        visitExpr(stmt.value),
-      sourceSection(stmt)
-    );
+        visitExpr(stmt.value)
+    ), stmt);
   }
 
   @Override
@@ -508,7 +510,7 @@ public class NimTranslator extends BaseVisitor<NNode> {
 
   @Override
   public NNode visitRaiseStmt(Stmt.Raise stmt) {
-    return NRaiseStmtNodeGen.create(visitExpr(stmt.exception), sourceSection(stmt));
+    return sourceSection(NRaiseStmtNodeGen.create(visitExpr(stmt.exception)), stmt);
   }
 
   @Override
@@ -555,14 +557,13 @@ public class NimTranslator extends BaseVisitor<NNode> {
     this.state = previousState;
     this.localScopes = previousLocalScopes;
 
-    return NFunctionStmtNodeGen.create(
+    return sourceSection(NFunctionStmtNodeGen.create(
       root,
       name,
       frameDescriptor,
       new NFunctionBodyNode(statements),
-      parameters.size(),
-      sourceSection(source)
-    );
+      parameters.size()
+    ), source);
   }
 
   private NFrameMember findFrameMember(String name) {
@@ -597,16 +598,16 @@ public class NimTranslator extends BaseVisitor<NNode> {
   // State management
   private enum ParserState {TOP_LEVEL, NESTED_TOP_LEVEL, FUNC_DEF}
 
-  private SourceSection sourceSection(Object object) {
+  private NNode sourceSection(NNode node, Object object) {
     if(object instanceof AST ast) {
 //      System.out.println("SL = " +ast.startLine+", EL = " +ast.endLine+", SC = " + ast.startColumn + ", EC = " +ast.endColumn);
-      return parser.lexer.source.createSection(
+      return node.setSourceSection(parser.lexer.source.createSection(
         ast.startLine, ast.startColumn + 1,
         ast.endLine, ast.endColumn + 1
-      );
+      ));
     }
 
-    return parser.lexer.source.createSection(1);
+    return node.setSourceSection(parser.lexer.source.createSection(1));
   }
 
   interface Callback {

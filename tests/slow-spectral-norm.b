@@ -7,7 +7,7 @@
  * modified for Node.js by Isaac Gouy
  */
 
-const ARRAY_LENGTH = 5500
+const ARRAY_LENGTH = 5
 
 var u = [1] * ARRAY_LENGTH
 var v = []
@@ -35,6 +35,7 @@ def vector_times_array_transposed(vector) {
   var arr = [], i = 0
   while i < ARRAY_LENGTH {
     var sum = 0, j = 0
+    echo vector
     while j < ARRAY_LENGTH {
       sum += eval_A(j,i) * vector[j]
       j += 1

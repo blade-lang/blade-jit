@@ -21,7 +21,7 @@ public abstract class NMultiplyNode extends NBinaryNode {
     return Math.multiplyExact(left, right);
   }
 
-  @Specialization(replaces = "doLongs")
+  @Specialization(replaces = {"doLongs"})
   protected double doDoubles(double left, double right) {
     return left * right;
   }

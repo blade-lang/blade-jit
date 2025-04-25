@@ -17,6 +17,16 @@ public abstract class NAddNode extends NBinaryNode {
     return Math.addExact(left, right);
   }
 
+  @Specialization(guards = {"isDouble(left)", "isLong(right)"})
+  protected double doDoubleLong(double left, long right) {
+    return left + right;
+  }
+
+  @Specialization(guards = {"isLong(left)", "isDouble(right)"})
+  protected double doLongDouble(long left, double right) {
+    return left + right;
+  }
+
   @Specialization(replaces = "doLongs")
   protected double doDoubles(double left, double right) {
     return left + right;

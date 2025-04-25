@@ -17,6 +17,16 @@ public abstract class NPowNode extends NBinaryNode {
     return (long) result;
   }
 
+  @Specialization(guards = {"isDouble(left)", "isLong(right)"})
+  protected double doDoubleLong(double left, long right) {
+    return Math.pow(left, (double) right);
+  }
+
+  @Specialization(guards = {"isLong(left)", "isDouble(right)"})
+  protected double doLongDouble(long left, double right) {
+    return Math.pow((double) left, right);
+  }
+
   @Specialization(replaces = "doLongs")
   protected double doDoubles(double left, double right) {
     return Math.pow(left, right);

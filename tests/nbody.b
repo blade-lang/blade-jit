@@ -3,9 +3,9 @@
  *
  * n-body Blade program
  *
- * based on work by Isaac Gouy
+ * based on work by Mark C. Lewis
  * contributed by Richard Ore
-*/
+ */
 
 var PI = 3.141592653589793
 var SOLAR_MASS = 4 * PI * PI
@@ -20,6 +20,13 @@ class Body {
     self.vy = vy
     self.vz = vz
     self.mass = mass
+  }
+
+  offsetMomentum(px, py, pz) {
+    self.vx = -px / SOLAR_MASS
+    self.vy = -py / SOLAR_MASS
+    self.vz = -pz / SOLAR_MASS
+    return self
   }
 }
 
@@ -67,102 +74,97 @@ var Sun = new Body(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, SOLAR_MASS)
 
 var bodies = [Sun, Jupiter, Saturn, Uranus, Neptune]
 
-def offsetMomentum() {
-  var px = 0, py = 0, pz = 0
+class NBodySystem {
+  @new() {
+    var px = 0, py = 0, pz = 0
 
-  iter var i = 0; i < bodies.length; i++ {
-    var body = bodies[i]
-    var mass = body.mass
+    iter var i = 0; i < bodies.length; i++ {
+      var body = bodies[i]
+      var mass = body.mass
 
-    px += body.vx * mass
-    py += body.vy * mass
-    pz += body.vz * mass
+      px += body.vx * mass
+      py += body.vy * mass
+      pz += body.vz * mass
+    }
+
+    bodies[0].offsetMomentum(px, py, pz)
   }
 
-  var body = bodies[0]
+  advance(dt) {
+    var size = bodies.length
 
-  body.vx = -px / SOLAR_MASS
-  body.vy = -py / SOLAR_MASS
-  body.vz = -pz / SOLAR_MASS
-}
-
-def advance(dt) {
-  var size = bodies.length
-
-  iter var i = 0; i < size; i++ {
-    var bodyi = bodies[i]
-    var vxi = bodyi.vx
-    var vyi = bodyi.vy
-    var vzi = bodyi.vz
-
-    iter var j = i + 1; j < size; j++ {
-      var bodyj = bodies[j]
-
-      var dx = bodyi.x - bodyj.x
-      var dy = bodyi.y - bodyj.y
-      var dz = bodyi.z - bodyj.z
-
-      var d2 = dx**2 + dy**2 + dz**2
-
-      var mag = dt / (d2 * (d2 ** 0.5)) # d2 ** 0.5 = sqrt(d2)
-
-      var massj = bodyj.mass
-      vxi -= dx * massj * mag
-      vyi -= dy * massj * mag
-      vzi -= dz * massj * mag
-
+    iter var i = 0; i < size; i++ {
+      var bodyi = bodies[i]
       var massi = bodyi.mass
-      bodyj.vx += dx * massi * mag
-      bodyj.vy += dy * massi * mag
-      bodyj.vz += dz * massi * mag
+
+      var ix = bodyi.x
+      var iy = bodyi.y
+      var iz = bodyi.z
+
+      iter var j = i + 1; j < size; j++ {
+        var bodyj = bodies[j]
+
+        var dx = ix - bodyj.x
+        var dy = iy - bodyj.y
+        var dz = iz - bodyj.z
+
+        var d2 = dx**2 + dy**2 + dz**2
+        var distance = (d2 ** 0.5) # d2 ** 0.5 = sqrt(d2)
+        var mag = dt / (d2 * distance)
+
+        var massj = bodyj.mass
+
+        bodyi.vx -= dx * massj * mag
+        bodyi.vy -= dy * massj * mag
+        bodyi.vz -= dz * massj * mag
+
+        bodyj.vx += dx * massi * mag
+        bodyj.vy += dy * massi * mag
+        bodyj.vz += dz * massi * mag
+      }
     }
 
-    bodyi.vx = vxi
-    bodyi.vy = vyi
-    bodyi.vz = vzi
-  }
-
-  iter var i = 0; i < size; i++ {
-    var body = bodies[i]
-    body.x += dt * body.vx
-    body.y += dt * body.vy
-    body.z += dt * body.vz
-  }
-}
-
-def energy() {
-  var e = 0
-  var size = bodies.length
-
-  iter var i = 0; i < size; i++ {
-    var bodyi = bodies[i]
-
-    e += 0.5 * bodyi.mass * (bodyi.vx**2 + bodyi.vy**2 + bodyi.vz**2)
-
-    iter var j = i + 1; j < size; j++ {
-      var bodyj = bodies[j]
-      var dx = bodyi.x - bodyj.x
-      var dy = bodyi.y - bodyj.y
-      var dz = bodyi.z - bodyj.z
-
-      var distance = (dx**2 + dy**2 + dz**2) ** 0.5
-      e -= (bodyi.mass * bodyj.mass) / distance
+    iter var i = 0; i < size; i++ {
+      var body = bodies[i]
+      body.x += dt * body.vx
+      body.y += dt * body.vy
+      body.z += dt * body.vz
     }
   }
 
-  return e
+  energy() {
+    var e = 0
+    var size = bodies.length
+
+    iter var i = 0; i < size; i++ {
+      var bodyi = bodies[i]
+
+      e += 0.5 * bodyi.mass * (bodyi.vx**2 + bodyi.vy**2 + bodyi.vz**2)
+
+      iter var j = i + 1; j < size; j++ {
+        var bodyj = bodies[j]
+        var dx = bodyi.x - bodyj.x
+        var dy = bodyi.y - bodyj.y
+        var dz = bodyi.z - bodyj.z
+
+        var distance = (dx**2 + dy**2 + dz**2) ** 0.5
+        e -= (bodyi.mass * bodyj.mass) / distance
+      }
+    }
+
+    return e
+  }
 }
 
 var n = 50000000
 
 var start = microtime()
 
-offsetMomentum()
-
-echo energy()
+var system = new NBodySystem()
+echo system.energy()
 iter var i = 0; i < n; i++ {
-  advance(0.01)
+  system.advance(0.01)
 }
-echo energy()
+echo system.energy()
 
 echo 'Time taken: ${(microtime() - start) / 1000000}'

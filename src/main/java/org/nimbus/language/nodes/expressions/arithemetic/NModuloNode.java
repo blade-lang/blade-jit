@@ -5,14 +5,11 @@ import com.oracle.truffle.api.dsl.Specialization;
 import org.nimbus.language.nodes.NBinaryNode;
 import org.nimbus.language.runtime.NimRuntimeError;
 
-public abstract class NDivideNode extends NBinaryNode {
+public abstract class NModuloNode extends NBinaryNode {
 
   @Specialization(rewriteOn = ArithmeticException.class, guards = "right > 0")
   protected long doLongs(long left, long right) {
-    if(left % right == 0) {
-      return left / right;
-    }
-    throw new ArithmeticException();
+    return Math.floorMod(left, right);
   }
 
   @Specialization(rewriteOn = ArithmeticException.class, guards = "left > 0")
@@ -27,22 +24,22 @@ public abstract class NDivideNode extends NBinaryNode {
 
   @Specialization(guards = {"isDouble(left)", "isLong(right)"})
   protected double doDoubleLong(double left, long right) {
-    return left / right;
+    return left % right;
   }
 
   @Specialization(guards = {"isLong(left)", "isDouble(right)"})
   protected double doLongDouble(long left, double right) {
-    return (double)left / right;
+    return (double)left % right;
   }
 
   @Specialization(replaces = {"doLongs", "doLongs2", "doLongs3"})
   protected double doDoubles(double left, double right) {
-    return left / right;
+    return left % right;
   }
 
   @Fallback
   protected double doUnsupported(Object left, Object right) {
-    throw NimRuntimeError.argumentError(this,"/", left, right);
+    throw NimRuntimeError.argumentError(this,"%", left, right);
   }
 
   protected static boolean isCornerCase(long a, long b) {

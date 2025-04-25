@@ -22,13 +22,11 @@ import org.nimbus.language.shared.NBuiltinClassesModel;
 @NodeField(name = "frameDescriptor", type = FrameDescriptor.class)
 @NodeField(name = "body", type = NFunctionBodyNode.class)
 @NodeField(name = "argumentCount", type = int.class)
-@NodeField(name = "source", type = SourceSection.class)
 public abstract class NFunctionStmtNode extends NStmtNode {
   protected abstract String getName();
   protected abstract FrameDescriptor getFrameDescriptor();
   protected abstract NFunctionBodyNode getBody();
   protected abstract int getArgumentCount();
-  protected abstract SourceSection getSource();
 
   @CompilerDirectives.CompilationFinal
   private NFunctionObject cachedFunction = null;
@@ -46,10 +44,5 @@ public abstract class NFunctionStmtNode extends NStmtNode {
 
     objectLibrary.putConstant(container, getName(), cachedFunction, 0);
     return NimNil.SINGLETON;
-  }
-
-  @Override
-  public SourceSection getSourceSection() {
-    return getSource();
   }
 }
