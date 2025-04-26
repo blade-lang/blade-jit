@@ -13,10 +13,7 @@ import com.oracle.truffle.api.object.DynamicObjectLibrary;
 import com.oracle.truffle.api.object.Shape;
 import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.strings.TruffleString;
-import org.nimbus.language.builtins.AbsBuiltinFunctionNodeFactory;
-import org.nimbus.language.builtins.MicroTimeBuiltinFunctionNodeFactory;
-import org.nimbus.language.builtins.PrintBuiltinFunctionNodeFactory;
-import org.nimbus.language.builtins.TimeBuiltinFunctionNodeFactory;
+import org.nimbus.language.builtins.*;
 import org.nimbus.language.builtins.list.NListAppendMethodNodeFactory;
 import org.nimbus.language.builtins.object.NObjectHasPropMethodNodeFactory;
 import org.nimbus.language.builtins.object.NObjectToStringMethodNodeFactory;
@@ -63,7 +60,7 @@ public class NimbusLanguage extends TruffleLanguage<NimContext> {
 
   public static final String ID = "nim";
   public static final String MIME_TYPE = "application/x-nimbus-lang";
-  public final static TruffleString.Encoding ENCODING = TruffleString.Encoding.UTF_16;
+  public final static TruffleString.Encoding ENCODING = TruffleString.Encoding.UTF_8;
   private static final LanguageReference<NimbusLanguage> REFERENCE = LanguageReference.create(NimbusLanguage.class);
   // Shapes
   public final Shape rootShape = Shape.newBuilder().build();
@@ -135,7 +132,7 @@ public class NimbusLanguage extends TruffleLanguage<NimContext> {
     defineBuiltinFunction(objectLibrary, globalScope, "abs", AbsBuiltinFunctionNodeFactory.getInstance());
     defineBuiltinFunction(objectLibrary, globalScope, "time", TimeBuiltinFunctionNodeFactory.getInstance());
     defineBuiltinFunction(objectLibrary, globalScope, "microtime", MicroTimeBuiltinFunctionNodeFactory.getInstance());
-    defineBuiltinFunction(objectLibrary, globalScope, "print", PrintBuiltinFunctionNodeFactory.getInstance(), true);
+    defineBuiltinFunction(objectLibrary, globalScope, "print", PrintBuiltinFunctionNode2Factory.getInstance(), true);
 
     // Object class
     defineBuiltinMethod(objectLibrary, objectClass, "has_prop", NObjectHasPropMethodNodeFactory.getInstance());

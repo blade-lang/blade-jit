@@ -4,13 +4,14 @@ import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.Fork;
 
 public class FibonacciBenchmark extends TruffleBenchmark {
-  private static final String REM_FIBONACCI = "\n" +
-    "def fib(n) {\n" +
-    "    if n < 2 {\n" +
-    "        return 1\n" +
-    "    }\n" +
-    "    return fib(n - 1) + fib(n - 2)\n" +
-    "}\n";
+  private static final String REM_FIBONACCI = """
+    def fib(n) {
+        if n < 2 {
+            return 1
+        }
+        return fib(n - 1) + fib(n - 2)
+    }
+    """;
 
   private static final String SL_FIBONACCI = "\n" +
     "function fib(n) { " +

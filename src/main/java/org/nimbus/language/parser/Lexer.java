@@ -2,6 +2,8 @@ package org.nimbus.language.parser;
 
 import com.oracle.truffle.api.source.Source;
 
+import java.nio.Buffer;
+import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
@@ -541,23 +543,21 @@ public class Lexer {
   }
 
   private String getUnquotedString(char quote) {
-    Charset UTF_16 = StandardCharsets.UTF_16;
+    Charset UTF_8 = StandardCharsets.UTF_8;
+    String escaped = sourceCharacters.subSequence(start + 1, current - 1).toString()
+      .replace("\\0", "\0")
+      .replace("\\$", "$")
+      .replace("\\'", quote == '\'' || quote == '}' ? "'" : "\\'")
+      .replace("\\\"", quote == '\"' || quote == '}' ? "'" : "\\\"")
+      .replace("\\b", "\b")
+      .replace("\\f", "\f")
+      .replace("\\n", "\n")
+      .replace("\\r", "\r")
+      .replace("\\t", "\t")
+      .replace("\\\\", "\\")
+      .replace("\\n", "\n");
 
-    return new String(
-      sourceCharacters.subSequence(start + 1, current - 1).toString()
-        .replaceAll("\\\\0", "\0")
-        .replaceAll("\\\\$", "$")
-        .replaceAll("\\\\'", quote == '\'' || quote == '}' ? "'" : "\\'")
-        .replaceAll("\\\\\"", quote == '\"' || quote == '}' ? "'" : "\\\"")
-        .replaceAll("\\\\b", "\b")
-        .replaceAll("\\\\f", "\f")
-        .replaceAll("\\\\n", "\n")
-        .replaceAll("\\\\r", "\r")
-        .replaceAll("\\\\t", "\t")
-        .replaceAll("\\\\\\\\", "\\\\")
-        .replaceAll("\\n", "\n")
-        .getBytes(UTF_16),
-      UTF_16
-    );
+    // ensure we align to UTF8
+    return UTF_8.decode(UTF_8.encode(escaped)).toString();
   }
 }

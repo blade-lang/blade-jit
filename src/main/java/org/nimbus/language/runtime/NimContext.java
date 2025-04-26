@@ -28,12 +28,22 @@ public class NimContext {
     this.objectsModel = objectsModel;
     this.emptyFunction = emptyFunction;
 
-    this.input = new BufferedReader(new InputStreamReader(env.in()));
-    this.output = new PrintWriter(env.out(), true);
+    input = new BufferedReader(new InputStreamReader(env.in()));
+    output = new PrintWriter(env.out(), true);
   }
 
   public static NimContext get(Node node) {
     return REFERENCE.get(node);
+  }
+
+  @CompilerDirectives.TruffleBoundary
+  public void print(Object object) {
+    output.print(object);
+  }
+
+  @CompilerDirectives.TruffleBoundary
+  public void println(Object object) {
+    output.println(object);
   }
 
   @CompilerDirectives.TruffleBoundary

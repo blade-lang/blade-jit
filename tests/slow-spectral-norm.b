@@ -35,7 +35,6 @@ def vector_times_array_transposed(vector) {
   var arr = [], i = 0
   while i < ARRAY_LENGTH {
     var sum = 0, j = 0
-    echo vector
     while j < ARRAY_LENGTH {
       sum += eval_A(j,i) * vector[j]
       j += 1

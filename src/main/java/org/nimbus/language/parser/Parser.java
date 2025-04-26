@@ -254,6 +254,8 @@ public class Parser {
     return wrapExpr(() -> new Expr.Literal(previous()));
   }
 
+  private Expr.Identifier identifier() { return (Expr.Identifier)wrapExpr(() -> new Expr.Identifier(previous())); }
+
   private Expr primary() {
     return wrapExpr(() -> {
       if (match(FALSE)) return new Expr.Boolean(false);
@@ -273,7 +275,7 @@ public class Parser {
         return literal();
       }
 
-      if (match(IDENTIFIER)) return new Expr.Identifier(previous());
+      if (match(IDENTIFIER)) return identifier();
 
       if (match(LPAREN)) return grouping();
       if (match(LBRACE)) return dict();
@@ -828,7 +830,7 @@ public class Parser {
       Expr.Identifier exception_var = null;
       if (match(AS)) {
         consume(IDENTIFIER, "exception variable expected");
-        exception_var = new Expr.Identifier(previous());
+        exception_var = identifier();
 
         ignoreNewlines();
         if (check(LBRACE)) {
@@ -975,6 +977,29 @@ public class Parser {
     });
   }
 
+  private boolean functionArgs(List<Expr.Identifier> params) {
+    ignoreNewlines();
+    boolean isVariadic = false;
+
+    while (match(IDENTIFIER, TRI_DOT)) {
+      if (previous().type() == TRI_DOT) {
+        consume(IDENTIFIER, "variable parameter name expected");
+        isVariadic = true;
+        params.add(identifier());
+        break;
+      }
+
+      params.add(identifier());
+
+      if (!check(RPAREN)) {
+        consume(COMMA, "',' expected between function arguments");
+        ignoreNewlines();
+      }
+    }
+
+    return isVariadic;
+  }
+
   private Expr anonymous() {
     return wrapExpr(() -> {
       Token nameCompatToken = previous();
@@ -985,18 +1010,8 @@ public class Parser {
       if (check(LPAREN)) {
         consume(LPAREN, "expected '(' at start of anonymous function");
 
-        while (!check(RPAREN)) {
-          consumeAny("parameter name expected", IDENTIFIER, TRI_DOT);
-          if (previous().type() == TRI_DOT) {
-            isVariadic = true;
-            break;
-          }
-
-          params.add(new Expr.Identifier(previous()));
-
-          if (!check(RPAREN)) {
-            consume(COMMA, "',' expected between function params");
-          }
+        if (!check(RPAREN)) {
+          isVariadic = functionArgs(params);
         }
 
         consume(RPAREN, "expected ')' after anonymous function parameters");
@@ -1022,20 +1037,7 @@ public class Parser {
       boolean isVariadic = false;
 
       consume(LPAREN, "'(' expected after function name");
-      while (match(IDENTIFIER, TRI_DOT)) {
-        if (previous().type() == TRI_DOT) {
-          isVariadic = true;
-          break;
-        }
-
-        params.add(new Expr.Identifier(previous()));
-
-        if (!check(RPAREN)) {
-          consume(COMMA, "',' expected between function arguments");
-          ignoreNewlines();
-        }
-      }
-
+      isVariadic = functionArgs(params);
       consume(RPAREN, "')' expected after function arguments");
 
       ignoreNewlines();
@@ -1082,20 +1084,7 @@ public class Parser {
       boolean isVariadic = false;
 
       consume(LPAREN, "'(' expected after method name");
-      while (match(IDENTIFIER, TRI_DOT)) {
-        if (previous().type() == TRI_DOT) {
-          isVariadic = true;
-          break;
-        }
-
-        params.add(new Expr.Identifier(previous()));
-
-        if (!check(RPAREN)) {
-          consume(COMMA, "',' expected between method arguments");
-          ignoreNewlines();
-        }
-      }
-
+      isVariadic = functionArgs(params);
       consume(RPAREN, "')' expected after method arguments");
 
       ignoreNewlines();
@@ -1118,7 +1107,7 @@ public class Parser {
 
       if (match(LESS)) {
         consume(IDENTIFIER, "super class name expected");
-        superclass = new Expr.Identifier(previous());
+        superclass = identifier();
       }
 
       ignoreNewlines();

@@ -38,10 +38,25 @@ public abstract class NFunctionCallExprNode extends NNode {
     return dispatchNode.executeDispatch(cachedFunction, consumeArguments(frame));
   }
 
-  @Specialization(guards = {"function.variadic"})
-  protected Object doVariableSize(VirtualFrame frame, NFunctionObject function,
-                                  @Cached("function") NFunctionObject cachedFunction) {
-    return dispatchNode.executeDispatch(cachedFunction, expandVarArguments(cachedFunction, consumeArguments(frame)));
+  @Specialization(guards = {"function.variadic", "arguments.length < function.argumentsCount"})
+  protected Object doVariableLessSize(VirtualFrame frame, NFunctionObject function,
+                                      @Cached("function") NFunctionObject cachedFunction,
+                                      @Cached(value = "languageContext()", neverDefault = true) @Cached.Shared("group") NimContext context) {
+    return dispatchNode.executeDispatch(cachedFunction, expandLessVarArguments(context, cachedFunction, consumeArguments(frame)));
+  }
+
+  @Specialization(guards = {"function.variadic", "function.argumentsCount > 1"})
+  protected Object doVariableMoreSize(VirtualFrame frame, NFunctionObject function,
+                                      @Cached("function") NFunctionObject cachedFunction,
+                                      @Cached(value = "languageContext()", neverDefault = true) @Cached.Shared("group") NimContext context) {
+    return dispatchNode.executeDispatch(cachedFunction, expandMoreVarArguments(context, cachedFunction, consumeArguments(frame)));
+  }
+
+  @Specialization(guards = {"function.variadic", "function.argumentsCount == 1"})
+  protected Object doVariableNoSize(VirtualFrame frame, NFunctionObject function,
+                                    @Cached("function") NFunctionObject cachedFunction,
+                                    @Cached(value = "languageContext()", neverDefault = true) @Cached.Shared("group") NimContext context) {
+    return dispatchNode.executeDispatch(cachedFunction, expandNoVarArguments(context, cachedFunction, consumeArguments(frame)));
   }
 
   @Specialization(replaces = "doSameSize")
@@ -85,44 +100,65 @@ public abstract class NFunctionCallExprNode extends NNode {
    * Specially used for variadic functions
    */
   @ExplodeLoop
-  private Object[] expandVarArguments(NFunctionObject function, Object[] arguments) {
-    Object[] ret = new Object[function.argumentsCount + 1];
-    NimContext context = NimContext.get(this);
+  private Object[] expandLessVarArguments(NimContext context, NFunctionObject function, Object[] arguments) {
+    int finalLength = function.argumentsCount + 1;
+    Object[] ret = new Object[finalLength];
 
-    if (arguments.length < function.argumentsCount) {
-      if (arguments.length > 0) {
-        System.arraycopy(arguments, 0, ret, 0, arguments.length);
-      }
-
-      for (int i = arguments.length; i < function.argumentsCount - 1; i++) {
-        ret[i] = NimNil.SINGLETON;
-      }
-
-      ret[function.argumentsCount - 1] = new NListObject(
-        context.objectsModel.listShape,
-        context.objectsModel.listObject,
-        new Object[0]
-      );
-    } else if(function.argumentsCount > 0) {
-      System.arraycopy(arguments, 0, ret, 0, function.argumentsCount - 1);
-
-      Object[] variadics = new Object[arguments.length - function.argumentsCount + 1];
-      for (int i = function.argumentsCount - 1; i < arguments.length; i++) {
-        variadics[i] = NimNil.SINGLETON;
-      }
-
-      ret[function.argumentsCount - 1] = new NListObject(
-        context.objectsModel.listShape,
-        context.objectsModel.listObject,
-        variadics
-      );
-    } else {
-      ret[0] = new NListObject(
-        context.objectsModel.listShape,
-        context.objectsModel.listObject,
-        arguments
-      );
+    if (arguments.length > 0) {
+      System.arraycopy(arguments, 1, ret, 1, arguments.length - 1);
     }
+
+    for (int i = arguments.length; i < function.argumentsCount; i++) {
+      ret[i] = NimNil.SINGLETON;
+    }
+
+    ret[function.argumentsCount] = new NListObject(
+      context.objectsModel.listShape,
+      context.objectsModel.listObject,
+      new Object[0]
+    );
+
+    return ret;
+  }
+
+  /**
+   * Specially used for variadic functions
+   */
+  @ExplodeLoop
+  private Object[] expandMoreVarArguments(NimContext context, NFunctionObject function, Object[] arguments) {
+    int finalLength = function.argumentsCount + 1;
+    Object[] ret = new Object[finalLength];
+
+    System.arraycopy(arguments, 1, ret, 1, function.argumentsCount - 1);
+
+    int varLength = arguments.length - function.argumentsCount;
+    Object[] variadic = new Object[varLength];
+    System.arraycopy(arguments, function.argumentsCount, variadic, 0, varLength);
+
+    ret[function.argumentsCount] = new NListObject(
+      context.objectsModel.listShape,
+      context.objectsModel.listObject,
+      variadic
+    );
+
+    return ret;
+  }
+
+  /**
+   * Specially used for variadic functions
+   */
+  @ExplodeLoop
+  private Object[] expandNoVarArguments(NimContext context, NFunctionObject function, Object[] arguments) {
+    Object[] ret = new Object[2];
+
+    Object[] variadic = new Object[arguments.length - 1];
+    System.arraycopy(arguments, 1, variadic, 0, arguments.length - 1);
+
+    ret[1] = new NListObject(
+      context.objectsModel.listShape,
+      context.objectsModel.listObject,
+      variadic
+    );
 
     return ret;
   }

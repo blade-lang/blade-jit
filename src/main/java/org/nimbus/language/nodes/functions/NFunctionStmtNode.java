@@ -22,11 +22,13 @@ import org.nimbus.language.shared.NBuiltinClassesModel;
 @NodeField(name = "frameDescriptor", type = FrameDescriptor.class)
 @NodeField(name = "body", type = NFunctionBodyNode.class)
 @NodeField(name = "argumentCount", type = int.class)
+@NodeField(name = "isVariadic", type = int.class)
 public abstract class NFunctionStmtNode extends NStmtNode {
   protected abstract String getName();
   protected abstract FrameDescriptor getFrameDescriptor();
   protected abstract NFunctionBodyNode getBody();
   protected abstract int getArgumentCount();
+  protected abstract int getIsVariadic();
 
   @CompilerDirectives.CompilationFinal
   private NFunctionObject cachedFunction = null;
@@ -39,7 +41,7 @@ public abstract class NFunctionStmtNode extends NStmtNode {
 
       NFunctionRootNode function = new NFunctionRootNode(NimbusLanguage.get(this), getFrameDescriptor(), getBody(), getName());
       NBuiltinClassesModel classesModel = languageContext().objectsModel;
-      cachedFunction = new NFunctionObject(classesModel.rootShape, classesModel.functionObject, getName(), function.getCallTarget(), getArgumentCount());
+      cachedFunction = new NFunctionObject(classesModel.rootShape, classesModel.functionObject, getName(), function.getCallTarget(), getArgumentCount(), getIsVariadic() == 1, null);
     }
 
     objectLibrary.putConstant(container, getName(), cachedFunction, 0);

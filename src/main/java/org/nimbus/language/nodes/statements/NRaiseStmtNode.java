@@ -48,43 +48,43 @@ public abstract class NRaiseStmtNode extends NNode {
   @CompilerDirectives.TruffleBoundary
   private TruffleString formStackTrace(Object type, Object message, NimRuntimeError easyScriptException) {
     TruffleStringBuilder sb = NString.builder();
-    sb.appendJavaStringUTF16Uncached(String.valueOf(type));
+    sb.appendStringUncached(NString.fromObject(type));
 
     if (message != NimNil.SINGLETON) {
-      sb.appendJavaStringUTF16Uncached(": ");
-      sb.appendJavaStringUTF16Uncached(String.valueOf(message));
+      sb.appendStringUncached(NString.fromJavaString(": "));
+      sb.appendStringUncached(NString.fromObject(message));
     }
 
     List<TruffleStackTraceElement> truffleStackTraceEls = TruffleStackTrace.getStackTrace(easyScriptException);
     for (TruffleStackTraceElement truffleStackTracEl : truffleStackTraceEls) {
-      sb.appendJavaStringUTF16Uncached("\n\tat ");
+      sb.appendStringUncached(NString.fromJavaString("\n\tat "));
 
       Node location = truffleStackTracEl.getLocation();
       RootNode rootNode = location.getRootNode();
       String funcName = rootNode.getName();
 
       SourceSection sourceSection = location.getEncapsulatingSourceSection();
-      sb.appendJavaStringUTF16Uncached(sourceSection.getSource().getName());
-      sb.appendJavaStringUTF16Uncached(":");
-      sb.appendJavaStringUTF16Uncached(String.valueOf(sourceSection.getStartLine()));
-      sb.appendJavaStringUTF16Uncached(":");
-      sb.appendJavaStringUTF16Uncached(String.valueOf(sourceSection.getStartColumn()));
+      sb.appendStringUncached(NString.fromJavaString(sourceSection.getSource().getName()));
+      sb.appendStringUncached(NString.fromJavaString(":"));
+      sb.appendStringUncached(NString.fromObject(sourceSection.getStartLine()));
+      sb.appendStringUncached(NString.fromJavaString(":"));
+      sb.appendStringUncached(NString.fromObject(sourceSection.getStartColumn()));
 
-      sb.appendJavaStringUTF16Uncached(" -> ");
+      sb.appendStringUncached(NString.fromJavaString(" -> "));
 
       // we want to ignore the top-level program RootNode type in this stack trace
       boolean isFunc = !":program".equals(funcName);
       if (isFunc) {
-        sb.appendJavaStringUTF16Uncached(funcName);
+        sb.appendStringUncached(NString.fromJavaString(funcName));
       } else {
-        sb.appendJavaStringUTF16Uncached("@.script");
+        sb.appendStringUncached(NString.fromJavaString("@.script"));
       }
 
-      sb.appendJavaStringUTF16Uncached("()");
+      sb.appendStringUncached(NString.fromJavaString("()"));
 
       // TODO: Really consider if you want to show source for each stack trace
       /*String nearSection = location.getEncapsulatingSourceSection().getCharacters().toString();
-      sb.appendJavaStringUTF16Uncached("\n\t\t\t" + nearSection.trim());*/
+      sb.appendStringUncached(NString.fromJavaString("\n\t\t\t" + nearSection.trim()));*/
     }
     return sb.toStringUncached();
   }

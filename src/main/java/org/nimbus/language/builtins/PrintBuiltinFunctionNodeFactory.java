@@ -5,6 +5,7 @@ import com.oracle.truffle.api.dsl.*;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.interop.InteropLibrary;
 import com.oracle.truffle.api.library.CachedLibrary;
+import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.nodes.Node;
 import org.nimbus.language.nodes.functions.NBuiltinFunctionNode;
 import org.nimbus.language.nodes.functions.NReadFunctionArgsExprNode;
@@ -60,6 +61,7 @@ public final class PrintBuiltinFunctionNodeFactory implements NodeFactory<PrintB
 
     private PrintBuiltinFunctionNode(NReadFunctionArgsExprNode[] arguments) {}
 
+    @ExplodeLoop
     @Override
     public Object execute(VirtualFrame frame) {
       Object[] arguments = ((NListObject) frame.getArguments()[0]).items;

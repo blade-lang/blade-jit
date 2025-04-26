@@ -1,15 +1,10 @@
 package org.nimbus;
 
-import com.oracle.truffle.api.TruffleStackTrace;
-import com.oracle.truffle.api.TruffleStackTraceElement;
-import com.oracle.truffle.api.nodes.Node;
-import com.oracle.truffle.api.nodes.RootNode;
 import org.graalvm.polyglot.*;
 import org.nimbus.language.NimbusLanguage;
 
 import java.io.*;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 public class Main {
@@ -79,7 +74,11 @@ public class Main {
       try {
         Value value = context.eval(source);
         if (isRepl) {
-          System.out.println(value);
+          if(value.isString()) {
+            System.out.println("'" + value.asString() + "'");
+          } else {
+            System.out.println(value);
+          }
         }
 
         return 0;

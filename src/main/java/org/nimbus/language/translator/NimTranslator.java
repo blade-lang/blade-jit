@@ -414,7 +414,8 @@ public class NimTranslator extends BaseVisitor<NNode> {
       stmt.name.literal(),
       stmt.parameters,
       stmt.body,
-      globalScopeNode
+      globalScopeNode,
+      stmt.isVariadic
     );
   }
 
@@ -425,7 +426,8 @@ public class NimTranslator extends BaseVisitor<NNode> {
       stmt.name.literal(),
       stmt.parameters,
       stmt.body,
-      globalScopeNode
+      globalScopeNode,
+      stmt.isVariadic
     );
   }
 
@@ -475,7 +477,8 @@ public class NimTranslator extends BaseVisitor<NNode> {
         method.name.literal(),
         method.parameters,
         method.body,
-        new NDynamicObjectRefNode(classObject)
+        new NDynamicObjectRefNode(classObject),
+        method.isVariadic
       ));
     }
 
@@ -535,7 +538,7 @@ public class NimTranslator extends BaseVisitor<NNode> {
     return new NCatchStmtNode(body, slot, asBody, thenBody);
   }
 
-  private NNode translateFunction(Stmt source, String name, List<Expr.Identifier> parameters, Stmt.Block body, NNode root) {
+  private NNode translateFunction(Stmt source, String name, List<Expr.Identifier> parameters, Stmt.Block body, NNode root, boolean isVariadic) {
     FrameDescriptor.Builder previousFrameDescriptor = frameDescriptor;
     ParserState previousState = state;
     var previousLocalScopes = localScopes;
@@ -562,7 +565,8 @@ public class NimTranslator extends BaseVisitor<NNode> {
       name,
       frameDescriptor,
       new NFunctionBodyNode(statements),
-      parameters.size()
+      parameters.size(),
+      isVariadic ? 1 : 0
     ), source);
   }
 
