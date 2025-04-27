@@ -7,11 +7,12 @@ import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.FrameSlotKind;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import org.nimbus.language.nodes.NNode;
+import org.nimbus.language.nodes.NStmtNode;
 
-@NodeChild(value = "value")
+@NodeChild(value = "value", type = NNode.class)
 @NodeField(name = "slot", type = int.class)
 @ImportStatic(FrameSlotKind.class)
-public abstract class NLocalAssignNode extends NNode {
+public abstract class NLocalAssignNode extends NStmtNode {
   protected abstract int getSlot();
 
   @Specialization(guards = "frame.getFrameDescriptor().getSlotKind(getSlot()) == Illegal || " +

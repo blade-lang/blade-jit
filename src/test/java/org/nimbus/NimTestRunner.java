@@ -262,21 +262,24 @@ public class NimTestRunner extends ParentRunner<NimTestRunner.TestCase> {
 
       Context.Builder builder = Context.newBuilder().allowExperimentalOptions(true).allowHostClassLookup((s) -> true).allowHostAccess(HostAccess.ALL).in(
         new ByteArrayInputStream(testCase.testInput.getBytes(StandardCharsets.UTF_8))).out(out).err(out);
+
       for (Map.Entry<String, String> e : testCase.options.entrySet()) {
         builder.option(e.getKey(), e.getValue());
       }
+
       boolean assertsOn = false;
       assert !!(assertsOn = true);
       if (!assertsOn) {
         // Assertions are off, we need to turn off probe assertions.
         builder.option("engine.AssertProbes", "false");
       }
+
       context = builder.build();
-      PrintWriter printer = new PrintWriter(out, true);
+      PrintWriter printer = new PrintWriter(out, false, StandardCharsets.UTF_8);
       run(context, testCase.path, printer);
       printer.flush();
 
-      String actualOutput = out.toString();
+      String actualOutput = new String(out.toByteArray());
       if(testCase.expectStackTrace) {
         MatcherAssert.assertThat(testCase.name.toString(), actualOutput, startsWith(testCase.expectedOutput));
       } else {
@@ -295,7 +298,7 @@ public class NimTestRunner extends ParentRunner<NimTestRunner.TestCase> {
   private static void run(Context context, Path path, PrintWriter out) throws IOException {
     try {
       /* Parse the Nim source file. */
-      Source source = Source.newBuilder(NimbusLanguage.ID, path.toFile()).interactive(true).build();
+      Source source = Source.newBuilder(NimbusLanguage.ID, path.toFile()).build();
 
       /* Call the main entry point, without any arguments. */
       context.eval(source);

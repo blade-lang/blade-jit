@@ -4,11 +4,12 @@ import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 import org.nimbus.language.nodes.NNode;
+import org.nimbus.language.nodes.NStmtNode;
 import org.nimbus.language.runtime.NimClass;
 
 import java.util.List;
 
-public final class NClassDeclNode extends NNode {
+public final class NClassDeclNode extends NStmtNode {
   @Children
   private final NNode[] methods;
 

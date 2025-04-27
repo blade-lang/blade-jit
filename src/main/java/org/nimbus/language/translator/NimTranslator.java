@@ -519,7 +519,7 @@ public class NimTranslator extends BaseVisitor<NNode> {
   @Override
   public NNode visitCatchStmt(Stmt.Catch stmt) {
     NNode body = visitBlockStmt(stmt.body);
-    NNode thenBody = stmt.thenBody == null ? null : visitBlockStmt(stmt.thenBody);
+    NNode thenBody = stmt.finallyBody == null ? null : visitBlockStmt(stmt.finallyBody);
     NNode asBody = null;
     int slot = -1;
 
@@ -532,7 +532,7 @@ public class NimTranslator extends BaseVisitor<NNode> {
       }
 
       // parse the 'catch' statement block
-      asBody = visitBlockStmt(stmt.asBody);
+      asBody = visitBlockStmt(stmt.catchBody);
     }
 
     return new NCatchStmtNode(body, slot, asBody, thenBody);

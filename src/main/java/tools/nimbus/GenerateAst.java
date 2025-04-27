@@ -69,7 +69,7 @@ public class GenerateAst {
       "Assert     : Expr expression, Expr message",
       "Using      : Expr expression, List<Expr> caseLabels, List<Stmt> caseBodies, Stmt defaultCase",
       "Import     : String path, List<Token> elements, boolean all",
-      "Catch      : Block body, Block asBody, Block thenBody, Expr.Identifier name",
+      "Catch      : Block body, Block catchBody, Block finallyBody, Expr.Identifier name",
       "Block      : List<Stmt> body",
       "Assign     : Expr expression, Token type, Expr value",
       "Var        : Token name, Expr value, boolean isConstant",

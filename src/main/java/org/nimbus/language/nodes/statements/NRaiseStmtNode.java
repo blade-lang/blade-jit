@@ -15,11 +15,12 @@ import com.oracle.truffle.api.source.SourceSection;
 import com.oracle.truffle.api.strings.TruffleString;
 import com.oracle.truffle.api.strings.TruffleStringBuilder;
 import org.nimbus.language.nodes.NNode;
+import org.nimbus.language.nodes.NStmtNode;
 import org.nimbus.language.runtime.*;
 
 import java.util.List;
 
-public abstract class NRaiseStmtNode extends NNode {
+public abstract class NRaiseStmtNode extends NStmtNode {
   @SuppressWarnings("FieldMayBeFinal")
   @Executed
   @Child protected NNode error;

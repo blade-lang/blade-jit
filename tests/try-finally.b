@@ -1,8 +1,6 @@
-catch {
+try {
   var a = 20
   raise new Error('Something happened')
-} /*as e {
-  echo e
-}*/ then {
+} finally {
   echo 'Cleaning up'
 }

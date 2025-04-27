@@ -6,6 +6,8 @@ import com.oracle.truffle.api.dsl.Executed;
 import com.oracle.truffle.api.dsl.Fallback;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.instrumentation.StandardTags;
+import com.oracle.truffle.api.instrumentation.Tag;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 import org.nimbus.language.nodes.NNode;
 import org.nimbus.language.runtime.*;
@@ -161,5 +163,10 @@ public abstract class NFunctionCallExprNode extends NNode {
     );
 
     return ret;
+  }
+
+  @Override
+  public boolean hasTag(Class<? extends Tag> tag) {
+    return tag == StandardTags.CallTag.class;
   }
 }

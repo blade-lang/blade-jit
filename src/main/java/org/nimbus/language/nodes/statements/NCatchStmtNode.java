@@ -1,11 +1,14 @@
 package org.nimbus.language.nodes.statements;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.instrumentation.StandardTags;
+import com.oracle.truffle.api.instrumentation.Tag;
 import org.nimbus.language.nodes.NNode;
+import org.nimbus.language.nodes.NStmtNode;
 import org.nimbus.language.runtime.NimNil;
 import org.nimbus.language.runtime.NimRuntimeError;
 
-public class NCatchStmtNode extends NNode {
+public final class NCatchStmtNode extends NStmtNode {
   @SuppressWarnings("FieldMayBeFinal")
   @Child
   private NNode body;
@@ -15,21 +18,21 @@ public class NCatchStmtNode extends NNode {
 
   @SuppressWarnings("FieldMayBeFinal")
   @Child
-  private NNode asBody;
+  private NNode catchBody;
 
   @SuppressWarnings("FieldMayBeFinal")
   @Child
-  private NNode thenBody;
+  private NNode finallyBody;
 
-  public NCatchStmtNode(NNode body, NNode thenBody) {
-    this(body, -1, null, thenBody);
+  public NCatchStmtNode(NNode body, NNode finallyBody) {
+    this(body, -1, null, finallyBody);
   }
 
-  public NCatchStmtNode(NNode body, int slot, NNode asBody, NNode thenBody) {
+  public NCatchStmtNode(NNode body, int slot, NNode catchBody, NNode finallyBody) {
     this.body = body;
     this.slot = slot;
-    this.asBody = asBody;
-    this.thenBody = thenBody;
+    this.catchBody = catchBody;
+    this.finallyBody = finallyBody;
   }
 
   @Override
@@ -38,25 +41,24 @@ public class NCatchStmtNode extends NNode {
       try {
         return body.execute(frame);
       } finally {
-        if(thenBody != null) {
-          thenBody.execute(frame);
-        }
+        finallyBody.execute(frame);
       }
     } else {
       try {
         return body.execute(frame);
       } catch (NimRuntimeError e) {
         frame.setObject(slot, e.value);
-        if(asBody != null) {
-          return asBody.execute(frame);
-        }
-
-        return NimNil.SINGLETON;
+        return catchBody.execute(frame);
       } finally {
-        if (thenBody != null) {
-          thenBody.execute(frame);
+        if (finallyBody != null) {
+          finallyBody.execute(frame);
         }
       }
     }
+  }
+
+  @Override
+  public boolean hasTag(Class<? extends Tag> tag) {
+    return tag == StandardTags.TryBlockTag.class;
   }
 }

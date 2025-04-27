@@ -3,6 +3,8 @@ package org.nimbus.language.nodes.expressions;
 import com.oracle.truffle.api.dsl.NodeChild;
 import com.oracle.truffle.api.dsl.NodeField;
 import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.instrumentation.StandardTags;
+import com.oracle.truffle.api.instrumentation.Tag;
 import com.oracle.truffle.api.library.CachedLibrary;
 import com.oracle.truffle.api.object.DynamicObject;
 import com.oracle.truffle.api.object.DynamicObjectLibrary;
@@ -26,5 +28,10 @@ public abstract class NGlobalVarRefExprNode extends NNode {
       throw NimRuntimeError.create("'", name, "' is not defined in this scope");
     }
     return value;
+  }
+
+  @Override
+  public boolean hasTag(Class<? extends Tag> tag) {
+    return tag == StandardTags.ReadVariableTag.class;
   }
 }

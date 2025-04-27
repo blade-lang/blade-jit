@@ -46,6 +46,7 @@ public class Lexer {
         put("echo", ECHO);
         put("else", ELSE);
         put("false", FALSE);
+        put("finally", FINALLY);
         put("for", FOR);
         put("if", IF);
         put("import", IMPORT);
@@ -59,8 +60,8 @@ public class Lexer {
         put("return", RETURN);
         put("self", SELF);
         put("static", STATIC);
-        put("then", THEN);
         put("true", TRUE);
+        put("try", TRY);
         put("using", USING);
         put("var", VAR);
         put("when", WHEN);

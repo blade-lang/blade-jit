@@ -3,11 +3,12 @@ package org.nimbus.language.nodes.statements;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 import org.nimbus.language.nodes.NNode;
+import org.nimbus.language.nodes.NStmtNode;
 import org.nimbus.language.runtime.NimNil;
 
 import java.util.List;
 
-public class NBlockStmtNode extends NNode {
+public final class NBlockStmtNode extends NStmtNode {
 
   @Children
   public final NNode[] nodes;

@@ -1,0 +1,4 @@
+^^^
+Cleaning up
+Error: Something happened
+	at <nim> @.script(tests/try-finally.b:3:21-58)

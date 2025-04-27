@@ -2,10 +2,14 @@ package org.nimbus.language.nodes.statements;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
 import org.nimbus.language.nodes.NNode;
+import org.nimbus.language.nodes.NStmtNode;
+import org.nimbus.language.runtime.NimContext;
 import org.nimbus.language.runtime.NimNil;
 import org.nimbus.language.runtime.NimUtils;
 
-public final class NEchoStmtNode extends NNode {
+import java.io.PrintWriter;
+
+public final class NEchoStmtNode extends NStmtNode {
   @SuppressWarnings("FieldMayBeFinal")
   @Child private NNode object;
 
@@ -16,7 +20,7 @@ public final class NEchoStmtNode extends NNode {
   @Override
   public Object execute(VirtualFrame frame) {
     Object value = object.execute(frame);
-    NimUtils.print(value);
+    NimContext.get(this).println(value);
     return value;
   }
 }

@@ -1,4 +1,4 @@
-package org.nimbus.language.nodes.statements;
+package org.nimbus.language.nodes.expressions;
 
 import com.oracle.truffle.api.dsl.NodeField;
 import com.oracle.truffle.api.dsl.Specialization;

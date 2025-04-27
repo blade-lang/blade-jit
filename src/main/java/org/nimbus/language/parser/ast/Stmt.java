@@ -229,14 +229,14 @@ public abstract class Stmt extends AST {
 
   public static class Catch extends Stmt {
     public final Block body;
-    public final Block asBody;
-    public final Block thenBody;
+    public final Block catchBody;
+    public final Block finallyBody;
     public final Expr.Identifier name;
 
-    public Catch(Block body, Block asBody, Block thenBody, Expr.Identifier name) {
+    public Catch(Block body, Block catchBody, Block finallyBody, Expr.Identifier name) {
       this.body = body;
-      this.asBody = asBody;
-      this.thenBody = thenBody;
+      this.catchBody = catchBody;
+      this.finallyBody = finallyBody;
       this.name = name;
     }
 

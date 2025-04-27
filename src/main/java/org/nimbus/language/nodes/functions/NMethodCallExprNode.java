@@ -2,6 +2,8 @@ package org.nimbus.language.nodes.functions;
 
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.instrumentation.StandardTags;
+import com.oracle.truffle.api.instrumentation.Tag;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 import org.nimbus.language.nodes.NNode;
 
@@ -39,5 +41,10 @@ public final class NMethodCallExprNode extends NNode {
     }
 
     return dispatchNode.executeDispatch(function, receiver, values);
+  }
+
+  @Override
+  public boolean hasTag(Class<? extends Tag> tag) {
+    return tag == StandardTags.CallTag.class;
   }
 }

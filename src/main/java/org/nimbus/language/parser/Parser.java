@@ -4,10 +4,7 @@ import org.nimbus.language.parser.ast.AST;
 import org.nimbus.language.parser.ast.Expr;
 import org.nimbus.language.parser.ast.Stmt;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static org.nimbus.language.parser.TokenType.*;
 
@@ -661,6 +658,12 @@ public class Parser {
     });
   }
 
+  private Stmt.Block matchBlock(String message) {
+    ignoreNewlines();
+    consume(LBRACE, message);
+    return block();
+  }
+
   private Stmt ifStatement() {
     return wrapStmt(() -> {
       Expr expr = expression();
@@ -820,32 +823,27 @@ public class Parser {
 
   private Stmt catchStatement() {
     return wrapStmt(() -> {
-      ignoreNewlines();
-
-      consume(LBRACE, "'{' expected after catch");
-      Stmt.Block body = block();
-      Stmt.Block asBody = null;
-      Stmt.Block thenBody = null;
+      Stmt.Block body = matchBlock("'{' expected after try");
+      Stmt.Block catchBody = null;
+      Stmt.Block finallyBody = null;
 
       Expr.Identifier exception_var = null;
-      if (match(AS)) {
+      if (match(CATCH)) {
         consume(IDENTIFIER, "exception variable expected");
         exception_var = identifier();
 
-        ignoreNewlines();
-        if (check(LBRACE)) {
-          consume(LBRACE, "'{' expected after variable name");
-          asBody = block();
-        }
+        catchBody = matchBlock("'{' expected after catch variable name");
       }
 
-      if (match(THEN)) {
-        ignoreNewlines();
-        consume(LBRACE, "'{' expected after then");
-        thenBody = block();
+      if(exception_var == null && !check(FINALLY)) {
+        throw new ParserException(lexer.getSource(), peek(), false, "try must declare at least one of `catch` or `finally`");
       }
 
-      return new Stmt.Catch(body, asBody, thenBody, exception_var);
+      if (match(FINALLY)) {
+        finallyBody = matchBlock("'{' expected after finally");
+      }
+
+      return new Stmt.Catch(body, catchBody, finallyBody, exception_var);
     });
   }
 
@@ -884,8 +882,7 @@ public class Parser {
         match(RPAREN);
       }
 
-      consume(LBRACE, "'{' expected after catch");
-      Stmt.Block body = block();
+      Stmt.Block body = matchBlock("'{' expected at beginning of iter block");
       return new Stmt.Iter(decl, condition, iterator, body);
     });
   }
@@ -895,6 +892,13 @@ public class Parser {
       ignoreNewlines();
 
       Stmt result;
+
+      if(match(CATCH) || match(FINALLY)) {
+        throw new ParserException(
+          lexer.getSource(), previous(), true,
+          "`catch` and `finally` are only valid in `try` context"
+        );
+      }
 
       if (match(ECHO)) {
         result = echoStatement();
@@ -924,7 +928,7 @@ public class Parser {
         result = block();
       } else if (match(IMPORT)) {
         result = importStatement();
-      } else if (match(CATCH)) {
+      } else if (match(TRY)) {
         result = catchStatement();
       } else {
         result = expressionStatement(false);
@@ -1017,8 +1021,7 @@ public class Parser {
         consume(RPAREN, "expected ')' after anonymous function parameters");
       }
 
-      consume(LBRACE, "'{' expected after function declaration");
-      var body = block();
+      var body = matchBlock("'{' expected after function declaration");
 
       return new Expr.Anonymous(
         new Stmt.Function(
@@ -1040,9 +1043,7 @@ public class Parser {
       isVariadic = functionArgs(params);
       consume(RPAREN, "')' expected after function arguments");
 
-      ignoreNewlines();
-      consume(LBRACE, "'{' expected after function declaration");
-      var body = block();
+      var body = matchBlock("'{' expected after function declaration");
 
       return new Stmt.Function(name, params, body, isVariadic);
     });
@@ -1068,8 +1069,7 @@ public class Parser {
       consumeAny("non-assignment operator expected", OPERATORS);
       var name = previous();
 
-      consume(LBRACE, "'{' expected after operator declaration");
-      var body = block();
+      var body = matchBlock("'{' expected after operator declaration");
 
       return new Stmt.Method(name, new ArrayList<>(), body, false, false);
     });
@@ -1087,9 +1087,7 @@ public class Parser {
       isVariadic = functionArgs(params);
       consume(RPAREN, "')' expected after method arguments");
 
-      ignoreNewlines();
-      consume(LBRACE, "'{' expected after method declaration");
-      var body = block();
+      var body = matchBlock("'{' expected after method declaration");
 
       return new Stmt.Method(name, params, body, isStatic, isVariadic);
     });

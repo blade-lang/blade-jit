@@ -4,6 +4,7 @@ import org.graalvm.polyglot.*;
 import org.nimbus.language.NimbusLanguage;
 
 import java.io.*;
+import java.nio.file.NoSuchFileException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -43,7 +44,14 @@ public class Main {
         .build()
     ) {
       if (file != null) {
-        System.exit(runSource(defaultContext, getSource(file), false));
+        try {
+          System.exit(runSource(defaultContext, getSource(file), false));
+        } catch (NoSuchFileException ex) {
+          System.err.printf("""
+              (Blade):
+                Launch aborted for %s
+                Reason: No such file or directory%n""", file);
+        }
       } else {
         while (true) {
           InputStreamReader input = new InputStreamReader(System.in);

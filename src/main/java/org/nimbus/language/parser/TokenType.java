@@ -72,6 +72,7 @@ public enum TokenType {
   ECHO,  // echo token
   ELSE,  // else token
   FALSE,  // false token
+  FINALLY,  // finally token
   FOR,  // for token
   IF,  // if token
   IMPORT,  // import token
@@ -85,8 +86,8 @@ public enum TokenType {
   RETURN,  // return token
   SELF,  // self token
   STATIC,  // static token
-  THEN,  // then token
   TRUE,  // true token
+  TRY,  // try token
   USING,  // using token
   VAR,  // var token
   WHEN,  // when token

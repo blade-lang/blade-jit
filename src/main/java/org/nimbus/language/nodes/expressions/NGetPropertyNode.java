@@ -2,6 +2,8 @@ package org.nimbus.language.nodes.expressions;
 
 import com.oracle.truffle.api.dsl.*;
 import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.instrumentation.StandardTags;
+import com.oracle.truffle.api.instrumentation.Tag;
 import org.nimbus.language.nodes.NNode;
 import org.nimbus.language.nodes.NSharedPropertyReaderNode;
 import org.nimbus.language.nodes.NSharedPropertyReaderNodeGen;
@@ -35,5 +37,10 @@ public abstract class NGetPropertyNode extends NNode {
   @Override
   public Object evaluateReceiver(VirtualFrame frame) {
     return getTargetExpr().execute(frame);
+  }
+
+  @Override
+  public boolean hasTag(Class<? extends Tag> tag) {
+    return tag == StandardTags.ReadVariableTag.class;
   }
 }
