@@ -38,6 +38,7 @@ public class Main {
         .engine(engine)
         .in(System.in)
         .out(System.out)
+        .err(System.err)
         .allowAllAccess(true)
         .build()
     ) {
@@ -130,7 +131,7 @@ public class Main {
       if(element.getClassName().equals("<" +NimbusLanguage .ID+ ">")) {
         String fileName = element.getFileName();
         String funcName = element.getMethodName();
-        if(funcName.equals(":program")) {
+        if(funcName.equals("@.script")) {
           funcName = "@.script";
         }
         int lineNo = element.getLineNumber();

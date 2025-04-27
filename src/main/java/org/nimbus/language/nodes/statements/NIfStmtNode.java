@@ -26,7 +26,7 @@ public final class NIfStmtNode extends NStmtNode {
 
   @Override
   public Object execute(VirtualFrame frame) {
-    if(profile.profile(condition.executeBoolean(frame))) {
+    if(profile.profile(evaluateBoolean(condition.execute(frame)))) {
       return thenBranch.execute(frame);
     } else if(elseBranch != null) {
       return elseBranch.execute(frame);

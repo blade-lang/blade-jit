@@ -50,13 +50,13 @@ public class NCatchStmtNode extends NNode {
         if(asBody != null) {
           return asBody.execute(frame);
         }
+
+        return NimNil.SINGLETON;
       } finally {
         if (thenBody != null) {
           thenBody.execute(frame);
         }
       }
     }
-
-    return NimNil.SINGLETON;
   }
 }

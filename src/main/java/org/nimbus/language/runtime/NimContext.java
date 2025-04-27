@@ -22,6 +22,7 @@ public class NimContext {
 
   public final BufferedReader input;
   public final PrintWriter output;
+  public final PrintWriter error;
 
   public NimContext(TruffleLanguage.Env env, DynamicObject globalScope, NBuiltinClassesModel objectsModel, NFunctionObject emptyFunction) {
     this.globalScope = globalScope;
@@ -30,6 +31,7 @@ public class NimContext {
 
     input = new BufferedReader(new InputStreamReader(env.in()));
     output = new PrintWriter(env.out(), true);
+    error = new PrintWriter(env.err(), true);
   }
 
   public static NimContext get(Node node) {

@@ -15,7 +15,7 @@ public abstract class PrintBuiltinFunctionNode2 extends NBuiltinFunctionNode {
   @Specialization
   public Object doList(NListObject object,
                        @CachedLibrary(limit = "3")InteropLibrary interopLibrary,
-                       @Cached(value = "languageContext()", neverDefault = true)NimContext context) {
+                       @Cached(value = "languageContext()", neverDefault = false)NimContext context) {
     print(context, interopLibrary, object.items);
     return NimNil.SINGLETON;
   }

@@ -40,7 +40,7 @@ public abstract class NSharedPropertyReaderNode extends NBaseNode {
     Object target, Object property,
     @CachedLibrary("target") InteropLibrary interopLibrary,
     @CachedLibrary(limit = "3") @Cached.Shared("objectLibrary") DynamicObjectLibrary objectLibrary,
-    @Cached(value = "languageContext().objectsModel", neverDefault = true) NBuiltinClassesModel classesModel
+    @Cached(value = "languageContext().objectsModel", neverDefault = false) NBuiltinClassesModel classesModel
   ) {
     throw NimRuntimeError.typeError(this, NString.concatString("Cannot read properties of nil (reading '", property, "')"));
   }
@@ -49,7 +49,7 @@ public abstract class NSharedPropertyReaderNode extends NBaseNode {
   protected Object doUnknown(
     @SuppressWarnings("unused") Object target,
     @SuppressWarnings("unused") Object property,
-    @Cached(value = "languageContext().objectsModel.objectObject", neverDefault = true) NObject objectObject,
+    @Cached(value = "languageContext().objectsModel.objectObject", neverDefault = false) NObject objectObject,
     @CachedLibrary(limit = "3") @Cached.Shared("objectLibrary") DynamicObjectLibrary dynamicObjectLibrary
   ) {
     return dynamicObjectLibrary.getOrDefault(objectObject, NString.toString(property), NimNil.SINGLETON);

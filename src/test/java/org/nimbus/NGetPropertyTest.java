@@ -1,21 +1,21 @@
 package org.nimbus;
 
 import org.graalvm.polyglot.Context;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.Assert.assertEquals;
 
 public class NGetPropertyTest {
   private Context context;
 
-  @BeforeEach
+  @Before
   public void setup() {
     context = Context.create();
   }
 
-  @AfterEach
+  @After
   public void tearDown() {
     context.close();
   }

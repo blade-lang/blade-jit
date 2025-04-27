@@ -12,7 +12,8 @@ repositories {
 
 dependencies {
     testImplementation platform('org.junit:junit-bom:5.10.0')
-    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testImplementation 'junit:junit:4.13.2'
+//    testImplementation 'org.junit.jupiter:junit-jupiter'
 
     implementation 'org.graalvm.truffle:truffle-api:24.2.0'
     implementation 'org.graalvm.polyglot:polyglot:24.2.0'
@@ -29,7 +30,7 @@ dependencies {
 }
 
 test {
-    useJUnitPlatform()
+//    useJUnitPlatform()
 }
 
 jar {

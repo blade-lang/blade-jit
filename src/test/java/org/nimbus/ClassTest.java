@@ -2,29 +2,27 @@ package org.nimbus;
 
 import org.graalvm.polyglot.Context;
 import org.graalvm.polyglot.PolyglotException;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
-import java.util.Set;
-
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.Assert.*;
 
 public class ClassTest {
   private Context context;
 
-  @BeforeEach
-  void setup() {
+  @Before
+  public void setup() {
     context = Context.create();
   }
 
-  @AfterEach
-  void tearDown() {
+  @After
+  public void tearDown() {
     context.close();
   }
 
   @Test
-  void class_declaration_creates_object() {
+  public void class_declaration_creates_object() {
     var result = context.eval("nim", "class A {}\n" +
       "A");
 
@@ -33,7 +31,7 @@ public class ClassTest {
   }
 
   @Test
-  void class_can_be_instantiated() {
+  public void class_can_be_instantiated() {
     var result = context.eval("nim", """
       class A {
           a() {
@@ -51,7 +49,7 @@ public class ClassTest {
   }
 
   @Test
-  void methods_can_be_called_on_class_instances() {
+  public void methods_can_be_called_on_class_instances() {
     var result = context.eval("nim", """
       class A {
           a() {
@@ -64,7 +62,7 @@ public class ClassTest {
   }
 
   @Test
-  void classes_can_be_reassigned() {
+  public void classes_can_be_reassigned() {
     var result = context.eval("nim", """
       class A { }
       A = 5
@@ -74,7 +72,7 @@ public class ClassTest {
   }
 
   @Test
-  void arguments_passed_to_new_are_evaluated() {
+  public void arguments_passed_to_new_are_evaluated() {
     var result = context.eval("nim", """
       class Class { }
       var l = 3
@@ -85,7 +83,7 @@ public class ClassTest {
   }
 
   @Test
-  void duplicate_methods_override_previous_ones() {
+  public void duplicate_methods_override_previous_ones() {
     var result = context.eval("nim", """
       class Class {
          c() { return 1 }
@@ -128,7 +126,7 @@ public class ClassTest {
   }
 
   @Test
-  void benchmark_with_alloc_inside_loop_returns_input() {
+  public void benchmark_with_alloc_inside_loop_returns_input() {
     var result = context.eval("nim", """
       class Adder {
           add(a, b) {
@@ -149,7 +147,7 @@ public class ClassTest {
   }
 
   @Test
-  void benchmark_with_alloc_outside_loop_returns_input() {
+  public void benchmark_with_alloc_outside_loop_returns_input() {
     var result = context.eval("nim", """
       class Adder {
           add(a, b) {
@@ -171,7 +169,7 @@ public class ClassTest {
   }
 
   @Test
-  void duplicate_class_declarations_are_an_error() {
+  public void duplicate_class_declarations_are_an_error() {
     try {
       context.eval("nim",
         "class A { }\n" +
@@ -186,7 +184,7 @@ public class ClassTest {
   }
 
   @Test
-  void new_with_non_class_is_an_error() {
+  public void new_with_non_class_is_an_error() {
     try {
       context.eval("nim",
         "new 3();");

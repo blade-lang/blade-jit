@@ -2,11 +2,11 @@ package org.nimbus;
 
 import org.graalvm.polyglot.Context;
 import org.graalvm.polyglot.Value;
-import org.junit.jupiter.api.Test;
+import org.junit.Test;
 
 import java.util.Set;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.Assert.*;
 
 public class NGlobalBindingsTest {
   @Test

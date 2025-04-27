@@ -239,7 +239,7 @@ public class NimbusLanguage extends TruffleLanguage<NimContext> {
 
     var visitor = new NimTranslator(parser, builtinObjects);
     var parseResult = visitor.translate(statements);
-    return new NRootNode(this, parseResult.frameDescriptor, parseResult.node, ":program").getCallTarget();
+    return new NRootNode(this, parseResult.frameDescriptor, parseResult.node, "@.script").getCallTarget();
   }
 
   @Override

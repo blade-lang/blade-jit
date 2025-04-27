@@ -41,6 +41,4 @@ def countWithSelfInIterDirect(n) {
   return counter.getCount()
 }
 
-const start = microtime()
 echo countWithSelfInIterDirect(1000000)
-echo '${(microtime() - start) / 1000}ms taken'

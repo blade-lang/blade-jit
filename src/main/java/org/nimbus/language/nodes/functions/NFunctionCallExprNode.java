@@ -41,21 +41,21 @@ public abstract class NFunctionCallExprNode extends NNode {
   @Specialization(guards = {"function.variadic", "arguments.length < function.argumentsCount"})
   protected Object doVariableLessSize(VirtualFrame frame, NFunctionObject function,
                                       @Cached("function") NFunctionObject cachedFunction,
-                                      @Cached(value = "languageContext()", neverDefault = true) @Cached.Shared("group") NimContext context) {
+                                      @Cached(value = "languageContext()", neverDefault = false) @Cached.Shared("group") NimContext context) {
     return dispatchNode.executeDispatch(cachedFunction, expandLessVarArguments(context, cachedFunction, consumeArguments(frame)));
   }
 
   @Specialization(guards = {"function.variadic", "function.argumentsCount > 1"})
   protected Object doVariableMoreSize(VirtualFrame frame, NFunctionObject function,
                                       @Cached("function") NFunctionObject cachedFunction,
-                                      @Cached(value = "languageContext()", neverDefault = true) @Cached.Shared("group") NimContext context) {
+                                      @Cached(value = "languageContext()", neverDefault = false) @Cached.Shared("group") NimContext context) {
     return dispatchNode.executeDispatch(cachedFunction, expandMoreVarArguments(context, cachedFunction, consumeArguments(frame)));
   }
 
   @Specialization(guards = {"function.variadic", "function.argumentsCount == 1"})
   protected Object doVariableNoSize(VirtualFrame frame, NFunctionObject function,
                                     @Cached("function") NFunctionObject cachedFunction,
-                                    @Cached(value = "languageContext()", neverDefault = true) @Cached.Shared("group") NimContext context) {
+                                    @Cached(value = "languageContext()", neverDefault = false) @Cached.Shared("group") NimContext context) {
     return dispatchNode.executeDispatch(cachedFunction, expandNoVarArguments(context, cachedFunction, consumeArguments(frame)));
   }
 

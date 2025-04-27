@@ -1,0 +1,3 @@
+^^^
+Error: Something happened
+	at <nim> @.script(tests/catch.b:3:23-60)

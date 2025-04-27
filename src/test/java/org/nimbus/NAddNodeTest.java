@@ -1,9 +1,8 @@
 package org.nimbus;
 
 import com.oracle.truffle.api.CallTarget;
-import com.oracle.truffle.api.object.Shape;
 import com.oracle.truffle.api.source.Source;
-import org.junit.jupiter.api.Test;
+import org.junit.Test;
 import org.nimbus.language.NimbusLanguage;
 import org.nimbus.language.nodes.NNode;
 import org.nimbus.language.nodes.NRootNode;
@@ -14,7 +13,7 @@ import org.nimbus.language.parser.Parser;
 import org.nimbus.language.runtime.NObject;
 import org.nimbus.language.translator.NimTranslator;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.Assert.assertEquals;
 
 public class NAddNodeTest {
   @Test
@@ -22,7 +21,7 @@ public class NAddNodeTest {
     NNode exprNode = NAddNodeGen.create(
         new NLongLiteralNode(12),
         new NLongLiteralNode(34));
-    var rootNode = new NRootNode(null, exprNode, ":program");
+    var rootNode = new NRootNode(null, exprNode, "@.script");
     CallTarget callTarget = rootNode.getCallTarget();
 
     var result = callTarget.call();
@@ -35,7 +34,7 @@ public class NAddNodeTest {
     NNode exprNode = NAddNodeGen.create(
         new NLongLiteralNode(Long.MAX_VALUE),
         new NLongLiteralNode(1));
-    var rootNode = new NRootNode(null, exprNode, ":program");
+    var rootNode = new NRootNode(null, exprNode, "@.script");
     CallTarget callTarget = rootNode.getCallTarget();
 
     var result = callTarget.call();
@@ -56,7 +55,7 @@ public class NAddNodeTest {
       var callTarget = new NRootNode(null,
         parseResult.getFirst()
               .accept(visitor),
-        ":program"
+        "@.script"
       ).getCallTarget();
 
       var result = callTarget.call();
