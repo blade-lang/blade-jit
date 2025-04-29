@@ -3,6 +3,7 @@ package org.nimbus.language.nodes;
 import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.RootNode;
+import com.oracle.truffle.api.source.SourceSection;
 import org.nimbus.language.NimbusLanguage;
 import org.nimbus.language.nodes.statements.NBlockStmtNode;
 
@@ -35,5 +36,10 @@ public final class NBlockRootNode extends RootNode {
   @Override
   public String getName() {
     return name;
+  }
+
+  @Override
+  public SourceSection getSourceSection() {
+    return block.getSourceSection();
   }
 }

@@ -2,7 +2,9 @@ package org.nimbus.language.nodes.statements;
 
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.instrumentation.Tag;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
+import com.oracle.truffle.api.source.SourceSection;
 import org.nimbus.language.nodes.NNode;
 import org.nimbus.language.nodes.NStmtNode;
 import org.nimbus.language.runtime.NimClass;
@@ -29,5 +31,16 @@ public final class NClassDeclNode extends NStmtNode {
     }
 
     return classObject;
+  }
+
+  @Override
+  public boolean hasTag(Class<? extends Tag> tag) {
+    return false;
+  }
+
+  @Override
+  public SourceSection getSourceSection() {
+    // we want to disable debuggers from reaching function declarations
+    return null;
   }
 }

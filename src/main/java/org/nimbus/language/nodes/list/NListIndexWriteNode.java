@@ -50,12 +50,20 @@ public abstract class NListIndexWriteNode extends NNode {
     return sharedPropertyWriterNode.executeWrite(target, toJavaStringNode.execute(name), value);
   }
 
-  @Specialization(guards = {"listLibrary.isNull(list)", "isBool(list)"}, limit = "3")
+  @Specialization(guards = {"isBool(list)"}, limit = "3")
+  protected Object doBool(
+    Object list, long index, Object value,
+    @CachedLibrary("list") InteropLibrary listLibrary
+  ) {
+    throw NimRuntimeError.create("Cannot set properties of nil (reading '" , index, "')", this);
+  }
+
+  @Specialization(guards = {"listLibrary.isNull(list)"}, limit = "3")
   protected Object doNil(
     Object list, long index, Object value,
     @CachedLibrary("list") InteropLibrary listLibrary
   ) {
-    throw NimRuntimeError.create("Cannot set properties of " , list, " (reading '" , index, "')", this);
+    throw NimRuntimeError.create("Cannot set properties of boolean value (reading '" , index, "')", this);
   }
 
   @Fallback

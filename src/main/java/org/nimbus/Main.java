@@ -12,7 +12,6 @@ public class Main {
   public static void main(String[] args) throws IOException {
 //    System.out.println(ProcessHandle.current().pid());
 
-    Source source;
     Map<String, String> options = new HashMap<>();
     String file = null;
     for (String arg : args) {

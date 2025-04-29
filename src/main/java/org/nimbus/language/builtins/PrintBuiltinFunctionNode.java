@@ -4,13 +4,13 @@ import com.oracle.truffle.api.dsl.*;
 import com.oracle.truffle.api.interop.InteropLibrary;
 import com.oracle.truffle.api.library.CachedLibrary;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
-import com.oracle.truffle.api.nodes.Node;
 import org.nimbus.language.nodes.functions.NBuiltinFunctionNode;
 import org.nimbus.language.runtime.NListObject;
+import org.nimbus.language.runtime.NString;
 import org.nimbus.language.runtime.NimContext;
 import org.nimbus.language.runtime.NimNil;
 
-public abstract class PrintBuiltinFunctionNode2 extends NBuiltinFunctionNode {
+public abstract class PrintBuiltinFunctionNode extends NBuiltinFunctionNode {
 
   @Specialization
   public Object doList(NListObject object,
@@ -22,7 +22,7 @@ public abstract class PrintBuiltinFunctionNode2 extends NBuiltinFunctionNode {
 
   @Fallback
   protected Object fallback(Object object) {
-    NimContext.get(this).println("Something not working right: " + object);
+    NimContext.get(this).println(NString.concatString("Something not working right: ", object));
     return NimNil.SINGLETON;
   }
 
@@ -30,7 +30,7 @@ public abstract class PrintBuiltinFunctionNode2 extends NBuiltinFunctionNode {
   private void print(NimContext context, InteropLibrary interopLibrary, Object[] arguments) {
     int length = arguments.length;
 
-    for (int i = 1; i < length - 1; i++) {
+    for (int i = 0; i < length - 1; i++) {
       if (arguments[i] != NimNil.SINGLETON) {
         context.print(interopLibrary.toDisplayString(arguments[i]));
         context.print(" ");

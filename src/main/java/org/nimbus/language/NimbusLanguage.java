@@ -13,7 +13,10 @@ import com.oracle.truffle.api.object.DynamicObjectLibrary;
 import com.oracle.truffle.api.object.Shape;
 import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.strings.TruffleString;
-import org.nimbus.language.builtins.*;
+import org.nimbus.language.builtins.AbsBuiltinFunctionNodeFactory;
+import org.nimbus.language.builtins.MicroTimeBuiltinFunctionNodeFactory;
+import org.nimbus.language.builtins.PrintBuiltinFunctionNodeFactory;
+import org.nimbus.language.builtins.TimeBuiltinFunctionNodeFactory;
 import org.nimbus.language.builtins.list.NListAppendMethodNodeFactory;
 import org.nimbus.language.builtins.object.NObjectHasPropMethodNodeFactory;
 import org.nimbus.language.builtins.object.NObjectToStringMethodNodeFactory;
@@ -132,7 +135,7 @@ public class NimbusLanguage extends TruffleLanguage<NimContext> {
     defineBuiltinFunction(objectLibrary, globalScope, "abs", AbsBuiltinFunctionNodeFactory.getInstance());
     defineBuiltinFunction(objectLibrary, globalScope, "time", TimeBuiltinFunctionNodeFactory.getInstance());
     defineBuiltinFunction(objectLibrary, globalScope, "microtime", MicroTimeBuiltinFunctionNodeFactory.getInstance());
-    defineBuiltinFunction(objectLibrary, globalScope, "print", PrintBuiltinFunctionNode2Factory.getInstance(), true);
+    defineBuiltinFunction(objectLibrary, globalScope, "print", PrintBuiltinFunctionNodeFactory.getInstance(), true);
 
     // Object class
     defineBuiltinMethod(objectLibrary, objectClass, "has_prop", NObjectHasPropMethodNodeFactory.getInstance());
@@ -239,7 +242,10 @@ public class NimbusLanguage extends TruffleLanguage<NimContext> {
 
     var visitor = new NimTranslator(parser, builtinObjects);
     var parseResult = visitor.translate(statements);
-    return new NRootNode(this, parseResult.frameDescriptor, parseResult.node, "@.script").getCallTarget();
+    return new NRootNode(
+      this, parseResult.frameDescriptor, parseResult.node,
+      "@.script", visitor.getRootSourceSection()
+    ).getCallTarget();
   }
 
   @Override

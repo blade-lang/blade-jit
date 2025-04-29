@@ -47,14 +47,14 @@ public abstract class NFunctionCallExprNode extends NNode {
     return dispatchNode.executeDispatch(cachedFunction, expandLessVarArguments(context, cachedFunction, consumeArguments(frame)));
   }
 
-  @Specialization(guards = {"function.variadic", "function.argumentsCount > 1"})
+  @Specialization(guards = {"function.variadic", "arguments.length >= function.argumentsCount", "function.argumentsCount > 1"})
   protected Object doVariableMoreSize(VirtualFrame frame, NFunctionObject function,
                                       @Cached("function") NFunctionObject cachedFunction,
                                       @Cached(value = "languageContext()", neverDefault = false) @Cached.Shared("group") NimContext context) {
     return dispatchNode.executeDispatch(cachedFunction, expandMoreVarArguments(context, cachedFunction, consumeArguments(frame)));
   }
 
-  @Specialization(guards = {"function.variadic", "function.argumentsCount == 1"})
+  @Specialization(guards = {"function.variadic", "arguments.length >= function.argumentsCount", "function.argumentsCount == 1"})
   protected Object doVariableNoSize(VirtualFrame frame, NFunctionObject function,
                                     @Cached("function") NFunctionObject cachedFunction,
                                     @Cached(value = "languageContext()", neverDefault = false) @Cached.Shared("group") NimContext context) {
@@ -64,7 +64,6 @@ public abstract class NFunctionCallExprNode extends NNode {
   @Specialization(replaces = "doSameSize")
   protected Object doNotSameSize(VirtualFrame frame, NFunctionObject function,
                                  @Cached("function") NFunctionObject cachedFunction) {
-    System.out.print(cachedFunction.variadic);
     return dispatchNode.executeDispatch(cachedFunction, extendArguments(cachedFunction, consumeArguments(frame)));
   }
 

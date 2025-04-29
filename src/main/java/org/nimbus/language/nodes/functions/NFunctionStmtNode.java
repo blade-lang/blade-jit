@@ -5,6 +5,7 @@ import com.oracle.truffle.api.dsl.NodeChild;
 import com.oracle.truffle.api.dsl.NodeField;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.FrameDescriptor;
+import com.oracle.truffle.api.instrumentation.Tag;
 import com.oracle.truffle.api.library.CachedLibrary;
 import com.oracle.truffle.api.object.DynamicObject;
 import com.oracle.truffle.api.object.DynamicObjectLibrary;
@@ -46,5 +47,16 @@ public abstract class NFunctionStmtNode extends NStmtNode {
 
     objectLibrary.putConstant(container, getName(), cachedFunction, 0);
     return NimNil.SINGLETON;
+  }
+
+  @Override
+  public boolean hasTag(Class<? extends Tag> tag) {
+    return false;
+  }
+
+  @Override
+  public SourceSection getSourceSection() {
+    // we want to disable debuggers from reaching function declarations
+    return null;
   }
 }

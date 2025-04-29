@@ -2,6 +2,7 @@ package org.nimbus.language.runtime;
 
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.exception.AbstractTruffleException;
+import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.nodes.Node;
 import org.nimbus.annotations.NAnnotationHelper;
 import org.nimbus.language.nodes.NNode;
@@ -76,6 +77,7 @@ public class NimRuntimeError extends AbstractTruffleException {
     return create(NErrorObject.create(node, "ValueError", message), node);
   }
 
+  @ExplodeLoop
   @CompilerDirectives.TruffleBoundary
   public static AbstractTruffleException argumentError(Node node, String operation, Object ...values) {
     StringBuilder result = new StringBuilder();
@@ -109,5 +111,10 @@ public class NimRuntimeError extends AbstractTruffleException {
     result.append(")");
 
     return create(NErrorObject.create(node, "ArgumentError", result.toString()), node);
+  }
+
+  @CompilerDirectives.TruffleBoundary
+  public static NimRuntimeError create(Object name, Object message, NimObject value, NNode node) {
+    return new NimRuntimeError(name, message, value, node);
   }
 }

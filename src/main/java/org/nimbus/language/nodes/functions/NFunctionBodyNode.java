@@ -1,6 +1,8 @@
 package org.nimbus.language.nodes.functions;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.instrumentation.StandardTags;
+import com.oracle.truffle.api.instrumentation.Tag;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.profiles.BranchProfile;
 import org.nimbus.language.nodes.NNode;
@@ -33,5 +35,10 @@ public final class NFunctionBodyNode extends NNode {
 
     nullTaken.enter();
     return NimNil.SINGLETON;
+  }
+
+  @Override
+  public boolean hasTag(Class<? extends Tag> tag) {
+    return tag == StandardTags.RootTag.class;
   }
 }

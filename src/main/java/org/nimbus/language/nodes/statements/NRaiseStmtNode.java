@@ -35,7 +35,7 @@ public abstract class NRaiseStmtNode extends NStmtNode {
                                    @CachedLibrary("value") DynamicObjectLibrary traceLibrary) {
     Object type = ((NimClass)value.classObject).name;
     Object message = messageLibrary.getOrDefault(value, "message", "");
-    NimRuntimeError error = new NimRuntimeError(type, message, value, this);
+    NimRuntimeError error = NimRuntimeError.create(type, message, value, this);
     traceLibrary.putConstant(value, "stacktrace", formStackTrace(type, message, error), 0);
     throw error;
   }

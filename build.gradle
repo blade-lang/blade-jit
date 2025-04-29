@@ -13,11 +13,11 @@ repositories {
 dependencies {
     testImplementation platform('org.junit:junit-bom:5.10.0')
     testImplementation 'junit:junit:4.13.2'
-//    testImplementation 'org.junit.jupiter:junit-jupiter'
 
     implementation 'org.graalvm.truffle:truffle-api:24.2.0'
     implementation 'org.graalvm.polyglot:polyglot:24.2.0'
     implementation 'org.graalvm.truffle:truffle-runtime:24.2.0'
+    implementation 'org.graalvm.tools:chromeinspector:23.0.8'
 
     annotationProcessor 'org.graalvm.truffle:truffle-dsl-processor:24.2.0'
 
@@ -33,17 +33,17 @@ test {
 //    useJUnitPlatform()
 }
 
-jar {
-    duplicatesStrategy 'exclude'
-    manifest {
-        attributes(
-                'Main-Class': 'org.nimbus.Main'
-        )
-    }
-    from {
-        configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
-    }
-}
+//jar {
+//    duplicatesStrategy 'exclude'
+//    manifest {
+//        attributes(
+//                'Main-Class': 'org.nimbus.Main'
+//        )
+//    }
+//    from {
+//        configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+//    }
+//}
 
 graalvmNative {
     binaries.all {

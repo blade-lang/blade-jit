@@ -5,10 +5,9 @@ import com.oracle.truffle.api.instrumentation.StandardTags;
 import com.oracle.truffle.api.instrumentation.Tag;
 import org.nimbus.language.nodes.NNode;
 import org.nimbus.language.nodes.NStmtNode;
-import org.nimbus.language.runtime.NimNil;
 import org.nimbus.language.runtime.NimRuntimeError;
 
-public final class NCatchStmtNode extends NStmtNode {
+public final class NTryCatchStmtNode extends NStmtNode {
   @SuppressWarnings("FieldMayBeFinal")
   @Child
   private NNode body;
@@ -24,11 +23,11 @@ public final class NCatchStmtNode extends NStmtNode {
   @Child
   private NNode finallyBody;
 
-  public NCatchStmtNode(NNode body, NNode finallyBody) {
+  public NTryCatchStmtNode(NNode body, NNode finallyBody) {
     this(body, -1, null, finallyBody);
   }
 
-  public NCatchStmtNode(NNode body, int slot, NNode catchBody, NNode finallyBody) {
+  public NTryCatchStmtNode(NNode body, int slot, NNode catchBody, NNode finallyBody) {
     this.body = body;
     this.slot = slot;
     this.catchBody = catchBody;

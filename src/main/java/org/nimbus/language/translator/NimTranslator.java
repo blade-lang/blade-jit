@@ -485,6 +485,8 @@ public class NimTranslator extends BaseVisitor<NNode> {
     // reset current class
     currentClass = null;
 
+    // deliberately not wrapped in sourceSection so that debuggers won't stop
+    // in class declarations and their global variable
     return NGlobalDeclNodeGen.create(
       NGlobalScopeObjectNodeGen.create(),
       new NClassDeclNode(methods, classObject),
@@ -535,7 +537,7 @@ public class NimTranslator extends BaseVisitor<NNode> {
       asBody = visitBlockStmt(stmt.catchBody);
     }
 
-    return new NCatchStmtNode(body, slot, asBody, thenBody);
+    return new NTryCatchStmtNode(body, slot, asBody, thenBody);
   }
 
   private NNode translateFunction(Stmt source, String name, List<Expr.Identifier> parameters, Stmt.Block body, NNode root, boolean isVariadic) {
@@ -612,6 +614,10 @@ public class NimTranslator extends BaseVisitor<NNode> {
     }
 
     return node.setSourceSection(parser.lexer.source.createSection(1));
+  }
+
+  public SourceSection getRootSourceSection() {
+    return parser.lexer.source.createSection(0, parser.lexer.source.getLength());
   }
 
   interface Callback {
