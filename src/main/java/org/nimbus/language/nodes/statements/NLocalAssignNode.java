@@ -10,10 +10,12 @@ import org.nimbus.language.nodes.NNode;
 import org.nimbus.language.nodes.NStmtNode;
 
 @NodeChild(value = "value", type = NNode.class)
+@NodeField(name = "slotName", type = String.class)
 @NodeField(name = "slot", type = int.class)
 @ImportStatic(FrameSlotKind.class)
 public abstract class NLocalAssignNode extends NStmtNode {
-  protected abstract int getSlot();
+  public abstract String getSlotName();
+  public abstract int getSlot();
 
   @Specialization(guards = "frame.getFrameDescriptor().getSlotKind(getSlot()) == Illegal || " +
     "frame.getFrameDescriptor().getSlotKind(getSlot()) == Boolean")

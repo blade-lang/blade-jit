@@ -9,9 +9,4 @@ import org.nimbus.language.nodes.NNode;
 @NodeChild(value = "arguments", type = NReadFunctionArgsExprNode[].class)
 @GenerateNodeFactory
 public abstract class NBuiltinFunctionNode extends NNode {
-
-  @Override
-  public boolean hasTag(Class<? extends Tag> tag) {
-    return tag == StandardTags.ReadVariableTag.class;
-  }
 }

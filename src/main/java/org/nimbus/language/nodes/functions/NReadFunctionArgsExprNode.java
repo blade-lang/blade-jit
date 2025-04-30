@@ -8,19 +8,18 @@ import org.nimbus.language.nodes.NNode;
 
 public final class NReadFunctionArgsExprNode extends NNode {
   @CompilerDirectives.CompilationFinal
-  private final int index;
+  public final int index;
 
-  public NReadFunctionArgsExprNode(int index) {
+  @CompilerDirectives.CompilationFinal
+  public final String name;
+
+  public NReadFunctionArgsExprNode(int index, String name) {
     this.index = index;
+    this.name = name;
   }
 
   @Override
   public Object execute(VirtualFrame frame) {
     return frame.getArguments()[index];
-  }
-
-  @Override
-  public boolean hasTag(Class<? extends Tag> tag) {
-    return tag == StandardTags.ReadVariableTag.class;
   }
 }

@@ -24,9 +24,4 @@ public final class NWriteFunctionArgExprNode extends NNode {
     frame.getArguments()[index] = result;
     return result;
   }
-
-  @Override
-  public boolean hasTag(Class<? extends Tag> tag) {
-    return tag == StandardTags.WriteVariableTag.class;
-  }
 }

@@ -38,9 +38,4 @@ public abstract class NGetPropertyNode extends NNode {
   public Object evaluateReceiver(VirtualFrame frame) {
     return getTargetExpr().execute(frame);
   }
-
-  @Override
-  public boolean hasTag(Class<? extends Tag> tag) {
-    return tag == StandardTags.ReadVariableTag.class;
-  }
 }

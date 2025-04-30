@@ -78,9 +78,4 @@ public abstract class NNewExprNode extends NNode {
     }
     return args;
   }
-
-  @Override
-  public boolean hasTag(Class<? extends Tag> tag) {
-    return tag == StandardTags.CallTag.class;
-  }
 }

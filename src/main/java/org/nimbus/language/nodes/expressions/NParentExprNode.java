@@ -56,9 +56,4 @@ public final class NParentExprNode extends NNode {
   public Object getParentClass() {
     return this.nimClass.classObject;
   }
-
-  @Override
-  public boolean hasTag(Class<? extends Tag> tag) {
-    return tag == StandardTags.ReadVariableTag.class;
-  }
 }

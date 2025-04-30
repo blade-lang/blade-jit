@@ -40,7 +40,7 @@ public final class NClassDeclNode extends NStmtNode {
 
   @Override
   public SourceSection getSourceSection() {
-    // we want to disable debuggers from reaching function declarations
+    // we want to disable debuggers from reaching class declarations
     return null;
   }
 }

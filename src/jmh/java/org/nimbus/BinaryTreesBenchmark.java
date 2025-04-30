@@ -43,7 +43,7 @@ public class BinaryTreesBenchmark extends TruffleBenchmark {
      }
     
      def itemCheck(node) {
-         if node.left == nil {
+         if !node.left {
              return 1
          }
          return 1 + itemCheck(node.left) + itemCheck(node.right)
@@ -82,8 +82,11 @@ public class BinaryTreesBenchmark extends TruffleBenchmark {
          console.log(`${iterations}\\t trees of depth ${depth}\\t check: ${check}`);
      }
     
-     function TreeNode(left, right) {
-         return {left, right};
+     class TreeNode {
+         constructor(left, right) {
+             this.left = left;
+             this.right = right;
+         }
      }
     
      function itemCheck(node) {

@@ -21,9 +21,6 @@ public final class NFunctionObject extends NimObject {
   public final String name;
 
   @CompilerDirectives.CompilationFinal
-  public final Object methodTarget;
-
-  @CompilerDirectives.CompilationFinal
   public CallTarget callTarget;
 
   @CompilerDirectives.CompilationFinal
@@ -33,20 +30,15 @@ public final class NFunctionObject extends NimObject {
   public final boolean variadic;
 
   public NFunctionObject(Shape shape, NimClass classObject, String name, CallTarget target, int argumentsCount) {
-    this(shape, classObject, name, target, argumentsCount, null);
+    this(shape, classObject, name, target, argumentsCount, false);
   }
 
-  public NFunctionObject(Shape shape, NimClass classObject, String name, CallTarget target, int argumentsCount, Object object) {
-    this(shape, classObject, name, target, argumentsCount, false, object);
-  }
-
-  public NFunctionObject(Shape shape, NimClass classObject, String name, CallTarget target, int argumentsCount, boolean variadic, Object object) {
+  public NFunctionObject(Shape shape, NimClass classObject, String name, CallTarget target, int argumentsCount, boolean variadic) {
     super(shape, classObject);
     callTarget = target;
     dispatchNode = NMethodDispatchNodeGen.create();
     this.name = name;
     this.argumentsCount = argumentsCount;
-    this.methodTarget = object;
     this.variadic = variadic;
   }
 

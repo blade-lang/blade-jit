@@ -42,7 +42,7 @@ public abstract class NFunctionStmtNode extends NStmtNode {
 
       NFunctionRootNode function = new NFunctionRootNode(NimbusLanguage.get(this), getFrameDescriptor(), getBody(), getName());
       NBuiltinClassesModel classesModel = languageContext().objectsModel;
-      cachedFunction = new NFunctionObject(classesModel.rootShape, classesModel.functionObject, getName(), function.getCallTarget(), getArgumentCount(), getIsVariadic() == 1, null);
+      cachedFunction = new NFunctionObject(classesModel.rootShape, classesModel.functionObject, getName(), function.getCallTarget(), getArgumentCount(), getIsVariadic() == 1);
     }
 
     objectLibrary.putConstant(container, getName(), cachedFunction, 0);

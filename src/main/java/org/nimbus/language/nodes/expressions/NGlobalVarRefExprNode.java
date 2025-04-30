@@ -29,9 +29,4 @@ public abstract class NGlobalVarRefExprNode extends NNode {
     }
     return value;
   }
-
-  @Override
-  public boolean hasTag(Class<? extends Tag> tag) {
-    return tag == StandardTags.ReadVariableTag.class;
-  }
 }

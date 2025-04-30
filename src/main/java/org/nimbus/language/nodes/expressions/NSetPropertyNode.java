@@ -20,9 +20,4 @@ public abstract class NSetPropertyNode extends NNode {
                                  @Cached NSharedPropertyWriterNode writerNode) {
     return writerNode.executeWrite(target, getName(), value);
   }
-
-  @Override
-  public boolean hasTag(Class<? extends Tag> tag) {
-    return tag == StandardTags.WriteVariableTag.class;
-  }
 }

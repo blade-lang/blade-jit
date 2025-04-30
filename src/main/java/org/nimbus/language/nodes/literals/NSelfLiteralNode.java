@@ -15,9 +15,4 @@ public final class NSelfLiteralNode extends NNode {
   public boolean executeBoolean(VirtualFrame frame) {
     return true;
   }
-
-  @Override
-  public boolean hasTag(Class<? extends Tag> tag) {
-    return tag == StandardTags.ReadVariableTag.class;
-  }
 }

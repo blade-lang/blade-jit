@@ -136,7 +136,7 @@ public class NimTranslator extends BaseVisitor<NNode> {
     } else {
       return sourceSection(
         member instanceof NFrameMember.FunctionArgument argument
-          ? new NReadFunctionArgsExprNode(argument.index)
+          ? new NReadFunctionArgsExprNode(argument.index, id)
           : NLocalRefNodeGen.create(((NFrameMember.LocalVariable) member).index),
         expr);
     }
@@ -227,7 +227,7 @@ public class NimTranslator extends BaseVisitor<NNode> {
             throw NimRuntimeError.create("Assignment to constant variable '", name, "'");
           }
 
-          return sourceSection(NLocalAssignNodeGen.create(value, local.index), expr);
+          return sourceSection(NLocalAssignNodeGen.create(value, name, local.index), expr);
         }
       }
     } else if (expr.expression instanceof Expr.Index index) {
@@ -340,7 +340,7 @@ public class NimTranslator extends BaseVisitor<NNode> {
         throw NimRuntimeError.create("'", name, "' is already declared in this scope");
       }
 
-      NLocalAssignNode assignment = NLocalAssignNodeGen.create(value, slot);
+      NLocalAssignNode assignment = NLocalAssignNodeGen.create(value, name, slot);
       return sourceSection(new NExprStmtNode(assignment, true), stmt);
     }
 

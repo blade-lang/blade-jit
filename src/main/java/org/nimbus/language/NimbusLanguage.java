@@ -171,7 +171,7 @@ public class NimbusLanguage extends TruffleLanguage<NimContext> {
               // this.message = args[1];
               new NExprStmtNode(NSetPropertyNodeGen.create(
                 new NSelfLiteralNode(),
-                new NReadFunctionArgsExprNode(1),
+                new NReadFunctionArgsExprNode(1, "arg"),
                 "message"
               )),
               // this.type = <type>;
@@ -197,7 +197,7 @@ public class NimbusLanguage extends TruffleLanguage<NimContext> {
     objectLibrary.putConstant(
       globalScope,
       name,
-      new NFunctionObject(rootShape, functionClass, name, createCallTarget(factory, true), factory.getExecutionSignature().size(), variadic, null),
+      new NFunctionObject(rootShape, functionClass, name, createCallTarget(factory, true), factory.getExecutionSignature().size(), variadic),
       0
     );
   }
@@ -225,7 +225,7 @@ public class NimbusLanguage extends TruffleLanguage<NimContext> {
     int argumentCount = factory.getExecutionSignature().size();
 
     NReadFunctionArgsExprNode[] arguments = IntStream.range(0, argumentCount)
-      .mapToObj(i -> new NReadFunctionArgsExprNode(offset ? i + 1 : i))
+      .mapToObj(i -> new NReadFunctionArgsExprNode(offset ? i + 1 : i, "arg"+i))
       .toArray(NReadFunctionArgsExprNode[]::new);
 
     NFunctionRootNode rootNode = new NFunctionRootNode(this, factory.createNode((Object) arguments));

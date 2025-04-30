@@ -2,10 +2,7 @@ package org.nimbus.language.nodes;
 
 import com.oracle.truffle.api.dsl.TypeSystemReference;
 import com.oracle.truffle.api.frame.VirtualFrame;
-import com.oracle.truffle.api.instrumentation.InstrumentableNode;
-import com.oracle.truffle.api.instrumentation.ProbeNode;
-import com.oracle.truffle.api.instrumentation.StandardTags;
-import com.oracle.truffle.api.instrumentation.Tag;
+import com.oracle.truffle.api.instrumentation.*;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.UnexpectedResultException;
 import com.oracle.truffle.api.source.SourceSection;
@@ -15,7 +12,7 @@ import org.nimbus.language.runtime.NimContext;
 import org.nimbus.language.runtime.NimNil;
 
 @TypeSystemReference(NimTypes.class)
-public abstract class NNode extends NBaseNode implements InstrumentableNode {
+public abstract class NNode extends NBaseNode {
   private SourceSection sourceSection = null;
 
   public abstract Object execute(VirtualFrame frame);
@@ -74,20 +71,5 @@ public abstract class NNode extends NBaseNode implements InstrumentableNode {
   @Override
   public SourceSection getSourceSection() {
     return sourceSection;
-  }
-
-  @Override
-  public boolean isInstrumentable() {
-    return true;
-  }
-
-  @Override
-  public boolean hasTag(Class<? extends Tag> tag) {
-    return tag == StandardTags.ExpressionTag.class;
-  }
-
-  @Override
-  public WrapperNode createWrapper(ProbeNode probe) {
-    return null;
   }
 }

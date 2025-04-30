@@ -50,8 +50,8 @@ public abstract class NSharedPropertyReaderNode extends NBaseNode {
     @SuppressWarnings("unused") Object target,
     @SuppressWarnings("unused") Object property,
     @Cached(value = "languageContext().objectsModel.objectObject", neverDefault = false) NObject objectObject,
-    @CachedLibrary(limit = "3") @Cached.Shared("objectLibrary") DynamicObjectLibrary dynamicObjectLibrary
+    @CachedLibrary(limit = "3") @Cached.Shared("objectLibrary") DynamicObjectLibrary objectLibrary
   ) {
-    return dynamicObjectLibrary.getOrDefault(objectObject, NString.toString(property), NimNil.SINGLETON);
+    return objectLibrary.getOrDefault(objectObject, NString.toString(property), NimNil.SINGLETON);
   }
 }

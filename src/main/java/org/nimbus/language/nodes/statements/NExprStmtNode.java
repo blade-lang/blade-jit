@@ -13,7 +13,7 @@ public final class NExprStmtNode extends NStmtNode {
   private NNode expr;
 
   @CompilerDirectives.CompilationFinal
-  private final boolean discardValue;
+  public final boolean discardValue;
 
   public NExprStmtNode(NNode expr) {
     this(expr, false);

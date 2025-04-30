@@ -21,6 +21,6 @@ public final class NEchoStmtNode extends NStmtNode {
   public Object execute(VirtualFrame frame) {
     Object value = object.execute(frame);
     NimContext.get(this).println(value);
-    return value;
+    return NimNil.SINGLETON;
   }
 }

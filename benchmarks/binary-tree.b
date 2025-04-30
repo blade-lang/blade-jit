@@ -12,17 +12,17 @@ def max(a, b) {
 }
 
 def make_tree(depth) {
-  if depth <= 0 return new Tree(nil, nil)
+  if depth <= 0 return [nil, nil]
   depth -= 1
-  return new Tree(make_tree(depth), make_tree(depth))
+  return [make_tree(depth), make_tree(depth)]
 }
 
 def check_tree(node) {
-  if node.left == nil return 1
-  return 1 + check_tree(node.left) + check_tree(node.right)
+  if node[0] == nil return 1
+  return 1 + check_tree(node[0]) + check_tree(node[1])
 }
 
-var start = time()
+var start = microtime()
 
 var min_depth = 4
 var max_depth = max(min_depth + 2, N)
@@ -45,4 +45,4 @@ iter var depth = min_depth; depth < stretch_depth; depth += 2 {
 }
 
 echo 'long lived tree of depth ${max_depth}\t check: ${check_tree(long_lived_tree)}'
-echo 'Total time taken: ${time() - start}'
+echo 'Total time taken: ${(microtime() - start)/1.0e+6}'

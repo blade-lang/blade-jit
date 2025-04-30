@@ -35,9 +35,4 @@ public abstract class NGlobalAssignExprNode extends NNode {
     objectLibrary.put(globalScope, name, value);
     return value;
   }
-
-  @Override
-  public boolean hasTag(Class<? extends Tag> tag) {
-    return tag == StandardTags.WriteVariableTag.class;
-  }
 }

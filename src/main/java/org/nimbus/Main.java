@@ -22,24 +22,20 @@ public class Main {
       }
     }
 
-    Engine engine = Engine.newBuilder()
-      .logHandler(new OutputStream() {
-        @Override
-        public void write(int b) throws IOException {
-          // DO NOTHING...
-        }
-      })
-      .allowExperimentalOptions(true)
-      .options(options)
-      .build();
-
     try(
       Context defaultContext = Context.newBuilder(NimbusLanguage.ID)
-        .engine(engine)
         .in(System.in)
         .out(System.out)
         .err(System.err)
+        .allowExperimentalOptions(true)
         .allowAllAccess(true)
+        .options(options)
+//        .logHandler(new OutputStream(){
+//          @Override
+//          public void write(int b) throws IOException {
+//
+//          }
+//        })
         .build()
     ) {
       if (file != null) {

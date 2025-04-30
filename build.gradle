@@ -13,11 +13,12 @@ repositories {
 dependencies {
     testImplementation platform('org.junit:junit-bom:5.10.0')
     testImplementation 'junit:junit:4.13.2'
+    testImplementation 'org.graalvm.truffle:truffle-tck:24.2.0'
 
     implementation 'org.graalvm.truffle:truffle-api:24.2.0'
     implementation 'org.graalvm.polyglot:polyglot:24.2.0'
     implementation 'org.graalvm.truffle:truffle-runtime:24.2.0'
-    implementation 'org.graalvm.tools:chromeinspector:23.0.8'
+    implementation 'org.graalvm.polyglot:inspect:24.2.0'
 
     annotationProcessor 'org.graalvm.truffle:truffle-dsl-processor:24.2.0'
 
@@ -32,6 +33,15 @@ dependencies {
 test {
 //    useJUnitPlatform()
 }
+
+tasks.register('jarWithDeps', Copy) {
+    dependsOn 'jar'
+    def conf = configurations.runtimeClasspath
+    from conf.allDependencies.collect { conf.files(it) }
+    from "${project.buildDir}/libs/${project.name}-${project.version}.jar"
+    into "${project.buildDir}/modules"
+}
+build.dependsOn('jarWithDeps')
 
 //jar {
 //    duplicatesStrategy 'exclude'

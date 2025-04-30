@@ -66,7 +66,7 @@ public class NGlobalScopeObject extends DynamicObject {
 
   @ExportMessage
   Object getMetaObject() {
-    return NimType.CLASS;
+    return NimType.OBJECT;
   }
 
   @ExportMessage
@@ -92,9 +92,8 @@ public class NGlobalScopeObject extends DynamicObject {
   @ExportMessage
   Object toDisplayString(@SuppressWarnings("unused") boolean allowSideEffects) { return toString(); }
 
-  @CompilerDirectives.TruffleBoundary
   @Override
   public String toString() {
-    return super.toString();
+    return "global";
   }
 }

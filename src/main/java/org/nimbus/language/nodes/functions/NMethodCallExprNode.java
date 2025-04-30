@@ -42,9 +42,4 @@ public final class NMethodCallExprNode extends NNode {
 
     return dispatchNode.executeDispatch(function, receiver, values);
   }
-
-  @Override
-  public boolean hasTag(Class<? extends Tag> tag) {
-    return tag == StandardTags.CallTag.class;
-  }
 }

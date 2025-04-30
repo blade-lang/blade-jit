@@ -163,9 +163,4 @@ public abstract class NFunctionCallExprNode extends NNode {
 
     return ret;
   }
-
-  @Override
-  public boolean hasTag(Class<? extends Tag> tag) {
-    return tag == StandardTags.CallTag.class;
-  }
 }

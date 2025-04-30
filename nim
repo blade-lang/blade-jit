@@ -14,4 +14,4 @@ if [ ! -d "$JAVA_HOME/lib/graalvm" ]; then
     echo
 fi
 
-"$JAVA_HOME/bin/java" "${JAVA_ARGS[@]}" -cp "${DIR}/build/libs/nimbus-1.0.0.jar" org.nimbus.Main "${PROGRAM_ARGS[@]}"
+"$JAVA_HOME/bin/java" "${JAVA_ARGS[@]}" -cp "bin:${DIR}/build/modules/*" org.nimbus.Main "${PROGRAM_ARGS[@]}"
