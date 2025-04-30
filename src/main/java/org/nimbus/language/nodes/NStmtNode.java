@@ -34,7 +34,7 @@ public abstract class NStmtNode extends NNode implements InstrumentableNode {
     return parent;
   }
 
-  /*@ExportMessage
+  @ExportMessage
   boolean hasScope(Frame frame,
                    @Cached(value = "this.getParentBlock()", adopt = false, allowUncached = true, neverDefault = true)
                    @Cached.Shared("parentBlock") Node parentBlock) {
@@ -48,7 +48,7 @@ public abstract class NStmtNode extends NNode implements InstrumentableNode {
     return  parentBlock instanceof NBlockStmtNode
       ? new NBlockScopeDebugObject(frame, (NBlockStmtNode) parentBlock)
       : new NFunctionScopeDebugObject(frame, (NFunctionBodyNode) parentBlock);
-  }*/
+  }
 
   @Override
   public boolean isInstrumentable() {

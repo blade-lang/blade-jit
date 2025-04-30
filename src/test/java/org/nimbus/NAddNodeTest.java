@@ -4,14 +4,18 @@ import com.oracle.truffle.api.CallTarget;
 import com.oracle.truffle.api.source.Source;
 import org.junit.Test;
 import org.nimbus.language.NimbusLanguage;
+import org.nimbus.language.nodes.NBlockRootNode;
 import org.nimbus.language.nodes.NNode;
-import org.nimbus.language.nodes.NRootNode;
 import org.nimbus.language.nodes.expressions.arithemetic.NAddNodeGen;
 import org.nimbus.language.nodes.literals.NLongLiteralNode;
+import org.nimbus.language.nodes.statements.NBlockStmtNode;
 import org.nimbus.language.parser.Lexer;
 import org.nimbus.language.parser.Parser;
 import org.nimbus.language.runtime.NObject;
 import org.nimbus.language.translator.NimTranslator;
+
+import java.util.Arrays;
+import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 
@@ -21,7 +25,7 @@ public class NAddNodeTest {
     NNode exprNode = NAddNodeGen.create(
         new NLongLiteralNode(12),
         new NLongLiteralNode(34));
-    var rootNode = new NRootNode(null, exprNode, "@.script");
+    var rootNode = new NBlockRootNode(null, new NBlockStmtNode(List.of(exprNode)), "@.script");
     CallTarget callTarget = rootNode.getCallTarget();
 
     var result = callTarget.call();
@@ -34,7 +38,7 @@ public class NAddNodeTest {
     NNode exprNode = NAddNodeGen.create(
         new NLongLiteralNode(Long.MAX_VALUE),
         new NLongLiteralNode(1));
-    var rootNode = new NRootNode(null, exprNode, "@.script");
+    var rootNode = new NBlockRootNode(null, new NBlockStmtNode(List.of(exprNode)), "@.script");
     CallTarget callTarget = rootNode.getCallTarget();
 
     var result = callTarget.call();
@@ -52,9 +56,8 @@ public class NAddNodeTest {
       assertEquals(1, parseResult.size());
 
       var visitor = new NimTranslator(parser, new NimbusLanguage().builtinObjects);
-      var callTarget = new NRootNode(null,
-        parseResult.getFirst()
-              .accept(visitor),
+      var callTarget = new NBlockRootNode(null,
+        new NBlockStmtNode(List.of(parseResult.getFirst().accept(visitor))),
         "@.script"
       ).getCallTarget();
 

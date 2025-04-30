@@ -4,7 +4,7 @@
     <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="true" />
     <option name="MAIN_CLASS_NAME" value="org.nimbus.Main" />
     <module name="nimbus.main" />
-    <option name="PROGRAM_PARAMETERS" value="$PROJECT_DIR$/benchmarks/binary-tree.b" />
+    <option name="PROGRAM_PARAMETERS" value="$PROJECT_DIR$/benchmarks/binary-tree.b --inspect" />
     <option name="VM_PARAMETERS" value="--enable-native-access=ALL-UNNAMED --sun-misc-unsafe-memory-access=allow" />
     <method v="2">
       <option name="Make" enabled="true" />

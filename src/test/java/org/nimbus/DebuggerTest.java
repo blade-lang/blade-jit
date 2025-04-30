@@ -5,7 +5,6 @@ import com.oracle.truffle.tck.DebuggerTester;
 import org.graalvm.polyglot.Source;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Test;
 
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -13,7 +12,6 @@ import java.util.List;
 import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 
 public class DebuggerTest {
   private static final String FIB_ITER = """

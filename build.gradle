@@ -43,18 +43,6 @@ tasks.register('jarWithDeps', Copy) {
 }
 build.dependsOn('jarWithDeps')
 
-//jar {
-//    duplicatesStrategy 'exclude'
-//    manifest {
-//        attributes(
-//                'Main-Class': 'org.nimbus.Main'
-//        )
-//    }
-//    from {
-//        configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
-//    }
-//}
-
 graalvmNative {
     binaries.all {
         // common options

@@ -23,7 +23,6 @@ import org.nimbus.language.builtins.object.NObjectToStringMethodNodeFactory;
 import org.nimbus.language.builtins.string.NStringIndexOfMethodNodeFactory;
 import org.nimbus.language.builtins.string.NStringUpperMethodNodeFactory;
 import org.nimbus.language.nodes.NBlockRootNode;
-import org.nimbus.language.nodes.NRootNode;
 import org.nimbus.language.nodes.expressions.NSetPropertyNodeGen;
 import org.nimbus.language.nodes.functions.NBuiltinFunctionNode;
 import org.nimbus.language.nodes.functions.NFunctionRootNode;
@@ -242,7 +241,7 @@ public class NimbusLanguage extends TruffleLanguage<NimContext> {
 
     var visitor = new NimTranslator(parser, builtinObjects);
     var parseResult = visitor.translate(statements);
-    return new NRootNode(
+    return new NBlockRootNode(
       this, parseResult.frameDescriptor, parseResult.node,
       "@.script", visitor.getRootSourceSection()
     ).getCallTarget();

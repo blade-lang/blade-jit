@@ -13,14 +13,21 @@ public final class NBlockRootNode extends RootNode {
 
   private final String name;
 
+  private final SourceSection sourceSection;
+
   public NBlockRootNode(NimbusLanguage language, NBlockStmtNode block, String name) {
     this(language, FrameDescriptor.newBuilder().build(), block, name);
   }
 
   public NBlockRootNode(NimbusLanguage language, FrameDescriptor frameDescriptor, NBlockStmtNode block, String name) {
+    this(language, frameDescriptor, block, name, null);
+  }
+
+  public NBlockRootNode(NimbusLanguage language, FrameDescriptor frameDescriptor, NBlockStmtNode block, String name, SourceSection sourceSection) {
     super(language, frameDescriptor);
     this.block = block;
     this.name = name;
+    this.sourceSection = sourceSection;
   }
 
   @Override
@@ -40,6 +47,6 @@ public final class NBlockRootNode extends RootNode {
 
   @Override
   public SourceSection getSourceSection() {
-    return block.getSourceSection();
+    return sourceSection == null ? block.getSourceSection() : sourceSection;
   }
 }
