@@ -113,7 +113,7 @@ public class NimTranslator extends BaseVisitor<NNode> {
     String number = expr.token.literal();
 
     try {
-      return sourceSection(new NLongLiteralNode(Integer.parseInt(number)), expr);
+      return sourceSection(new NLongLiteralNode(Long.parseLong(number)), expr);
     } catch (NumberFormatException e) {
       // it's possible that the integer literal is too big to fit in a 32-bit Java `int` -
       // in that case, fall back to a double literal

@@ -3,6 +3,7 @@ package org.nimbus.language.runtime;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.Fallback;
+import com.oracle.truffle.api.dsl.GenerateInline;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.interop.InteropLibrary;
 import com.oracle.truffle.api.interop.UnknownIdentifierException;
@@ -63,7 +64,7 @@ public class NListObject extends NimObject {
     index = effectiveIndex(index);
 
     // TODO: Throw proper error as defined in Blade spec.
-    return this.isArrayElementReadable(index)
+    return isArrayElementReadable(index)
       ? items[(int) index]
       : NimNil.SINGLETON;
   }
@@ -82,7 +83,7 @@ public class NListObject extends NimObject {
   void writeArrayElement(long index, Object value) {
     index = effectiveIndex(index);
 
-    if (this.isArrayElementModifiable(index)) {
+    if (isArrayElementModifiable(index)) {
       items[(int) index] = value;
     } else {
       throw NimRuntimeError.create("List index ", index, " out of range");
@@ -136,7 +137,6 @@ public class NListObject extends NimObject {
   }
 
   private long effectiveIndex(long index) {
-    if(index < 0) index = items.length + index;
-    return (int)index;
+    return index < 0 ? items.length + index : index;
   }
 }

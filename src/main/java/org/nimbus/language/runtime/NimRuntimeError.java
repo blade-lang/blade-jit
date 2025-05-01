@@ -83,7 +83,7 @@ public class NimRuntimeError extends AbstractTruffleException {
     StringBuilder result = new StringBuilder();
 
     if (operation != null) {
-      result.append("\"").append(operation).append("\"");
+      result.append("'").append(operation).append("'");
     } else {
       result.append("operation");
     }
