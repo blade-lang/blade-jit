@@ -1,6 +1,7 @@
 package org.nimbus.language.runtime;
 
 import com.oracle.truffle.api.CompilerDirectives;
+import com.oracle.truffle.api.interop.InteropLibrary;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.strings.TruffleString;
 import com.oracle.truffle.api.strings.TruffleStringBuilder;
@@ -29,6 +30,15 @@ public final class NString {
 
   public static TruffleString fromObject(TruffleString.FromJavaStringNode fromJavaStringNode, Object object) {
     return fromJavaStringNode.execute(toString(object), NimbusLanguage.ENCODING);
+  }
+
+  public static TruffleString fromCodePoint(TruffleString.FromCodePointNode fromCodePointNode, int codepoint) {
+    return fromCodePointNode.execute(codepoint, NimbusLanguage.ENCODING);
+  }
+
+  @CompilerDirectives.TruffleBoundary
+  public static Object fromObject(InteropLibrary interopLibrary, Object object) {
+    return interopLibrary.toDisplayString(object);
   }
 
   public static boolean equals(TruffleString a, TruffleString b, TruffleString.EqualNode equalNode) {
@@ -72,6 +82,11 @@ public final class NString {
   @CompilerDirectives.TruffleBoundary
   public static String toUpper(String string) {
     return string.toUpperCase();
+  }
+
+  @CompilerDirectives.TruffleBoundary
+  public static String toLower(String string) {
+    return string.toLowerCase();
   }
 
   @CompilerDirectives.TruffleBoundary

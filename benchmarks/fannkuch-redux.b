@@ -29,7 +29,6 @@ def fannkuchredux(n)
         var flipsCount = 0
         var k
 
-#        echo perm[0]
         while !((k = perm[0]) == 0) {
             var k2 = (k+1) >> 1
             iter var i=0; i<k2; i++ {

@@ -13,15 +13,10 @@ import com.oracle.truffle.api.object.DynamicObjectLibrary;
 import com.oracle.truffle.api.object.Shape;
 import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.strings.TruffleString;
-import org.nimbus.language.builtins.AbsBuiltinFunctionNodeFactory;
-import org.nimbus.language.builtins.MicroTimeBuiltinFunctionNodeFactory;
-import org.nimbus.language.builtins.PrintBuiltinFunctionNodeFactory;
-import org.nimbus.language.builtins.TimeBuiltinFunctionNodeFactory;
-import org.nimbus.language.builtins.list.NListAppendMethodNodeFactory;
-import org.nimbus.language.builtins.object.NObjectHasPropMethodNodeFactory;
-import org.nimbus.language.builtins.object.NObjectToStringMethodNodeFactory;
-import org.nimbus.language.builtins.string.NStringIndexOfMethodNodeFactory;
-import org.nimbus.language.builtins.string.NStringUpperMethodNodeFactory;
+import org.nimbus.language.builtins.NBuiltinFunctions;
+import org.nimbus.language.builtins.NListMethods;
+import org.nimbus.language.builtins.NObjectMethods;
+import org.nimbus.language.builtins.NStringMethods;
 import org.nimbus.language.nodes.NBlockRootNode;
 import org.nimbus.language.nodes.expressions.NSetPropertyNodeGen;
 import org.nimbus.language.nodes.functions.NBuiltinFunctionNode;
@@ -131,24 +126,29 @@ public class NimbusLanguage extends TruffleLanguage<NimContext> {
     NGlobalScopeObject globalScope = new NGlobalScopeObject(rootShape);
 
     // built-in functions
-    defineBuiltinFunction(objectLibrary, globalScope, "abs", AbsBuiltinFunctionNodeFactory.getInstance());
-    defineBuiltinFunction(objectLibrary, globalScope, "time", TimeBuiltinFunctionNodeFactory.getInstance());
-    defineBuiltinFunction(objectLibrary, globalScope, "microtime", MicroTimeBuiltinFunctionNodeFactory.getInstance());
-    defineBuiltinFunction(objectLibrary, globalScope, "print", PrintBuiltinFunctionNodeFactory.getInstance(), true);
+    NBuiltinDeclarationAccessor.get(NBuiltinFunctions.class).forEach((factory) -> {
+      defineBuiltinFunction(objectLibrary, globalScope, factory.key(), factory.value(), factory.regulator());
+    });
 
     // Object class
-    defineBuiltinMethod(objectLibrary, objectClass, "has_prop", NObjectHasPropMethodNodeFactory.getInstance());
-    defineBuiltinMethod(objectLibrary, objectClass, "to_string", NObjectToStringMethodNodeFactory.getInstance());
+    NBuiltinDeclarationAccessor.get(NObjectMethods.class).forEach((factory) -> {
+      defineBuiltinMethod(objectLibrary, objectClass, factory.key(), factory.value());
+    });
 
     // List class
-    defineBuiltinMethod(objectLibrary, builtinObjects.listObject, "append", NListAppendMethodNodeFactory.getInstance());
+    NBuiltinDeclarationAccessor.get(NListMethods.class).forEach((factory) -> {
+      defineBuiltinMethod(objectLibrary, builtinObjects.listObject, factory.key(), factory.value());
+    });
 
     // String class
-    defineBuiltinMethod(objectLibrary, builtinObjects.stringObject, "upper", NStringUpperMethodNodeFactory.getInstance());
-    defineBuiltinMethod(objectLibrary, builtinObjects.stringObject, "index_of", NStringIndexOfMethodNodeFactory.getInstance());
+    NBuiltinDeclarationAccessor.get(NStringMethods.class).forEach((factory) -> {
+      defineBuiltinMethod(objectLibrary, builtinObjects.stringObject, factory.key(), factory.value());
+    });
 
     // global classes
     objectLibrary.putConstant(globalScope, "Object", objectClass, 0);
+    objectLibrary.putConstant(globalScope, "String", builtinObjects.stringObject, 0);
+    objectLibrary.putConstant(globalScope, "List", builtinObjects.listObject, 0);
 
     // add all built-in class prototypes to the global scope
     for (Map.Entry<String, NimClass> entry : builtinObjects.builtinClasses.entrySet()) {

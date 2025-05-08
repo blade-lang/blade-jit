@@ -45,8 +45,9 @@ public class NListObject extends NimObject {
 
   @ExportMessage
   public boolean isArrayElementReadable(long index) {
-    index = effectiveIndex(index);
-    return index >= 0 && index < items.length;
+    long length = items.length;
+    index = effectiveIndex(index, length);
+    return index < length && index >= 0;
   }
 
   @ExportMessage
@@ -61,13 +62,31 @@ public class NListObject extends NimObject {
 
   @ExportMessage
   Object readArrayElement(long index) {
-    index = effectiveIndex(index);
+    index = effectiveIndex(index, items.length);
 
-    // TODO: Throw proper error as defined in Blade spec.
     return isArrayElementReadable(index)
       ? items[(int) index]
       : NimNil.SINGLETON;
   }
+
+//  static class ReadArrayElement {
+//    @Specialization(guards = {"index < length", "index >= 0"})
+//    static Object doWithinLength(NListObject list, long index,
+//                               @Cached(value = "list.items.length", neverDefault = true) @Cached.Shared("length") int length) {
+//      return list.readArrayElement(index);
+//    }
+//
+//    @Specialization(guards = {"index < 0"})
+//    static Object doIndexLessThanZero(NListObject list, long index,
+//                                    @Cached(value = "list.items.length", neverDefault = true) @Cached.Shared("length") int length) {
+//      return list.readArrayElement(index + length);
+//    }
+//
+//    @Fallback
+//    static Object doInvalid(NListObject list, long index) {
+//      return NimNil.SINGLETON;
+//    }
+//  }
 
   @ExportMessage
   Object readMember(String member,
@@ -79,13 +98,27 @@ public class NListObject extends NimObject {
     };
   }
 
-  @ExportMessage
+  @ExportMessage.Ignore
   void writeArrayElement(long index, Object value) {
-    index = effectiveIndex(index);
+    items[(int)index] = value;
+  }
 
-    if (isArrayElementModifiable(index)) {
-      items[(int) index] = value;
-    } else {
+  @ExportMessage
+  static class WriteArrayElement {
+    @Specialization(guards = {"index < length", "index >= 0"})
+    static void doWithinLength(NListObject list, long index, Object value,
+                               @Cached(value = "list.items.length", neverDefault = true) @Cached.Shared("length") int length) {
+      list.writeArrayElement(index, value);
+    }
+
+    @Specialization(guards = {"index < 0"})
+    static void doIndexLessThanZero(NListObject list, long index, Object value,
+                                    @Cached(value = "list.items.length", neverDefault = true) @Cached.Shared("length") int length) {
+      list.writeArrayElement(index + length, value);
+    }
+
+    @Fallback
+    static void doInvalid(NListObject list, long index, Object value) {
       throw NimRuntimeError.create("List index ", index, " out of range");
     }
   }
@@ -136,7 +169,7 @@ public class NListObject extends NimObject {
     this.setArrayElements(newItems, objectLibrary);
   }
 
-  private long effectiveIndex(long index) {
-    return index < 0 ? items.length + index : index;
+  private long effectiveIndex(long index, long length) {
+    return index + (length & -(index >> 31));
   }
 }

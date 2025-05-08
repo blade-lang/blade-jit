@@ -4,8 +4,8 @@
     <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="true" />
     <option name="MAIN_CLASS_NAME" value="org.nimbus.Main" />
     <module name="nimbus.main" />
-    <option name="PROGRAM_PARAMETERS" value="$PROJECT_DIR$/benchmarks/fannkuch-redux.b --engine.TraceCompilation --compiler.TracePerformanceWarnings=all" />
-    <option name="VM_PARAMETERS" value="-Dpolyglot.compiler.MaximumGraalGraphSize=15000 -Dpolyglot.compiler.DiagnoseFailure=true -Djdk.graal.CompilationFailureAction=Diagnose -Dgraal.Dump=Truffle:1 -Dgraal.PrintGraph=File --enable-native-access=ALL-UNNAMED --sun-misc-unsafe-memory-access=allow " />
+    <option name="PROGRAM_PARAMETERS" value="$PROJECT_DIR$/benchmarks/binary-tree.b" />
+    <option name="VM_PARAMETERS" value="--enable-native-access=ALL-UNNAMED --sun-misc-unsafe-memory-access=allow " />
     <method v="2">
       <option name="Make" enabled="true" />
     </method>

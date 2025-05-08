@@ -112,7 +112,7 @@ public class NimObject extends DynamicObject {
   }
 
   @CompilerDirectives.TruffleBoundary
-  protected long hash() {
+  public long hash() {
     return hashCode();
   }
 }

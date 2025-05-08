@@ -150,10 +150,15 @@ public abstract class NDebugObject implements TruffleObject {
   NRefObject findReference(String member) {
     NRefObject[] refObjects = getRefs();
     for (var refObject : refObjects) {
-      if (Objects.equals(refObject.name, member)) {
+      if (objectEquals(refObject.name, member)) {
         return refObject;
       }
     }
     return null;
+  }
+
+  @CompilerDirectives.TruffleBoundary
+  private boolean objectEquals(Object a, Object b) {
+    return Objects.equals(a, b);
   }
 }

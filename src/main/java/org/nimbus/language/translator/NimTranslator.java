@@ -113,9 +113,26 @@ public class NimTranslator extends BaseVisitor<NNode> {
     String number = expr.token.literal();
 
     try {
+      if(number.startsWith("0x")) {
+        return sourceSection(
+          new NLongLiteralNode(Long.parseLong(number.substring(2), 16)),
+          expr
+        );
+      } else if(number.startsWith("0b")) {
+        return sourceSection(
+          new NLongLiteralNode(Long.parseLong(number.substring(2), 2)),
+          expr
+        );
+      } else if(number.startsWith("0c")) {
+        return sourceSection(
+          new NLongLiteralNode(Long.parseLong(number.substring(2), 8)),
+          expr
+        );
+      }
+
       return sourceSection(new NLongLiteralNode(Long.parseLong(number)), expr);
     } catch (NumberFormatException e) {
-      // it's possible that the integer literal is too big to fit in a 32-bit Java `int` -
+      // it's possible that the long literal is too big to fit in a 32-bit Java `int` -
       // in that case, fall back to a double literal
       return sourceSection(new NDoubleLiteralNode(Double.parseDouble(number)), expr);
     }
@@ -461,7 +478,7 @@ public class NimTranslator extends BaseVisitor<NNode> {
       NimClass superClassObject = classMember.object;
       classObject = new NimClass(objectShape, className, superClassObject);
     } else {
-      throw NimRuntimeError.create("Class '", className, "' extends unknown class '", superClass, "'");
+      throw NimRuntimeError.create("Class '", className, "' extends unknown or frozen class '", superClass, "'");
     }
 
     localScopes.getFirst().put(className, new NFrameMember.ClassObject(classObject));
@@ -573,7 +590,7 @@ public class NimTranslator extends BaseVisitor<NNode> {
   }
 
   private NFrameMember findFrameMember(String name) {
-    for (var scope : localScopes) {
+    for (Map<String, NFrameMember> scope : localScopes) {
       NFrameMember member = scope.get(name);
       if (member != null) {
         return member;

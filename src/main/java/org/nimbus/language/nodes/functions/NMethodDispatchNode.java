@@ -16,21 +16,19 @@ public abstract class NMethodDispatchNode extends Node {
   @Specialization(guards = "function.callTarget == callNode.getCallTarget()", limit = "3")
   protected Object directDispatch(
     NFunctionObject function,  Object receiver, Object[] arguments,
-    @Cached("receiver") Object cachedReceiver,
     @Cached("function") NFunctionObject cachedFunction,
     @Cached("create(function.callTarget)") DirectCallNode callNode
   ) {
-    return callNode.call(extendArguments(cachedFunction, cachedReceiver, arguments));
+    return callNode.call(extendArguments(cachedFunction, receiver, arguments));
   }
 
   @Specialization(replaces = "directDispatch")
   protected Object indirectDispatch(
     NFunctionObject function,  Object receiver, Object[] arguments,
-    @Cached(value = "receiver", neverDefault = false) Object cachedReceiver,
     @Cached("function") NFunctionObject cachedFunction,
     @Cached IndirectCallNode callNode
   ) {
-    return callNode.call(cachedFunction.callTarget, extendArguments(cachedFunction, cachedReceiver, arguments));
+    return callNode.call(cachedFunction.callTarget, extendArguments(cachedFunction, receiver, arguments));
   }
 
   @Fallback

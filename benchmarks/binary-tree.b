@@ -2,7 +2,7 @@ var N = 21
 
 class Tree {
   @new(left, right) {
-    self.left = right
+    self.left = left
     self.right = right
   }
 }
@@ -12,14 +12,14 @@ def max(a, b) {
 }
 
 def make_tree(depth) {
-  if depth <= 0 return [nil, nil]
+  if depth <= 0 return new Tree(nil, nil)
   depth -= 1
-  return [make_tree(depth), make_tree(depth)]
+  return new Tree(make_tree(depth), make_tree(depth))
 }
 
 def check_tree(node) {
-  if node[0] == nil return 1
-  return 1 + check_tree(node[0]) + check_tree(node[1])
+  if node.left == nil return 1
+  return 1 + check_tree(node.left) + check_tree(node.right)
 }
 
 var start = microtime()

@@ -7,7 +7,7 @@
  * modified for Node.js by Isaac Gouy
  */
 
-const ARRAY_LENGTH = 5
+const ARRAY_LENGTH = 5500
 
 var u = [1] * ARRAY_LENGTH
 var v = []
@@ -64,4 +64,5 @@ while i < ARRAY_LENGTH {
   i += 1
 }
 
+echo vBv/vv ** 0.5
 echo '\nTime taken = ${(microtime() - start) / 1.0e+6}s'

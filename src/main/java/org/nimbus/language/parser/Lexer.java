@@ -84,13 +84,13 @@ public class Lexer {
   }
 
   private boolean isDigit(char c) {
-    return c >= 48 && c <= 57; // 0 - 9
+    return c >= '0' && c <= '9';
   }
 
   private boolean isAlpha(char c) {
-    return (c >= 97 && c <= 122) ||  // a - z
-      (c >= 65 && c <= 90) || // A - Z
-      c == 95;  // _
+    return (c >= 'a' && c <= 'z') ||
+      (c >= 'A' && c <= 'Z') ||
+      c == '_';
   }
 
   private boolean isAlphanumeric(char c) {
@@ -98,17 +98,17 @@ public class Lexer {
   }
 
   private boolean isBinary(char c) {
-    return c == 48 || c == 49;
+    return c == '1' || c == '0';
   }
 
   private boolean isOctal(char c) {
-    return c >= 48 && c <= 55;  // 0 - 7
+    return c >= '0' && c <= '7';
   }
 
   private boolean isHexadecimal(char c) {
-    return this.isDigit(c) ||  // 0 - 9
-      (c >= 97 && c <= 102) || // a - f
-      (c >= 65 && c <= 70);   // A - F
+    return this.isDigit(c) ||
+      (c >= 'a' && c <= 'f') ||
+      (c >= 'A' && c <= 'F');
   }
 
   /**
