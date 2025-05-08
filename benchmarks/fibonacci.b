@@ -6,4 +6,4 @@ def fib(n) {
     return fib(n - 1) + fib(n - 2)
 }
 
-echo fib(50)
+echo fib(45)

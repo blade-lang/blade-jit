@@ -3,7 +3,7 @@ plugins {
     id 'org.graalvm.buildtools.native' version '0.10.6'
 }
 
-group = 'org.nimbus'
+group = 'org.blade'
 version = '1.0.0'
 
 repositories {
@@ -52,8 +52,8 @@ graalvmNative {
 
     binaries.main {
         // options to configure the main binary
-        imageName = 'nimbus'
-        mainClass = 'org.nimbus.Main'
+        imageName = 'blade'
+        mainClass = 'org.blade.Main'
 
         fallback = true
         sharedLibrary = true
@@ -63,10 +63,10 @@ graalvmNative {
         buildArgs.add('-H:+AddAllCharsets')
         buildArgs.add('-H:MaxRuntimeCompileMethods=5400')
         buildArgs.add('-H:+UnlockExperimentalVMOptions')
-        buildArgs.add('--initialize-at-build-time=org.nimbus')
+        buildArgs.add('--initialize-at-build-time=org.blade')
         buildArgs.add('--enable-native-access=org.graalvm.truffle')
         buildArgs.add('--enable-native-access=org.graalvm.polyglot')
-        buildArgs.add('-Dpolyglot.image-build-time.PreinitializeContexts=nim')
+        buildArgs.add('-Dpolyglot.image-build-time.PreinitializeContexts=blade')
     }
 
     binaries.test {
