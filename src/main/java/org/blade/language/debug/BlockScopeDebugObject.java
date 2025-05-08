@@ -1,5 +1,6 @@
 package org.blade.language.debug;
 
+import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.frame.Frame;
 import com.oracle.truffle.api.interop.InteropLibrary;
@@ -26,6 +27,7 @@ public final class BlockScopeDebugObject extends DebugObject {
     return node.getLocalVarRefs();
   }
 
+  @CompilerDirectives.TruffleBoundary
   @ExportMessage
   Object toDisplayString(boolean allowSideEffects,
                          @Cached(value = "this.node.getParentBlock()", adopt = false, allowUncached = true, neverDefault = true)

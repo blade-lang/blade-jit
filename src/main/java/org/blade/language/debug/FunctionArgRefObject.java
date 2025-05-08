@@ -1,5 +1,6 @@
 package org.blade.language.debug;
 
+import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.frame.Frame;
 import com.oracle.truffle.api.source.SourceSection;
 
@@ -31,6 +32,7 @@ public final class FunctionArgRefObject extends RefObject {
     return false;
   }
 
+  @CompilerDirectives.TruffleBoundary
   @Override
   public int hashCode() {
     return Objects.hashCode(index);
