@@ -62,7 +62,7 @@ public final class NimLanguageView implements TruffleObject {
       if (type.isInstance(this.delegate, interop)) {
         try {
           if (type == NimType.NUMBER) {
-            return numberToString(interop.asLong(delegate));
+            return numberToString(interop.asInt(delegate));
           } else if (type == NimType.BOOLEAN) {
             return Boolean.toString(interop.asBoolean(delegate));
           } else if (type == NimType.STRING || type == NimType.LIST) {
@@ -80,8 +80,8 @@ public final class NimLanguageView implements TruffleObject {
   }
 
   @CompilerDirectives.TruffleBoundary
-  private static String numberToString(long l) {
-    return Long.toString(l);
+  private static String numberToString(int l) {
+    return Integer.toString(l);
   }
 
   @CompilerDirectives.TruffleBoundary

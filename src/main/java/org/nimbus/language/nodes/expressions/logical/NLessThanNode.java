@@ -10,11 +10,11 @@ import org.nimbus.language.nodes.NBinaryNode;
 public abstract class NLessThanNode extends NBinaryNode {
 
   @Specialization
-  protected boolean doLongs(long left, long right) {
+  protected boolean doInts(int left, int right) {
     return left < right;
   }
 
-  @Specialization(replaces = "doLongs")
+  @Specialization(replaces = "doInts")
   protected boolean doDoubles(double left, double right) {
     return left < right;
   }

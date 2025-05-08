@@ -18,7 +18,7 @@ public abstract class NLogicalNotNode extends NUnaryNode {
   }
 
   @Specialization
-  public boolean doLong(long value) {
+  public boolean doInt(int value) {
     return value <= 0;
   }
 

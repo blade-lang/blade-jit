@@ -8,11 +8,11 @@ import org.nimbus.language.runtime.NimRuntimeError;
 public abstract class NNegateNode extends NUnaryNode {
 
   @Specialization(rewriteOn = ArithmeticException.class)
-  protected long doLong(long value) {
+  protected int doInt(int value) {
     return -value;
   }
 
-  @Specialization(replaces = "doLong")
+  @Specialization(replaces = "doInt")
   protected double doDouble(double value) {
     return -value;
   }

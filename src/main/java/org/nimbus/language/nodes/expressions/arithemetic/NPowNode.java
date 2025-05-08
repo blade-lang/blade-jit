@@ -8,26 +8,26 @@ import org.nimbus.language.runtime.NimRuntimeError;
 public abstract class NPowNode extends NBinaryNode {
 
   @Specialization(rewriteOn = ArithmeticException.class)
-  protected long doLongs(long left, long right) {
+  protected int doInts(int left, int right) {
     double result = Math.pow(left, right);
-    if(result < Long.MIN_VALUE || result > Long.MAX_VALUE) {
+    if(result < Integer.MIN_VALUE || result > Integer.MAX_VALUE) {
       throw new ArithmeticException();
     }
 
-    return (long) result;
+    return (int) result;
   }
 
-  @Specialization(guards = {"isDouble(left)", "isLong(right)"})
-  protected double doDoubleLong(double left, long right) {
+  @Specialization(guards = {"isDouble(left)", "isInt(right)"})
+  protected double doDoubleInt(double left, int right) {
     return Math.pow(left, (double) right);
   }
 
-  @Specialization(guards = {"isLong(left)", "isDouble(right)"})
-  protected double doLongDouble(long left, double right) {
+  @Specialization(guards = {"isInt(left)", "isDouble(right)"})
+  protected double doIntDouble(int left, double right) {
     return Math.pow((double) left, right);
   }
 
-  @Specialization(replaces = "doLongs")
+  @Specialization(replaces = "doInts")
   protected double doDoubles(double left, double right) {
     return Math.pow(left, right);
   }

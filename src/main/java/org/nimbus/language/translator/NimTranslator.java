@@ -115,22 +115,22 @@ public class NimTranslator extends BaseVisitor<NNode> {
     try {
       if(number.startsWith("0x")) {
         return sourceSection(
-          new NLongLiteralNode(Long.parseLong(number.substring(2), 16)),
+          new NIntLiteralNode(Integer.parseInt(number.substring(2), 16)),
           expr
         );
       } else if(number.startsWith("0b")) {
         return sourceSection(
-          new NLongLiteralNode(Long.parseLong(number.substring(2), 2)),
+          new NIntLiteralNode(Integer.parseInt(number.substring(2), 2)),
           expr
         );
       } else if(number.startsWith("0c")) {
         return sourceSection(
-          new NLongLiteralNode(Long.parseLong(number.substring(2), 8)),
+          new NIntLiteralNode(Integer.parseInt(number.substring(2), 8)),
           expr
         );
       }
 
-      return sourceSection(new NLongLiteralNode(Long.parseLong(number)), expr);
+      return sourceSection(new NIntLiteralNode(Integer.parseInt(number)), expr);
     } catch (NumberFormatException e) {
       // it's possible that the long literal is too big to fit in a 32-bit Java `int` -
       // in that case, fall back to a double literal

@@ -17,23 +17,23 @@ import org.nimbus.language.shared.NBuiltinClassesModel;
 public abstract class NMultiplyNode extends NBinaryNode {
 
   @Specialization(rewriteOn = ArithmeticException.class)
-  protected long doLongs(long left, long right) {
+  protected int doInts(int left, int right) {
     return Math.multiplyExact(left, right);
   }
 
-  @Specialization(replaces = {"doLongs"})
+  @Specialization(replaces = {"doInts"})
   protected double doDoubles(double left, double right) {
     return left * right;
   }
 
   @Specialization
-  protected TruffleString doStringMultiplication(TruffleString string, long count,
+  protected TruffleString doStringMultiplication(TruffleString string, int count,
                                                  @Cached TruffleString.RepeatNode repeatNode) {
     return repeatNode.execute(string, (int)count, NimbusLanguage.ENCODING);
   }
 
   @Specialization(guards = "count <= MAX_VALUE")
-  protected NListObject doListMultiplication(NListObject list, long count) {
+  protected NListObject doListMultiplication(NListObject list, int count) {
     NBuiltinClassesModel objectModel = NimContext.get(this).objectsModel;
     return new NListObject(
       objectModel.listShape,
@@ -43,12 +43,12 @@ public abstract class NMultiplyNode extends NBinaryNode {
   }
 
   @Specialization(guards = "count > MAX_VALUE")
-  protected NListObject doListMultiplicationOutOfBound(NListObject list, long count) {
+  protected NListObject doListMultiplicationOutOfBound(NListObject list, int count) {
     throw NimRuntimeError.create("List multiplication count out of bounds (", count, " > ", Integer.MAX_VALUE, ")");
   }
 
   @ExplodeLoop
-  private Object[] repeatList(NListObject list, long count) {
+  private Object[] repeatList(NListObject list, int count) {
     int size = (int) list.getArraySize();
     int finalSize = (int)(size * count);
 

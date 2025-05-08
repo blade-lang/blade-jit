@@ -14,7 +14,7 @@ import org.nimbus.language.NimbusLanguage;
 
 @ExportLibrary(InteropLibrary.class)
 public final class NimType implements TruffleObject {
-  public static final NimType NUMBER = new NimType("Number", (l, v) -> l.fitsInLong(v) || v instanceof Double);
+  public static final NimType NUMBER = new NimType("Number", (l, v) -> l.fitsInInt(v) || v instanceof Double);
   public static final NimType NIL = new NimType("Nil", InteropLibrary::isNull);
   public static final NimType STRING = new NimType("String", InteropLibrary::isString);
   public static final NimType LIST = new NimType("List", (l, v) -> v instanceof NListObject);

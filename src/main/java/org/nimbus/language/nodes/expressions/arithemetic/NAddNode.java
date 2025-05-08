@@ -13,21 +13,21 @@ import org.nimbus.language.runtime.NimRuntimeError;
 public abstract class NAddNode extends NBinaryNode {
 
   @Specialization(rewriteOn = ArithmeticException.class)
-  protected long doLongs(long left, long right) {
+  protected int doInts(int left, int right) {
     return Math.addExact(left, right);
   }
 
-  @Specialization(guards = {"isDouble(left)", "isLong(right)"})
-  protected double doDoubleLong(double left, long right) {
+  @Specialization(guards = {"isDouble(left)", "isInt(right)"})
+  protected double doDoubleInt(double left, int right) {
     return left + right;
   }
 
-  @Specialization(guards = {"isLong(left)", "isDouble(right)"})
-  protected double doLongDouble(long left, double right) {
+  @Specialization(guards = {"isInt(left)", "isDouble(right)"})
+  protected double doIntDouble(int left, double right) {
     return left + right;
   }
 
-  @Specialization(replaces = "doLongs")
+  @Specialization(replaces = "doInts")
   protected double doDoubles(double left, double right) {
     return left + right;
   }
@@ -39,17 +39,17 @@ public abstract class NAddNode extends NBinaryNode {
   }
 
   @Specialization
-  protected TruffleString doStringLong(TruffleString left, long right,
+  protected TruffleString doStringInt(TruffleString left, int right,
                                     @Cached @Cached.Shared("fromLongNode") TruffleString.FromLongNode fromLongNode,
                                     @Cached @Cached.Shared("concatNode") TruffleString.ConcatNode concatNode) {
-    return NString.concat(concatNode, left, NString.fromLong(fromLongNode, right));
+    return NString.concat(concatNode, left, NString.fromInt(fromLongNode, right));
   }
 
   @Specialization
-  protected TruffleString doLongString(long left, TruffleString right,
+  protected TruffleString doIntString(int left, TruffleString right,
                                     @Cached @Cached.Shared("fromLongNode") TruffleString.FromLongNode fromLongNode,
                                     @Cached @Cached.Shared("concatNode") TruffleString.ConcatNode concatNode) {
-    return NString.concat(concatNode, NString.fromLong(fromLongNode, left), right);
+    return NString.concat(concatNode, NString.fromInt(fromLongNode, left), right);
   }
 
   @CompilerDirectives.TruffleBoundary

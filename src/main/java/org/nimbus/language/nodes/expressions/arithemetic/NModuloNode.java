@@ -8,31 +8,31 @@ import org.nimbus.language.runtime.NimRuntimeError;
 public abstract class NModuloNode extends NBinaryNode {
 
   @Specialization(rewriteOn = ArithmeticException.class, guards = "right > 0")
-  protected long doLongs(long left, long right) {
+  protected int doInts(int left, int right) {
     return Math.floorMod(left, right);
   }
 
   @Specialization(rewriteOn = ArithmeticException.class, guards = "left > 0")
-  protected long doLongs2(long left, long right) {
-    return doLongs(left, right);
+  protected int doInts2(int left, int right) {
+    return doInts(left, right);
   }
 
   @Specialization(rewriteOn = ArithmeticException.class, guards = "isCornerCase(left, right)")
-  protected long doLongs3(long left, long right) {
-    return doLongs(left, right);
+  protected int doInts3(int left, int right) {
+    return doInts(left, right);
   }
 
-  @Specialization(guards = {"isDouble(left)", "isLong(right)"})
-  protected double doDoubleLong(double left, long right) {
+  @Specialization(guards = {"isDouble(left)", "isInt(right)"})
+  protected double doDoubleInt(double left, int right) {
     return left % right;
   }
 
-  @Specialization(guards = {"isLong(left)", "isDouble(right)"})
-  protected double doLongDouble(long left, double right) {
+  @Specialization(guards = {"isInt(left)", "isDouble(right)"})
+  protected double doIntDouble(int left, double right) {
     return (double)left % right;
   }
 
-  @Specialization(replaces = {"doLongs", "doLongs2", "doLongs3"})
+  @Specialization(replaces = {"doInts", "doInts2", "doInts3"})
   protected double doDoubles(double left, double right) {
     return left % right;
   }
@@ -42,7 +42,7 @@ public abstract class NModuloNode extends NBinaryNode {
     throw NimRuntimeError.argumentError(this,"%", left, right);
   }
 
-  protected static boolean isCornerCase(long a, long b) {
-    return a != 0L && !(b == -1L && a == Long.MIN_VALUE);
+  protected static boolean isCornerCase(int a, int b) {
+    return a != 0L && !(b == -1L && a == Integer.MIN_VALUE);
   }
 }

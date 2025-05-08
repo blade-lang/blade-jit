@@ -8,11 +8,11 @@ import org.nimbus.language.runtime.NimRuntimeError;
 public abstract class NFloorDivideNode extends NBinaryNode {
 
   @Specialization(rewriteOn = ArithmeticException.class)
-  protected long doLongs(long left, long right) {
+  protected int doInts(int left, int right) {
     return Math.divideExact(left, right);
   }
 
-  @Specialization(replaces = "doLongs")
+  @Specialization(replaces = "doInts")
   protected double doDoubles(double left, double right) {
     return Math.floor(left / right);
   }

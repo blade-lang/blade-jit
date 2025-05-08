@@ -4,11 +4,11 @@ import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import org.nimbus.language.nodes.NNode;
 
-public final class NLongLiteralNode extends NNode {
+public final class NIntLiteralNode extends NNode {
   @CompilerDirectives.CompilationFinal
-  private final long value;
+  private final int value;
 
-  public NLongLiteralNode(long value) {
+  public NIntLiteralNode(int value) {
     this.value = value;
   }
 

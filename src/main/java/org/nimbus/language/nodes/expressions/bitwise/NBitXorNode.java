@@ -8,13 +8,13 @@ import org.nimbus.language.runtime.NimRuntimeError;
 public abstract class NBitXorNode extends NBinaryNode {
 
   @Specialization
-  protected long doLongs(long left, long right) {
+  protected int doInts(int left, int right) {
     return left ^ right;
   }
 
-  @Specialization(replaces = "doLongs")
-  protected long doDoubles(double left, double right) {
-    return (long)left ^ (long)right;
+  @Specialization(replaces = "doInts")
+  protected int doDoubles(double left, double right) {
+    return (int)left ^ (int)right;
   }
 
   @Fallback

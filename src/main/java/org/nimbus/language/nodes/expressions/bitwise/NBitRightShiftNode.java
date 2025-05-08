@@ -8,12 +8,12 @@ import org.nimbus.language.runtime.NimRuntimeError;
 public abstract class NBitRightShiftNode extends NBinaryNode {
 
   @Specialization
-  protected long doLongs(long left, long right) {
+  protected int doInts(int left, int right) {
     return (int)left >> (toUInt32(right) & 31);
   }
 
-  @Specialization(replaces = "doLongs")
-  protected long doDoubles(double left, double right) {
+  @Specialization(replaces = "doInts")
+  protected int doDoubles(double left, double right) {
     return (int)left >> (toUInt32(right) & 31);
   }
 
@@ -22,7 +22,7 @@ public abstract class NBitRightShiftNode extends NBinaryNode {
     throw NimRuntimeError.argumentError(this,">>", left, right);
   }
 
-  private int toUInt32(long value) {
+  private int toUInt32(int value) {
     return ((int) value & Integer.MAX_VALUE);
   }
 

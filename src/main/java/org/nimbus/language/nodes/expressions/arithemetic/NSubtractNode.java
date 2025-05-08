@@ -8,21 +8,21 @@ import org.nimbus.language.runtime.NimRuntimeError;
 public abstract class NSubtractNode extends NBinaryNode {
 
   @Specialization(rewriteOn = ArithmeticException.class)
-  protected long doLongs(long left, long right) {
+  protected int doInts(int left, int right) {
     return Math.subtractExact(left, right);
   }
 
-  @Specialization(guards = {"isDouble(left)", "isLong(right)"})
-  protected double doDoubleLong(double left, long right) {
+  @Specialization(guards = {"isDouble(left)", "isInt(right)"})
+  protected double doDoubleInt(double left, int right) {
     return left - right;
   }
 
-  @Specialization(guards = {"isLong(left)", "isDouble(right)"})
-  protected double doLongDouble(long left, double right) {
+  @Specialization(guards = {"isInt(left)", "isDouble(right)"})
+  protected double doIntDouble(int left, double right) {
     return (double)left - right;
   }
 
-  @Specialization(replaces = "doLongs")
+  @Specialization(replaces = "doInts")
   protected double doDoubles(double left, double right) {
     return left - right;
   }

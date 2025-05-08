@@ -8,12 +8,12 @@ import org.nimbus.language.runtime.NimRuntimeError;
 public abstract class NBitNotNode extends NUnaryNode {
 
   @Specialization
-  protected long doLongs(long value) {
+  protected int doInts(int value) {
     return ~(int)value;
   }
 
-  @Specialization(replaces = "doLongs")
-  protected long doDoubles(double value) {
+  @Specialization(replaces = "doInts")
+  protected int doDoubles(double value) {
     return ~(int)value;
   }
 

@@ -10,7 +10,7 @@ public abstract class NBinaryNode extends NNode {
     return object instanceof Double;
   }
 
-  protected static boolean isLong(Object object) {
-    return object instanceof Double;
+  protected static boolean isInt(Object object) {
+    return object instanceof Integer;
   }
 }

@@ -26,7 +26,7 @@ public class NListObject extends NimObject {
   public Object[] items;
 
   // List properties...
-  @DynamicField private long length;
+  @DynamicField private int length;
 
   public NListObject(Shape shape, NimClass classObject, Object[] objects) {
     super(shape, classObject);
@@ -45,7 +45,7 @@ public class NListObject extends NimObject {
 
   @ExportMessage
   public boolean isArrayElementReadable(long index) {
-    long length = items.length;
+    int length = items.length;
     index = effectiveIndex(index, length);
     return index < length && index >= 0;
   }
@@ -174,7 +174,7 @@ public class NListObject extends NimObject {
     this.setArrayElements(newItems, objectLibrary);
   }
 
-  private long effectiveIndex(long index, long length) {
+  private long effectiveIndex(long index, int length) {
     return index + (length & -(index >> 31));
   }
 }

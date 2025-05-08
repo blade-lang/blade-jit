@@ -21,8 +21,8 @@ public abstract class NNode extends NBaseNode {
     return evaluateBoolean(execute(frame));
   }
 
-  public long executeLong(VirtualFrame frame) throws UnexpectedResultException {
-    return NimTypesGen.expectLong(execute(frame));
+  public long executeInt(VirtualFrame frame) throws UnexpectedResultException {
+    return NimTypesGen.expectInteger(execute(frame));
   }
 
   public double executeDouble(VirtualFrame frame) throws UnexpectedResultException {

@@ -20,6 +20,10 @@ public final class NString {
     return fromLongNode.execute(value, NimbusLanguage.ENCODING, true);
   }
 
+  public static TruffleString fromInt(TruffleString.FromLongNode fromLongNode, long value) {
+    return fromLongNode.execute(value, NimbusLanguage.ENCODING, true);
+  }
+
   public static TruffleString concat(TruffleString.ConcatNode concatNode, TruffleString left, TruffleString right) {
     return concatNode.execute(left, right, NimbusLanguage.ENCODING, true);
   }
