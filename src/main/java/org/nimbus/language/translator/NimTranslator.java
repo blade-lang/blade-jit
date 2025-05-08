@@ -132,7 +132,7 @@ public class NimTranslator extends BaseVisitor<NNode> {
 
       return sourceSection(new NIntLiteralNode(Integer.parseInt(number)), expr);
     } catch (NumberFormatException e) {
-      // it's possible that the long literal is too big to fit in a 32-bit Java `int` -
+      // it's possible that the int literal is too big to fit in a 32-bit Java `int` -
       // in that case, fall back to a double literal
       return sourceSection(new NDoubleLiteralNode(Double.parseDouble(number)), expr);
     }

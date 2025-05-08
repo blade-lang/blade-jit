@@ -19,12 +19,12 @@ public abstract class NPowNode extends NBinaryNode {
 
   @Specialization(guards = {"isDouble(left)", "isInt(right)"})
   protected double doDoubleInt(double left, int right) {
-    return Math.pow(left, (double) right);
+    return Math.pow(left, right);
   }
 
   @Specialization(guards = {"isInt(left)", "isDouble(right)"})
   protected double doIntDouble(int left, double right) {
-    return Math.pow((double) left, right);
+    return Math.pow(left, right);
   }
 
   @Specialization(replaces = "doInts")

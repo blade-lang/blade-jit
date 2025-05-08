@@ -20,7 +20,7 @@ public final class NString {
     return fromLongNode.execute(value, NimbusLanguage.ENCODING, true);
   }
 
-  public static TruffleString fromInt(TruffleString.FromLongNode fromLongNode, long value) {
+  public static TruffleString fromInt(TruffleString.FromLongNode fromLongNode, int value) {
     return fromLongNode.execute(value, NimbusLanguage.ENCODING, true);
   }
 
@@ -49,7 +49,7 @@ public final class NString {
     return equalNode.execute(a, b, NimbusLanguage.ENCODING);
   }
 
-  public static long length(TruffleString string, TruffleString.CodePointLengthNode lengthNode) {
+  public static int length(TruffleString string, TruffleString.CodePointLengthNode lengthNode) {
     return lengthNode.execute(string, NimbusLanguage.ENCODING);
   }
 
@@ -57,7 +57,7 @@ public final class NString {
     return substringNode.execute(string, startIndex, length, NimbusLanguage.ENCODING, true);
   }
 
-  public static long indexOf(TruffleString.IndexOfStringNode indexOfStringNode, TruffleString.CodePointLengthNode lengthNode,
+  public static int indexOf(TruffleString.IndexOfStringNode indexOfStringNode, TruffleString.CodePointLengthNode lengthNode,
                              TruffleString self, TruffleString other, int startIndex) {
     return indexOfStringNode.execute(
       self, other,

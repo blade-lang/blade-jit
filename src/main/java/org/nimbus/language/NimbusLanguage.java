@@ -73,7 +73,7 @@ public class NimbusLanguage extends TruffleLanguage<NimContext> {
 
   private Shape createShape(Class<? extends NimObject> layout) {
     return Shape.newBuilder()
-      .allowImplicitCastIntToLong(true)
+//      .allowImplicitCastIntToLong(true)
       .layout(layout, MethodHandles.lookup())
       .build();
   }

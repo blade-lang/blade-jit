@@ -26,7 +26,7 @@ public class NStringMethods implements NBaseBuiltinDeclaration {
   public abstract static class NStringIndexOfMethodNode extends NBuiltinFunctionNode {
 
     @Specialization(guards = "isNil(extra)")
-    protected long indexOfNil(
+    protected int indexOfNil(
       TruffleString self, TruffleString other, Object extra,
       @Cached @Cached.Shared("indexOfStringNode") TruffleString.IndexOfStringNode indexOfStringNode,
       @Cached @Cached.Shared("lengthNode") TruffleString.CodePointLengthNode lengthNode
@@ -39,8 +39,8 @@ public class NStringMethods implements NBaseBuiltinDeclaration {
     }
 
     @Specialization(replaces = "indexOfNil")
-    protected long indexOfLong(
-      TruffleString self, TruffleString other, long startIndex,
+    protected int indexOfInt(
+      TruffleString self, TruffleString other, int startIndex,
       @Cached @Cached.Shared("indexOfStringNode") TruffleString.IndexOfStringNode indexOfStringNode,
       @Cached @Cached.Shared("lengthNode") TruffleString.CodePointLengthNode lengthNode
     ) {
@@ -48,7 +48,7 @@ public class NStringMethods implements NBaseBuiltinDeclaration {
         return -1;
       }
 
-      return NString.indexOf(indexOfStringNode, lengthNode, self, other, (int)startIndex);
+      return NString.indexOf(indexOfStringNode, lengthNode, self, other, startIndex);
     }
 
     protected boolean isNil(Object o) {

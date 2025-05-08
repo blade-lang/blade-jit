@@ -8,14 +8,12 @@ public class NimTypes {
 
   /*@TypeCheck(double.class)
   public static boolean isDouble(Object value) {
-    return value instanceof Double || value instanceof Long || value instanceof Integer;
+    return value instanceof Double || value instanceof Integer;
   }
 
   @TypeCast(double.class)
   public static double asDouble(Object value) {
-    if(value instanceof Long longVal) {
-      return longVal.doubleValue();
-    } else if(value instanceof Integer intVal) {
+    if(value instanceof Integer intVal) {
       return intVal.doubleValue();
     }
 

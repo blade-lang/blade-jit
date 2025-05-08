@@ -32,7 +32,7 @@ public final class NListMethods implements NBaseBuiltinDeclaration {
       try {
         NListObject list = (NListObject) self;
         long size = list.getArraySize();
-        list.resize(size + 1, objectLibrary);
+        list.resize((int)size + 1, objectLibrary);
         interopLibrary.writeArrayElement(self, size, item);
       } catch (UnsupportedMessageException | UnsupportedTypeException | InvalidArrayIndexException e) {
         throw NimRuntimeError.create(e.getMessage());

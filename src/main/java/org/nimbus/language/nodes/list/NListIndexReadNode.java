@@ -55,7 +55,7 @@ public abstract class NListIndexReadNode extends NNode {
     abstract Object executeRead(Object list, Object index);
 
     @Specialization(guards = "listLibrary.isArrayElementReadable(list, index)", limit = "3")
-    protected Object doListLong(Object list, long index,
+    protected Object doListInt(Object list, int index,
                                 @CachedLibrary("list") InteropLibrary listLibrary) {
       try {
         return listLibrary.readArrayElement(list, index);
@@ -86,7 +86,7 @@ public abstract class NListIndexReadNode extends NNode {
     }
 
     @Specialization(guards = "listLibrary.isNull(list)", limit = "3")
-    protected Object doNil(Object list, long index,
+    protected Object doNil(Object list, int index,
                            @CachedLibrary("list") InteropLibrary listLibrary) {
       throw NimRuntimeError.create("Cannot read properties of nil (reading '", index, "')");
     }

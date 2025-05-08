@@ -27,15 +27,15 @@ public abstract class NLocalAssignNode extends NStmtNode {
   }
 
   @Specialization(guards = "frame.getFrameDescriptor().getSlotKind(getSlot()) == Illegal || " +
-    "frame.getFrameDescriptor().getSlotKind(getSlot()) == Long")
-  protected long doLong(VirtualFrame frame, long value) {
+    "frame.getFrameDescriptor().getSlotKind(getSlot()) == Int")
+  protected int doInt(VirtualFrame frame, int value) {
     int frameSlot = getSlot();
-    frame.getFrameDescriptor().setSlotKind(frameSlot, FrameSlotKind.Long);
-    frame.setLong(frameSlot, value);
+    frame.getFrameDescriptor().setSlotKind(frameSlot, FrameSlotKind.Int);
+    frame.setInt(frameSlot, value);
     return value;
   }
 
-  @Specialization(replaces = "doLong",
+  @Specialization(replaces = "doInt",
     guards = "frame.getFrameDescriptor().getSlotKind(getSlot()) == Illegal || " +
       "frame.getFrameDescriptor().getSlotKind(getSlot()) == Double")
   protected double doDouble(VirtualFrame frame, double value) {
@@ -45,7 +45,7 @@ public abstract class NLocalAssignNode extends NStmtNode {
     return value;
   }
 
-  @Specialization(replaces = {"doLong", "doDouble", "doBoolean"})
+  @Specialization(replaces = {"doInt", "doDouble", "doBoolean"})
   protected Object doObject(VirtualFrame frame, Object value) {
     int frameSlot = getSlot();
     frame.getFrameDescriptor().setSlotKind(frameSlot, FrameSlotKind.Object);

@@ -71,19 +71,19 @@ public class NListObject extends NimObject {
 
 //  static class ReadArrayElement {
 //    @Specialization(guards = {"index < length", "index >= 0"})
-//    static Object doWithinLength(NListObject list, long index,
+//    static Object doWithinLength(NListObject list, int index,
 //                               @Cached(value = "list.items.length", neverDefault = true) @Cached.Shared("length") int length) {
 //      return list.readArrayElement(index);
 //    }
 //
 //    @Specialization(guards = {"index < 0"})
-//    static Object doIndexLessThanZero(NListObject list, long index,
+//    static Object doIndexLessThanZero(NListObject list, int index,
 //                                    @Cached(value = "list.items.length", neverDefault = true) @Cached.Shared("length") int length) {
 //      return list.readArrayElement(index + length);
 //    }
 //
 //    @Fallback
-//    static Object doInvalid(NListObject list, long index) {
+//    static Object doInvalid(NListObject list, int index) {
 //      return NimNil.SINGLETON;
 //    }
 //  }
@@ -164,7 +164,7 @@ public class NListObject extends NimObject {
   }
 
   @ExplodeLoop
-  public void resize(long length, DynamicObjectLibrary objectLibrary) {
+  public void resize(int length, DynamicObjectLibrary objectLibrary) {
     Object[] newItems = new Object[(int) length];
     for (int i = 0; i < length; i++) {
       newItems[i] = i < this.items.length

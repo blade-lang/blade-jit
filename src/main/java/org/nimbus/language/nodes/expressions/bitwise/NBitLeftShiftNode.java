@@ -9,12 +9,12 @@ public abstract class NBitLeftShiftNode extends NBinaryNode {
 
   @Specialization
   protected int doInts(int left, int right) {
-    return (int)(toUInt32(left) << (toUInt32(right) & 31));
+    return toUInt32(left) << (toUInt32(right) & 31);
   }
 
   @Specialization(replaces = "doInts")
   protected int doDoubles(double left, double right) {
-    return (int)(toUInt32(left) << (toUInt32(right) & 31));
+    return toUInt32(left) << (toUInt32(right) & 31);
   }
 
   @Fallback
@@ -23,7 +23,7 @@ public abstract class NBitLeftShiftNode extends NBinaryNode {
   }
 
   private int toUInt32(int value) {
-    return ((int) value + Integer.MIN_VALUE);
+    return value + Integer.MIN_VALUE;
   }
 
   private int toUInt32(double value) {

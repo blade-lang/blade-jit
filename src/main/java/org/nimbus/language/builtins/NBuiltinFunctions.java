@@ -31,13 +31,13 @@ public final class NBuiltinFunctions implements NBaseBuiltinDeclaration {
 
   public abstract static class TimeFunctionNode extends NBuiltinFunctionNode {
     @Specialization
-    protected long doAny() {
+    protected int doAny() {
       return time() / 1000;
     }
 
     @CompilerDirectives.TruffleBoundary
-    private long time() {
-      return System.currentTimeMillis();
+    private int time() {
+      return (int)System.currentTimeMillis();
     }
   }
 
@@ -78,23 +78,23 @@ public final class NBuiltinFunctions implements NBaseBuiltinDeclaration {
 
   public abstract static class MicroTimeFunctionNode extends NBuiltinFunctionNode {
     @Specialization
-    protected long doAny() {
+    protected double doAny() {
       return microTime();
     }
 
     @CompilerDirectives.TruffleBoundary
-    private long microTime() {
+    private double microTime() {
       return ChronoUnit.MICROS.between(Instant.EPOCH, Instant.now());
     }
   }
 
   public abstract static class AbsFunctionNode extends NBuiltinFunctionNode {
     @Specialization(rewriteOn = ArithmeticException.class)
-    protected long doLong(long arg) {
+    protected int doInt(int arg) {
       return arg < 0 ? Math.negateExact(arg) : arg;
     }
 
-    @Specialization(replaces = "doLong")
+    @Specialization(replaces = "doInt")
     protected double doDouble(double arg) {
       return Math.abs(arg);
     }
@@ -107,36 +107,36 @@ public final class NBuiltinFunctions implements NBaseBuiltinDeclaration {
 
   public abstract static class BinFunctionNode extends NBuiltinFunctionNode {
     @Specialization
-    protected TruffleString doLong(long arg,
+    protected TruffleString doInt(int arg,
                                    @Cached TruffleString.FromJavaStringNode fromJavaStringNode) {
-      return NString.fromObject(fromJavaStringNode, Long.toBinaryString(arg));
+      return NString.fromObject(fromJavaStringNode, Integer.toBinaryString(arg));
     }
 
     @Fallback
-    protected double doInvalid(Object object) {
+    protected Object doInvalid(Object object) {
       throw NimRuntimeError.argumentError(this, "bin", object);
     }
   }
 
   public abstract static class ChrFunctionNode extends NBuiltinFunctionNode {
     @Specialization
-    protected TruffleString doLong(long arg,
+    protected TruffleString doInt(int arg,
                                    @Cached TruffleString.FromCodePointNode fromCodePointNode,
                                    @Cached TruffleString.FromJavaStringNode fromJavaStringNode) {
-      return NString.fromObject(fromJavaStringNode, NString.fromCodePoint(fromCodePointNode, (int)arg));
+      return NString.fromObject(fromJavaStringNode, NString.fromCodePoint(fromCodePointNode, arg));
     }
 
     @Fallback
-    protected double doInvalid(Object object) {
+    protected Object doInvalid(Object object) {
       throw NimRuntimeError.argumentError(this, "chr", object);
     }
   }
 
   public abstract static class HexFunctionNode extends NBuiltinFunctionNode {
     @Specialization
-    protected TruffleString doLong(long arg,
+    protected TruffleString doInt(int arg,
                                    @Cached TruffleString.FromJavaStringNode fromJavaStringNode) {
-      return NString.fromObject(fromJavaStringNode, Long.toHexString(arg));
+      return NString.fromObject(fromJavaStringNode, Integer.toHexString(arg));
     }
 
     @Fallback
@@ -147,17 +147,17 @@ public final class NBuiltinFunctions implements NBaseBuiltinDeclaration {
 
   public abstract static class IdFunctionNode extends NBuiltinFunctionNode {
     @Specialization
-    protected long doNimObject(NimObject arg) {
+    protected int doNimObject(NimObject arg) {
       return arg.hash();
     }
 
     @Fallback
-    protected long doOthers(Object object) {
+    protected int doOthers(Object object) {
       return hash(object);
     }
 
     @CompilerDirectives.TruffleBoundary
-    protected long hash(Object object) {
+    protected int hash(Object object) {
       return object.hashCode();
     }
   }

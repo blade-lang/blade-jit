@@ -14,17 +14,17 @@ public abstract class NLocalRefNode extends NNode {
     return frame.getBoolean(getSlot());
   }
 
-  @Specialization(guards = "frame.isLong(getSlot())")
-  protected long doLong(VirtualFrame frame) {
-    return frame.getLong(getSlot());
+  @Specialization(guards = "frame.isInt(getSlot())")
+  protected int doInt(VirtualFrame frame) {
+    return frame.getInt(getSlot());
   }
 
-  @Specialization(guards = "frame.isDouble(getSlot())", replaces = "doLong")
+  @Specialization(guards = "frame.isDouble(getSlot())", replaces = "doInt")
   protected double doDouble(VirtualFrame frame) {
     return frame.getDouble(getSlot());
   }
 
-  @Specialization(replaces = {"doBoolean", "doLong", "doDouble"})
+  @Specialization(replaces = {"doBoolean", "doInt", "doDouble"})
   protected Object doObject(VirtualFrame frame) {
     return frame.getObject(getSlot());
   }

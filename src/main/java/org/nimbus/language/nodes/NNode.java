@@ -21,7 +21,7 @@ public abstract class NNode extends NBaseNode {
     return evaluateBoolean(execute(frame));
   }
 
-  public long executeInt(VirtualFrame frame) throws UnexpectedResultException {
+  public int executeInt(VirtualFrame frame) throws UnexpectedResultException {
     return NimTypesGen.expectInteger(execute(frame));
   }
 
@@ -45,8 +45,8 @@ public abstract class NNode extends NBaseNode {
     }
 
     // a number is falsy when it's 0
-    if (value instanceof Long v) {
-      return v != 0L;
+    if (value instanceof Integer v) {
+      return v != 0;
     } else if (value instanceof Double d) {
       return d != 0D;
     }
