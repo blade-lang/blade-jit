@@ -1,8 +1,8 @@
-package org.nimbus.language.nodes.literals;
+package org.blade.language.nodes.literals;
 
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.frame.VirtualFrame;
-import org.nimbus.language.nodes.NNode;
+import org.blade.language.nodes.NNode;
 
 public final class NIntLiteralNode extends NNode {
   @CompilerDirectives.CompilationFinal
