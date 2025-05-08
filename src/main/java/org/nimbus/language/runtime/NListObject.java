@@ -111,10 +111,15 @@ public class NListObject extends NimObject {
       list.writeArrayElement(index, value);
     }
 
+    @Specialization(guards = {"index > 0", "index < list.items.length"})
+    static void doWithinLengthUncached(NListObject list, long index, Object value) {
+      list.writeArrayElement(index, value);
+    }
+
     @Specialization(guards = {"index < 0"})
     static void doIndexLessThanZero(NListObject list, long index, Object value,
                                     @Cached(value = "list.items.length", neverDefault = true) @Cached.Shared("length") int length) {
-      list.writeArrayElement(index + length, value);
+      list.writeArrayElement(index + list.items.length, value);
     }
 
     @Fallback
