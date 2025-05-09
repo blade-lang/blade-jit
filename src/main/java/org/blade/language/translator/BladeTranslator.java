@@ -366,6 +366,15 @@ public class BladeTranslator extends BaseVisitor<NNode> {
   }
 
   @Override
+  public NNode visitPropertyStmt(Stmt.Property stmt) {
+    return sourceSection(NSetPropertyNodeGen.create(
+      new NDynamicObjectRefNode(currentClass),
+      stmt.value == null ? new NNilLiteralNode() : visitExpr(stmt.value),
+      stmt.name.literal()
+    ), stmt);
+  }
+
+  @Override
   public NBlockStmtNode visitBlockStmt(Stmt.Block stmt) {
     return (NBlockStmtNode) newLocalScope(() -> {
       List<NNode> nodes = new ArrayList<>();
@@ -483,12 +492,29 @@ public class BladeTranslator extends BaseVisitor<NNode> {
 
     localScopes.getFirst().put(className, new NFrameMember.ClassObject(classObject));
 
+    List<NNode> methods = new ArrayList<>();
+    List<NNode> properties = new ArrayList<>();
+    List<NNode> operators = new ArrayList<>();
+
     // set current class
     currentClass = classObject;
 
-    List<NNode> methods = new ArrayList<>();
+    for(Stmt.Property property : stmt.properties) {
+      properties.add(visitPropertyStmt(property));
+    }
 
     for (Stmt.Method method : stmt.methods) {
+      methods.add(translateFunction(
+        method,
+        method.name.literal(),
+        method.parameters,
+        method.body,
+        new NDynamicObjectRefNode(classObject),
+        method.isVariadic
+      ));
+    }
+
+    for (Stmt.Method method : stmt.operators) {
       methods.add(translateFunction(
         method,
         method.name.literal(),
@@ -506,7 +532,7 @@ public class BladeTranslator extends BaseVisitor<NNode> {
     // in class declarations and their global variable
     return NGlobalDeclNodeGen.create(
       NGlobalScopeObjectNodeGen.create(),
-      new NClassDeclNode(methods, classObject),
+      new NClassDeclNode(methods, properties, operators, classObject),
       className,
       false
     );

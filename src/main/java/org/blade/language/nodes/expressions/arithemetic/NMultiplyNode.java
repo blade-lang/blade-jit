@@ -4,10 +4,13 @@ import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.Fallback;
 import com.oracle.truffle.api.dsl.ImportStatic;
 import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.interop.InteropLibrary;
+import com.oracle.truffle.api.library.CachedLibrary;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.strings.TruffleString;
 import org.blade.language.BladeLanguage;
 import org.blade.language.nodes.NBinaryNode;
+import org.blade.language.runtime.BladeObject;
 import org.blade.language.runtime.ListObject;
 import org.blade.language.runtime.BladeContext;
 import org.blade.language.runtime.BladeRuntimeError;
@@ -59,6 +62,16 @@ public abstract class NMultiplyNode extends NBinaryNode {
     }
 
     return objects;
+  }
+
+  @Specialization(limit = "3")
+  protected Object doObjects(BladeObject left, BladeObject right, @CachedLibrary("left") InteropLibrary interopLibrary) {
+    Object overrideValue = methodOverride("*", left, right, interopLibrary);
+    if(overrideValue != null) {
+      return overrideValue;
+    }
+
+    return doUnsupported(left, right);
   }
 
   @Fallback

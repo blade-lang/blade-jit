@@ -39,7 +39,7 @@ public class Parser {
     }
   };
   private static final TokenType[] OPERATORS = new TokenType[]{
-    PLUS, MINUS, MULTIPLY, POW, DIVIDE, FLOOR, EQUAL, LESS,
+    PLUS, MINUS, MULTIPLY, POW, DIVIDE, FLOOR, EQUAL_EQ, LESS,
     LSHIFT, GREATER, RSHIFT, URSHIFT, PERCENT, AMP, BAR,
     TILDE, XOR,
   };
@@ -1069,9 +1069,12 @@ public class Parser {
       consumeAny("non-assignment operator expected", OPERATORS);
       var name = previous();
 
+      List<Expr.Identifier> params = new ArrayList<>();
+      params.add(new Expr.Identifier(previous().copyToType(IDENTIFIER, "__arg__")));
+
       var body = matchBlock("'{' expected after operator declaration");
 
-      return new Stmt.Method(name, new ArrayList<>(), body, false, false);
+      return new Stmt.Method(name, params, body, false, false);
     });
   }
 
@@ -1081,10 +1084,9 @@ public class Parser {
       Token name = previous();
 
       List<Expr.Identifier> params = new ArrayList<>();
-      boolean isVariadic = false;
 
       consume(LPAREN, "'(' expected after method name");
-      isVariadic = functionArgs(params);
+      boolean isVariadic = functionArgs(params);
       consume(RPAREN, "')' expected after method arguments");
 
       var body = matchBlock("'{' expected after method declaration");

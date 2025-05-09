@@ -98,7 +98,7 @@ public class BladeRuntimeError extends AbstractTruffleException {
       if(o instanceof BladeObject classInstance) {
         result.append(classInstance.getClassName());
       } else {
-        String[] qualifiedName = NAnnotationHelper.getObjectName(o.getClass()).split("[.]");
+        String[] qualifiedName = o == null ? new String[]{"Unknown"} : NAnnotationHelper.getObjectName(o.getClass()).split("[.]");
         String name = qualifiedName[qualifiedName.length - 1];
         if(name.equals("TruffleString")) {
           name = "String";

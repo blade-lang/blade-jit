@@ -15,6 +15,8 @@ public class BuiltinClassesModel {
   public final BladeClass functionObject;
   public final BladeClass listObject;
   public final BladeClass stringObject;
+  public final BladeClass numberObject;
+  public final BladeClass booleanObject;
 
   public final ErrorsModel errorsModel;
   public final Map<String, BladeClass> builtinClasses;
@@ -22,6 +24,7 @@ public class BuiltinClassesModel {
   public BuiltinClassesModel(
     Shape rootShape, Shape listShape, BObject objectObject,
     BladeClass functionObject, BladeClass listObject, BladeClass stringObject,
+    BladeClass numberObject, BladeClass booleanObject,
     ErrorsModel errorsModel
   ) {
     this.rootShape = rootShape;
@@ -30,6 +33,8 @@ public class BuiltinClassesModel {
     this.functionObject = functionObject;
     this.listObject = listObject;
     this.stringObject = stringObject;
+    this.numberObject = numberObject;
+    this.booleanObject = booleanObject;
     this.errorsModel = errorsModel;
 
     Map<String, BladeClass> allBuiltInClasses = new HashMap<>();

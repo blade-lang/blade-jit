@@ -63,6 +63,22 @@ public final class BString {
     );
   }
 
+  public static long indexOfCodePoint(TruffleString.IndexOfCodePointNode indexOfNode,
+                                      TruffleString self, int codePoint, int length) {
+    return indexOfCodePoint(indexOfNode, self, codePoint, length, 0);
+  }
+
+  public static long indexOfCodePoint(TruffleString.IndexOfCodePointNode indexOfNode,
+                                      TruffleString self, int codePoint, int length, int startIndex) {
+    return indexOfNode.execute(
+      self,
+      codePoint,
+      startIndex,
+      length,
+      BladeLanguage.ENCODING
+    );
+  }
+
   public static boolean same(Object o1, Object o2) {
     return o1 == o2;
   }

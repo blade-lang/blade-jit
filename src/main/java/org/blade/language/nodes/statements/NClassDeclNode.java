@@ -15,17 +15,36 @@ public final class NClassDeclNode extends NStmtNode {
   @Children
   private final NNode[] methods;
 
+  @Children
+  private final NNode[] propreties;
+
+  @Children
+  private final NNode[] operators;
+
   @CompilerDirectives.CompilationFinal
   private final BladeClass classObject;
 
-  public NClassDeclNode(List<NNode> methods, BladeClass classObject) {
+  public NClassDeclNode(List<NNode> methods, List<NNode> properties, List<NNode> operators, BladeClass classObject) {
     this.methods = methods.toArray(new NNode[0]);
+    this.propreties = properties.toArray(new NNode[0]);
+    this.operators = operators.toArray(new NNode[0]);
     this.classObject = classObject;
   }
 
   @ExplodeLoop
   @Override
   public Object execute(VirtualFrame frame) {
+    // Expand properties first as methods may need them.
+    for(NNode property : propreties) {
+      property.execute(frame);
+    }
+
+    // followed by operators since methods can need them too.
+    for(NNode operator : operators) {
+      operator.execute(frame);
+    }
+
+    // lastly, the methods
     for(NNode method : methods) {
       method.execute(frame);
     }

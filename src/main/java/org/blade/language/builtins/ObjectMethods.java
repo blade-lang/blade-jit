@@ -5,13 +5,15 @@ import com.oracle.truffle.api.dsl.Fallback;
 import com.oracle.truffle.api.dsl.NodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.library.CachedLibrary;
+import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.object.DynamicObject;
 import com.oracle.truffle.api.object.DynamicObjectLibrary;
 import com.oracle.truffle.api.strings.TruffleString;
 import org.blade.language.BaseBuiltinDeclaration;
 import org.blade.language.nodes.functions.NBuiltinFunctionNode;
 import org.blade.language.nodes.string.NReadStringPropertyNode;
-import org.blade.language.runtime.BString;
+import org.blade.language.runtime.*;
+import org.blade.language.shared.BuiltinClassesModel;
 import org.blade.utility.RegulatedMap;
 
 public class ObjectMethods implements BaseBuiltinDeclaration {
@@ -20,6 +22,7 @@ public class ObjectMethods implements BaseBuiltinDeclaration {
     return new RegulatedMap<>() {{
       add("to_string", false, ObjectMethodsFactory.NObjectToStringMethodNodeFactory.getInstance());
       add("has_prop", false, ObjectMethodsFactory.NObjectHasPropMethodNodeFactory.getInstance());
+      add("get_class", false, ObjectMethodsFactory.GetClassMethodNodeFactory.getInstance());
     }};
   }
 
@@ -53,6 +56,39 @@ public class ObjectMethods implements BaseBuiltinDeclaration {
     protected boolean doPrimitive(Object self, Object property) {
       // primitives don't own any properties
       return false;
+    }
+  }
+
+  public abstract static class GetClassMethodNode extends NBuiltinFunctionNode {
+
+    @Specialization
+    protected Object doObject(BladeObject object) {
+      return object.classObject;
+    }
+
+    @Specialization
+    protected Object doString(TruffleString object) {
+      return languageContext().objectsModel.stringObject;
+    }
+
+    @Specialization
+    protected Object doLong(long object) {
+      return languageContext().objectsModel.numberObject;
+    }
+
+    @Specialization
+    protected Object doDouble(double object) {
+      return languageContext().objectsModel.numberObject;
+    }
+
+    @Specialization
+    protected Object doBoolean(boolean object) {
+      return languageContext().objectsModel.booleanObject;
+    }
+
+    @Fallback
+    protected Object doOthers(Object object) {
+      return languageContext().objectsModel.objectObject;
     }
   }
 }

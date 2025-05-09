@@ -2,7 +2,10 @@ package org.blade.language.nodes.expressions.arithemetic;
 
 import com.oracle.truffle.api.dsl.Fallback;
 import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.interop.InteropLibrary;
+import com.oracle.truffle.api.library.CachedLibrary;
 import org.blade.language.nodes.NBinaryNode;
+import org.blade.language.runtime.BladeObject;
 import org.blade.language.runtime.BladeRuntimeError;
 
 public abstract class NModuloNode extends NBinaryNode {
@@ -35,6 +38,16 @@ public abstract class NModuloNode extends NBinaryNode {
   @Specialization(replaces = {"doLongs", "doLongs2", "doLongs3"})
   protected double doDoubles(double left, double right) {
     return left % right;
+  }
+
+  @Specialization(limit = "3")
+  protected Object doObjects(BladeObject left, BladeObject right, @CachedLibrary("left") InteropLibrary interopLibrary) {
+    Object overrideValue = methodOverride("%", left, right, interopLibrary);
+    if(overrideValue != null) {
+      return overrideValue;
+    }
+
+    return doUnsupported(left, right);
   }
 
   @Fallback
