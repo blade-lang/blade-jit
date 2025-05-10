@@ -283,9 +283,22 @@ public class Parser {
     });
   }
 
+  private Expr range() {
+    return wrapExpr(() -> {
+      Expr expr = primary();
+
+      while (match(RANGE)) {
+        ignoreNewlines();
+        expr = new Expr.Range(expr, primary());
+      }
+
+      return expr;
+    });
+  }
+
   private Expr call() {
     return wrapExpr(() -> {
-      var expr = primary();
+      var expr = range();
 
       while (true) {
         if (match(DOT)) {
@@ -395,27 +408,14 @@ public class Parser {
     });
   }
 
-  private Expr range() {
-    return wrapExpr(() -> {
-      Expr expr = term();
-
-      while (match(RANGE)) {
-        ignoreNewlines();
-        expr = new Expr.Range(expr, term());
-      }
-
-      return expr;
-    });
-  }
-
   private Expr shift() {
     return wrapExpr(() -> {
-      Expr expr = range();
+      Expr expr = term();
 
       while (match(LSHIFT, RSHIFT, URSHIFT)) {
         var op = previous();
         ignoreNewlines();
-        expr = new Expr.Binary(expr, op, range());
+        expr = new Expr.Binary(expr, op, term());
       }
 
       return expr;

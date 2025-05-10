@@ -16,6 +16,7 @@ import org.blade.language.nodes.functions.*;
 import org.blade.language.nodes.list.NListIndexReadNodeGen;
 import org.blade.language.nodes.list.NListIndexWriteNodeGen;
 import org.blade.language.nodes.list.NListLiteralNode;
+import org.blade.language.nodes.list.NRangeLiteralNodeGen;
 import org.blade.language.nodes.literals.*;
 import org.blade.language.nodes.statements.*;
 import org.blade.language.nodes.statements.loops.*;
@@ -317,6 +318,11 @@ public class BladeTranslator extends BaseVisitor<NNode> {
       nodes.add(visitExpr(e));
     }
     return sourceSection(new NListLiteralNode(nodes), expr);
+  }
+
+  @Override
+  public NNode visitRangeExpr(Expr.Range expr) {
+    return NRangeLiteralNodeGen.create(visitExpr(expr.lower), visitExpr(expr.upper));
   }
 
   @Override

@@ -113,6 +113,7 @@ public class BladeLanguage extends TruffleLanguage<BladeContext> {
       new BladeClass(rootShape, "String", objectClass),
       new BladeClass(rootShape, "Number", objectClass),
       new BladeClass(rootShape, "Boolean", objectClass),
+      new BladeClass(rootShape, "Range", objectClass),
       createErrorsModel()
     );
   }
@@ -151,12 +152,18 @@ public class BladeLanguage extends TruffleLanguage<BladeContext> {
       defineBuiltinMethod(objectLibrary, builtinObjects.stringObject, factory.key(), factory.value());
     });
 
+    // Range class
+    BuiltinDeclarationAccessor.get(RangeMethods.class).forEach((factory) -> {
+      defineBuiltinMethod(objectLibrary, builtinObjects.rangeObject, factory.key(), factory.value());
+    });
+
     // global classes
     objectLibrary.putConstant(globalScope, "Object", objectClass, 0);
     objectLibrary.putConstant(globalScope, "String", builtinObjects.stringObject, 0);
     objectLibrary.putConstant(globalScope, "List", builtinObjects.listObject, 0);
     objectLibrary.putConstant(globalScope, "Number", builtinObjects.numberObject, 0);
     objectLibrary.putConstant(globalScope, "Boolean", builtinObjects.booleanObject, 0);
+    objectLibrary.putConstant(globalScope, "Range", builtinObjects.rangeObject, 0);
 
     // add all built-in class prototypes to the global scope
     for (Map.Entry<String, BladeClass> entry : builtinObjects.builtinClasses.entrySet()) {
