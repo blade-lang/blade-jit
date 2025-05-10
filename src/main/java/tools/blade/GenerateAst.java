@@ -61,7 +61,6 @@ public class GenerateAst {
       "Iter       : Stmt declaration, Expr condition, Expression interation, Block body",
       "While      : Expr condition, Stmt body",
       "DoWhile    : Stmt body, Expr condition",
-      "For        : List<Expr.Identifier> variables, Expr iterable, Stmt body",
       "Continue   :",
       "Break      :",
       "Raise      : Expr exception",

@@ -150,11 +150,6 @@ public class BaseVisitor<T> implements Expr.Visitor<T>, Stmt.Visitor<T> {
   }
 
   @Override
-  public T visitForStmt(Stmt.For stmt) {
-    return null;
-  }
-
-  @Override
   public T visitContinueStmt(Stmt.Continue stmt) {
     return null;
   }

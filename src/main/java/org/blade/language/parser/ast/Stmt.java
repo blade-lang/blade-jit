@@ -15,7 +15,6 @@ public abstract class Stmt extends AST {
     T visitIterStmt(Iter stmt);
     T visitWhileStmt(While stmt);
     T visitDoWhileStmt(DoWhile stmt);
-    T visitForStmt(For stmt);
     T visitContinueStmt(Continue stmt);
     T visitBreakStmt(Break stmt);
     T visitRaiseStmt(Raise stmt);
@@ -118,22 +117,6 @@ public abstract class Stmt extends AST {
 
     public <T> T accept(Visitor<T> visitor) {
       return visitor.visitDoWhileStmt(this);
-    }
-  }
-
-  public static class For extends Stmt {
-    public final List<Expr.Identifier> variables;
-    public final Expr iterable;
-    public final Stmt body;
-
-    public For(List<Expr.Identifier> variables, Expr iterable, Stmt body) {
-      this.variables = variables;
-      this.iterable = iterable;
-      this.body = body;
-    }
-
-    public <T> T accept(Visitor<T> visitor) {
-      return visitor.visitForStmt(this);
     }
   }
 

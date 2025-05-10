@@ -19,6 +19,10 @@ public abstract class NBinaryNode extends NNode {
     return object instanceof Long;
   }
 
+  protected static boolean isList(Object object) {
+    return object instanceof ListObject;
+  }
+
   protected static Object methodOverride(String def, BladeObject left, BladeObject right, InteropLibrary interopLibrary) {
     Object overrideFunction = null;
     try {

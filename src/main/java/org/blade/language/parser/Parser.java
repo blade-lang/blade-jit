@@ -691,20 +691,77 @@ public class Parser {
 
   private Stmt forStatement() {
     return wrapStmt(() -> {
-      List<Expr.Identifier> vars = new ArrayList<>();
-      vars.add(
-        new Expr.Identifier(consume(IDENTIFIER, "variable name expected"))
-      );
+      consume(IDENTIFIER, "variable name expected");
+
+      // var key = nil
+      Stmt.Var key = new Stmt.Var(previous().copyToType(IDENTIFIER, " key "), null, false);
+      // var value = nil
+      Stmt.Var value = new Stmt.Var(previous(), null, false);
 
       if (match(COMMA)) {
-        vars.add(
-          new Expr.Identifier(consume(IDENTIFIER, "variable name expected"))
-        );
+        consume(IDENTIFIER, "variable name expected");
+        key = value;
+        value = new Stmt.Var(previous(), null, false);
       }
 
       consume(IN, "'in' expected after for statement variables");
 
-      return new Stmt.For(vars, expression(), statement());
+      // object
+      Expr iterable = expression();
+
+      List<Stmt> stmtList = new ArrayList<>();
+
+      // key = object.@key(key)
+      stmtList.add(new Stmt.Expression(
+        new Expr.Assign(
+          new Expr.Identifier(key.name),
+          new Expr.Call(
+            new Expr.Get(
+              iterable,
+              new Expr.Identifier(previous().copyToType(IDENTIFIER, "@key"))
+            ),
+            List.of(new Expr.Identifier(key.name))
+          )
+        )
+      ));
+
+      // if key == nil {
+      //   break
+      // }
+      stmtList.add(new Stmt.If(
+        new Expr.Binary(
+          new Expr.Identifier(key.name),
+          key.name.copyToType(EQUAL_EQ, "=="),
+          new Expr.Nil()
+        ),
+        new Stmt.Break(),
+        null
+      ));
+
+      // value = object.@value(key)
+      stmtList.add(new Stmt.Expression(
+        new Expr.Assign(
+          new Expr.Identifier(value.name),
+          new Expr.Call(
+            new Expr.Get(
+              iterable,
+              new Expr.Identifier(previous().copyToType(IDENTIFIER, "@value"))
+            ),
+            List.of(new Expr.Identifier(key.name))
+          )
+        )
+      ));
+
+      // parse the loop body
+      stmtList.add(statement());
+
+      return new Stmt.Block(
+        List.of(
+          key,
+          value,
+          new Stmt.While(new Expr.Boolean(true), new Stmt.Block(stmtList))
+        )
+      );
     });
   }
 

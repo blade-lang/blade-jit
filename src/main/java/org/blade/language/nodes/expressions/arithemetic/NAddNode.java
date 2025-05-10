@@ -8,9 +8,8 @@ import com.oracle.truffle.api.interop.InteropLibrary;
 import com.oracle.truffle.api.library.CachedLibrary;
 import com.oracle.truffle.api.strings.TruffleString;
 import org.blade.language.nodes.NBinaryNode;
-import org.blade.language.runtime.BString;
-import org.blade.language.runtime.BladeObject;
-import org.blade.language.runtime.BladeRuntimeError;
+import org.blade.language.runtime.*;
+import org.blade.language.shared.BuiltinClassesModel;
 
 public abstract class NAddNode extends NBinaryNode {
 
@@ -65,6 +64,21 @@ public abstract class NAddNode extends NBinaryNode {
       BString.fromObject(leftFromJavaNode, left),
       BString.fromObject(rightFromJavaNode, right)
     );
+  }
+
+  @Specialization(limit = "3")
+  protected Object doLists(ListObject left, ListObject right, @CachedLibrary("left") InteropLibrary interopLibrary) {
+    Object[] leftItems = left.items;
+    Object[] rightItems = right.items;
+    int leftLength = leftItems.length;
+    int rightLength = rightItems.length;
+
+    Object[] items =  new Object[leftLength + rightLength];
+    System.arraycopy(leftItems, 0, items, 0, leftLength);
+    System.arraycopy(rightItems, 0, items, leftLength, rightLength);
+
+    BuiltinClassesModel model = languageContext().objectsModel;
+    return new ListObject(model.listShape, model.listObject, items);
   }
 
   @Specialization(limit = "3")

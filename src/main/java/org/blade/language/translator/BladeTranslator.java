@@ -303,10 +303,11 @@ public class BladeTranslator extends BaseVisitor<NNode> {
 
   @Override
   public NNode visitIndexExpr(Expr.Index expr) {
-    if (expr.arguments.size() == 1) {
-      return sourceSection(NListIndexReadNodeGen.create(visitExpr(expr.callee), visitExpr(expr.arguments.getFirst())), expr);
+    NNode callee = visitExpr(expr.callee);
+    for(Expr argument : expr.arguments) {
+      callee = NListIndexReadNodeGen.create(callee, visitExpr(argument));
     }
-    throw BladeRuntimeError.create("Slices are not yet supported");
+    return callee;
   }
 
   @Override
