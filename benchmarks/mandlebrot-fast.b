@@ -18,7 +18,7 @@ class Mandelbrot {
      @new(size) {
        self.size = size
        self.fac = 2.0 / size
-       self.shift = size % 8 == 0 ? 0 : (8- size % 8)
+       self.shift = size % 8 == 0 ? 0 : (8 - size % 8)
      }
 
     compute()

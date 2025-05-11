@@ -19,13 +19,13 @@ public abstract class NNegateNode extends NUnaryNode {
     return -value;
   }
 
-  @Specialization(replaces = "doLong")
+  @Specialization
   @CompilerDirectives.TruffleBoundary
   public BigIntObject doBigInt(BigIntObject left) {
     return new BigIntObject(left.get().negate());
   }
 
-  @Specialization(replaces = "doBigInt")
+  @Specialization(replaces = {"doLong", "doBigInt"})
   protected double doDouble(double value) {
     return -value;
   }

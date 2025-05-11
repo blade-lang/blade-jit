@@ -11,26 +11,18 @@ import org.blade.language.runtime.BigIntObject;
 import org.blade.language.runtime.BladeObject;
 import org.blade.language.runtime.BladeRuntimeError;
 
+import java.math.BigInteger;
+
 import static com.oracle.truffle.api.CompilerDirectives.shouldNotReachHere;
 
 public abstract class NDivideNode extends NBinaryNode {
 
-  @Specialization(rewriteOn = ArithmeticException.class, guards = "right > 0")
+  @Specialization(rewriteOn = ArithmeticException.class)
   protected long doLongs(long left, long right) {
     if(left % right == 0) {
       return left / right;
     }
     throw new ArithmeticException();
-  }
-
-  @Specialization(rewriteOn = ArithmeticException.class, guards = "left > 0")
-  protected long doLongs2(long left, long right) {
-    return doLongs(left, right);
-  }
-
-  @Specialization(rewriteOn = ArithmeticException.class, guards = "isCornerCase(left, right)")
-  protected long doLongs3(long left, long right) {
-    return doLongs(left, right);
   }
 
   @Specialization(guards = {"isDouble(left)", "isLong(right)"})
@@ -43,27 +35,37 @@ public abstract class NDivideNode extends NBinaryNode {
     return (double)left / right;
   }
 
-  @Specialization(replaces = {"doLongs", "doLongs2", "doLongs3"})
+  @Specialization
+  @CompilerDirectives.TruffleBoundary
+  public BigIntObject doBigIntLong(BigIntObject left, long right) {
+    return new BigIntObject(left.get().divide(BigInteger.valueOf(right)));
+  }
+
+  @Specialization
+  @CompilerDirectives.TruffleBoundary
+  public BigIntObject doLongBigInt(long left, BigIntObject right) {
+    return new BigIntObject(BigInteger.valueOf(left).divide(right.get()));
+  }
+
+  @Specialization
   @CompilerDirectives.TruffleBoundary
   public BigIntObject doBigInts(BigIntObject left, BigIntObject right) {
     return new BigIntObject(left.get().divide(right.get()));
   }
 
-  @Specialization(replaces = "doBigInts", guards = {"leftLibrary.fitsInBigInteger(left)", "rightLibrary.fitsInBigInteger(right)"}, limit = "3")
-  @CompilerDirectives.TruffleBoundary
-  public static BigIntObject doInteropBigInteger(Object left, Object right,
-                                                 @CachedLibrary("left") InteropLibrary leftLibrary,
-                                                 @CachedLibrary("right") InteropLibrary rightLibrary) {
-    try {
-      return new BigIntObject(leftLibrary.asBigInteger(left).divide(rightLibrary.asBigInteger(right)));
-    } catch (UnsupportedMessageException e) {
-      throw shouldNotReachHere(e);
-    }
-  }
-
-  @Specialization(replaces = {"doInteropBigInteger"})
+  @Specialization(replaces = {"doLongs"})
   protected double doDoubles(double left, double right) {
     return left / right;
+  }
+
+  @Specialization
+  protected double doDoubleBigInt(double left, BigIntObject right) {
+    return left / right.get().intValue();
+  }
+
+  @Specialization
+  protected double doDoubleBigInt(BigIntObject left, double right) {
+    return left.get().intValue() / right;
   }
 
   @Specialization(limit = "3")

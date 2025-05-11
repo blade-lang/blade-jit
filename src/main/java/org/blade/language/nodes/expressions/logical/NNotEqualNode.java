@@ -1,5 +1,6 @@
 package org.blade.language.nodes.expressions.logical;
 
+import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.Fallback;
 import com.oracle.truffle.api.dsl.Specialization;
@@ -29,6 +30,7 @@ public abstract class NNotEqualNode extends NBinaryNode {
     return left != right;
   }
 
+  @CompilerDirectives.TruffleBoundary
   @Specialization
   protected boolean doBigInts(BigIntObject left, BigIntObject right) {
     return !left.equals(right);

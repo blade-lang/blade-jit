@@ -109,6 +109,9 @@ public class BladeRuntimeError extends AbstractTruffleException {
         }
 
         result.append(name);
+        result.append(" \"");
+        result.append(o);
+        result.append("\"");
       }
 
     }

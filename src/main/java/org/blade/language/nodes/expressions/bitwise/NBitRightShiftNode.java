@@ -11,6 +11,8 @@ import org.blade.language.runtime.BigIntObject;
 import org.blade.language.runtime.BladeObject;
 import org.blade.language.runtime.BladeRuntimeError;
 
+import java.math.BigInteger;
+
 import static com.oracle.truffle.api.CompilerDirectives.shouldNotReachHere;
 
 public abstract class NBitRightShiftNode extends NBinaryNode {
@@ -20,27 +22,37 @@ public abstract class NBitRightShiftNode extends NBinaryNode {
     return (int)left >> (toUInt32(right) & 31);
   }
 
-  @Specialization(replaces = "doLongs")
+  @Specialization
+  @CompilerDirectives.TruffleBoundary
+  public BigIntObject doBigIntLong(BigIntObject left, long right) {
+    return new BigIntObject(left.get().shiftRight((int)right));
+  }
+
+  @Specialization
+  @CompilerDirectives.TruffleBoundary
+  public BigIntObject doLongBigInt(long left, BigIntObject right) {
+    return new BigIntObject(BigInteger.valueOf(left).shiftRight(right.get().intValue()));
+  }
+
+  @Specialization
   @CompilerDirectives.TruffleBoundary
   public BigIntObject doBigInts(BigIntObject left, BigIntObject right) {
     return new BigIntObject(left.get().shiftRight(right.get().intValue()));
   }
 
-  @Specialization(replaces = "doBigInts", guards = {"leftLibrary.fitsInBigInteger(left)", "rightLibrary.fitsInBigInteger(right)"}, limit = "3")
-  @CompilerDirectives.TruffleBoundary
-  public static BigIntObject doInteropBigInteger(Object left, Object right,
-                                                 @CachedLibrary("left") InteropLibrary leftLibrary,
-                                                 @CachedLibrary("right") InteropLibrary rightLibrary) {
-    try {
-      return new BigIntObject(leftLibrary.asBigInteger(left).shiftRight(rightLibrary.asBigInteger(right).intValue()));
-    } catch (UnsupportedMessageException e) {
-      throw shouldNotReachHere(e);
-    }
-  }
-
-  @Specialization(replaces = "doInteropBigInteger")
+  @Specialization(replaces = {"doLongs"})
   protected long doDoubles(double left, double right) {
     return (int)left >> (toUInt32(right) & 31);
+  }
+
+  @Specialization
+  protected long doDoubleBigInt(double left, BigIntObject right) {
+    return (long) left >> (toUInt32(right.get().intValue()) & 31);
+  }
+
+  @Specialization
+  protected long doDoubleBigInt(BigIntObject left, double right) {
+    return left.get().intValue() >> (toUInt32((long)right) & 31);
   }
 
   @Specialization(limit = "3")

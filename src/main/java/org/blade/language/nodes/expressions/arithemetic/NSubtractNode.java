@@ -11,6 +11,8 @@ import org.blade.language.runtime.BigIntObject;
 import org.blade.language.runtime.BladeObject;
 import org.blade.language.runtime.BladeRuntimeError;
 
+import java.math.BigInteger;
+
 import static com.oracle.truffle.api.CompilerDirectives.shouldNotReachHere;
 
 public abstract class NSubtractNode extends NBinaryNode {
@@ -30,27 +32,37 @@ public abstract class NSubtractNode extends NBinaryNode {
     return (double)left - right;
   }
 
-  @Specialization(replaces = "doLongs")
+  @Specialization
+  @CompilerDirectives.TruffleBoundary
+  public BigIntObject doBigIntLong(BigIntObject left, long right) {
+    return new BigIntObject(left.get().subtract(BigInteger.valueOf(right)));
+  }
+
+  @Specialization
+  @CompilerDirectives.TruffleBoundary
+  public BigIntObject doLongBigInt(long left, BigIntObject right) {
+    return new BigIntObject(BigInteger.valueOf(left).subtract(right.get()));
+  }
+
+  @Specialization
   @CompilerDirectives.TruffleBoundary
   public BigIntObject doBigInts(BigIntObject left, BigIntObject right) {
     return new BigIntObject(left.get().subtract(right.get()));
   }
 
-  @Specialization(replaces = "doBigInts", guards = {"leftLibrary.fitsInBigInteger(left)", "rightLibrary.fitsInBigInteger(right)"}, limit = "3")
-  @CompilerDirectives.TruffleBoundary
-  public static BigIntObject doInteropBigInteger(Object left, Object right,
-                                                 @CachedLibrary("left") InteropLibrary leftLibrary,
-                                                 @CachedLibrary("right") InteropLibrary rightLibrary) {
-    try {
-      return new BigIntObject(leftLibrary.asBigInteger(left).subtract(rightLibrary.asBigInteger(right)));
-    } catch (UnsupportedMessageException e) {
-      throw shouldNotReachHere(e);
-    }
-  }
-
-  @Specialization(replaces = "doInteropBigInteger")
+  @Specialization(replaces = {"doLongs"})
   protected double doDoubles(double left, double right) {
     return left - right;
+  }
+
+  @Specialization
+  protected double doDoubleBigInt(double left, BigIntObject right) {
+    return left - right.get().intValue();
+  }
+
+  @Specialization
+  protected double doDoubleBigInt(BigIntObject left, double right) {
+    return left.get().intValue() - right;
   }
 
   @Specialization(limit = "3")

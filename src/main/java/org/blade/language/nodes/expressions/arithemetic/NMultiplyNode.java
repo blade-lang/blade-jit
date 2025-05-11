@@ -15,6 +15,8 @@ import org.blade.language.nodes.NBinaryNode;
 import org.blade.language.runtime.*;
 import org.blade.language.shared.BuiltinClassesModel;
 
+import java.math.BigInteger;
+
 import static com.oracle.truffle.api.CompilerDirectives.shouldNotReachHere;
 
 @ImportStatic(Integer.class)
@@ -25,27 +27,47 @@ public abstract class NMultiplyNode extends NBinaryNode {
     return Math.multiplyExact(left, right);
   }
 
-  @Specialization(replaces = "doLongs")
+  @Specialization(guards = {"isDouble(left)", "isLong(right)"})
+  protected double doDoubleLong(double left, long right) {
+    return left * (double) right;
+  }
+
+  @Specialization(guards = {"isLong(left)", "isDouble(right)"})
+  protected double doLongDouble(long left, double right) {
+    return (double) left * right;
+  }
+
+  @Specialization
+  @CompilerDirectives.TruffleBoundary
+  public BigIntObject doBigIntLong(BigIntObject left, long right) {
+    return new BigIntObject(left.get().multiply(BigInteger.valueOf(right)));
+  }
+
+  @Specialization
+  @CompilerDirectives.TruffleBoundary
+  public BigIntObject doLongBigInt(long left, BigIntObject right) {
+    return new BigIntObject(BigInteger.valueOf(left).multiply(right.get()));
+  }
+
+  @Specialization
   @CompilerDirectives.TruffleBoundary
   public BigIntObject doBigInts(BigIntObject left, BigIntObject right) {
     return new BigIntObject(left.get().multiply(right.get()));
   }
 
-  @Specialization(replaces = "doBigInts", guards = {"leftLibrary.fitsInBigInteger(left)", "rightLibrary.fitsInBigInteger(right)"}, limit = "3")
-  @CompilerDirectives.TruffleBoundary
-  public static BigIntObject doInteropBigInteger(Object left, Object right,
-                                                 @CachedLibrary("left") InteropLibrary leftLibrary,
-                                                 @CachedLibrary("right") InteropLibrary rightLibrary) {
-    try {
-      return new BigIntObject(leftLibrary.asBigInteger(left).multiply(rightLibrary.asBigInteger(right)));
-    } catch (UnsupportedMessageException e) {
-      throw shouldNotReachHere(e);
-    }
-  }
-
-  @Specialization(replaces = {"doInteropBigInteger"})
+  @Specialization(replaces = {"doLongs"})
   protected double doDoubles(double left, double right) {
     return left * right;
+  }
+
+  @Specialization
+  protected double doDoubleBigInt(double left, BigIntObject right) {
+    return left * right.get().intValue();
+  }
+
+  @Specialization
+  protected double doDoubleBigInt(BigIntObject left, double right) {
+    return left.get().intValue() * right;
   }
 
   @Specialization

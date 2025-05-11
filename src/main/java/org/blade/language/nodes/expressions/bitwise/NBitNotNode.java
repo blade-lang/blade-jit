@@ -8,6 +8,7 @@ import com.oracle.truffle.api.interop.UnknownIdentifierException;
 import com.oracle.truffle.api.interop.UnsupportedMessageException;
 import com.oracle.truffle.api.library.CachedLibrary;
 import org.blade.language.nodes.NUnaryNode;
+import org.blade.language.nodes.functions.NMethodDispatchNode;
 import org.blade.language.nodes.functions.NMethodDispatchNodeGen;
 import org.blade.language.runtime.BigIntObject;
 import org.blade.language.runtime.BladeObject;
@@ -16,18 +17,22 @@ import org.blade.language.runtime.FunctionObject;
 
 public abstract class NBitNotNode extends NUnaryNode {
 
+  @Child
+  @SuppressWarnings("FieldMayBeFinal")
+  private NMethodDispatchNode dispatchNode = NMethodDispatchNodeGen.create();
+
   @Specialization
   protected long doLong(long value) {
     return ~(int)value;
   }
 
-  @Specialization(replaces = "doLong")
+  @Specialization
   @CompilerDirectives.TruffleBoundary
   public BigIntObject doBigInt(BigIntObject left) {
     return new BigIntObject(left.get().not());
   }
 
-  @Specialization(replaces = "doBigInt")
+  @Specialization(replaces = {"doLong", "doBigInt"})
   protected long doDouble(double value) {
     return ~(int)value;
   }
@@ -45,7 +50,7 @@ public abstract class NBitNotNode extends NUnaryNode {
     }
 
     if(overrideFunction instanceof FunctionObject function) {
-      return NMethodDispatchNodeGen.create().executeDispatch(function, value, new Object[0]);
+      return dispatchNode.executeDispatch(function, value, new Object[0]);
     }
 
     return doUnsupported(value);
