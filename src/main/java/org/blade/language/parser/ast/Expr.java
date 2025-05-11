@@ -12,6 +12,7 @@ public abstract class Expr extends AST {
     T visitNilExpr(Nil expr);
     T visitBooleanExpr(Boolean expr);
     T visitNumberExpr(Number expr);
+    T visitBigNumberExpr(BigNumber expr);
     T visitLiteralExpr(Literal expr);
     T visitUnaryExpr(Unary expr);
     T visitBinaryExpr(Binary expr);
@@ -64,6 +65,18 @@ public abstract class Expr extends AST {
 
     public <T> T accept(Visitor<T> visitor) {
       return visitor.visitNumberExpr(this);
+    }
+  }
+
+  public static class BigNumber extends Expr {
+    public final Token token;
+
+    public BigNumber(Token token) {
+      this.token = token;
+    }
+
+    public <T> T accept(Visitor<T> visitor) {
+      return visitor.visitBigNumberExpr(this);
     }
   }
 

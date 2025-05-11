@@ -26,10 +26,10 @@ public class RangeObject extends BladeObject {
     this.range = upper > lower ? upper - lower : lower - upper;
   }
 
-  @ExportMessage
-  boolean isMemberReadable(String member, @CachedLibrary("this") DynamicObjectLibrary objectLibrary) {
-    return member.equals("upper") || member.equals("lower") || member.equals("range");
-  }
+//  @ExportMessage
+//  boolean isMemberReadable(String member, @CachedLibrary("this") DynamicObjectLibrary objectLibrary) {
+//    return member.equals("upper") || member.equals("lower") || member.equals("range");
+//  }
 
   @ExportMessage
   Object readMember(String member,

@@ -20,6 +20,11 @@ public class BaseVisitor<T> implements Expr.Visitor<T>, Stmt.Visitor<T> {
   }
 
   @Override
+  public T visitBigNumberExpr(Expr.BigNumber expr) {
+    return null;
+  }
+
+  @Override
   public T visitLiteralExpr(Expr.Literal expr) {
     return null;
   }

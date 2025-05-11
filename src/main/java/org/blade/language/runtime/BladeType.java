@@ -14,7 +14,7 @@ import org.blade.language.BladeLanguage;
 
 @ExportLibrary(InteropLibrary.class)
 public final class BladeType implements TruffleObject {
-  public static final BladeType NUMBER = new BladeType("Number", (l, v) -> l.fitsInLong(v) || v instanceof Double);
+  public static final BladeType NUMBER = new BladeType("Number", (l, v) -> l.fitsInLong(v) || v instanceof Double || v instanceof BigIntObject);
   public static final BladeType NIL = new BladeType("Nil", InteropLibrary::isNull);
   public static final BladeType STRING = new BladeType("String", InteropLibrary::isString);
   public static final BladeType LIST = new BladeType("List", (l, v) -> v instanceof ListObject);

@@ -5,8 +5,8 @@
 */
 
 def pad(i, last) {
-  var res = i.to_string(), count
-  count = 10 - res.length
+  var res = i.to_string()
+  var count = 10 - res.length
   while count > 0 {
     if last {
       res += ' '
@@ -21,26 +21,26 @@ def pad(i, last) {
 def calculatePi(arg) {
   var i = 0, ns = 0
 
-  var k = 0
-  var k1 = 1
-  var a = 0
-  var d = 1
-  var m = 0
-  var n = 1
-  var t = 0
-  var u = 1
+  var k = 0n
+  var k1 = 1n
+  var a = 0n
+  var d = 1n
+  var m = 0n
+  var n = 1n
+  var t = 0n
+  var u = 1n
 
   while true {
-    k += 1
-    k1 += 2
-    t = n << 1
+    k += 1n
+    k1 += 2n
+    t = n << 1n
     n *= k
     a += t
     a *= k1
     d *= k1
 
     if a > n {
-      m = n * 3 + a
+      m = n * 3n + a
       t = m / d
       u = m % d + n
 
@@ -50,15 +50,15 @@ def calculatePi(arg) {
 
         var last = i >= arg
         if i % 10 == 0 or last {
-                
+
           echo pad(ns, last) + '\t:' + i
           ns = 0
         }
 
         if last break
 
-        a = (a - d * t) * 10
-        n = n * 10
+        a = (a - d * t) * 10n
+        n = n * 10n
       }
     }
   }

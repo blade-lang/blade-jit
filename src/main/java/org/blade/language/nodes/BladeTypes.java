@@ -1,7 +1,11 @@
 package org.blade.language.nodes;
 
+import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.dsl.ImplicitCast;
 import com.oracle.truffle.api.dsl.TypeSystem;
+import org.blade.language.runtime.BigIntObject;
+
+import java.math.BigInteger;
 
 @TypeSystem({boolean.class, long.class, double.class})
 public class BladeTypes {
@@ -28,5 +32,11 @@ public class BladeTypes {
   @ImplicitCast
   public static double castIntToDouble(int value) {
     return value;
+  }
+
+  @ImplicitCast
+  @CompilerDirectives.TruffleBoundary
+  public static BigIntObject castBigNumber(long value) {
+    return new BigIntObject(BigInteger.valueOf(value));
   }
 }

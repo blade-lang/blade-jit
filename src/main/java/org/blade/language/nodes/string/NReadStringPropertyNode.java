@@ -19,9 +19,9 @@ public abstract class NReadStringPropertyNode extends NBaseNode {
   protected Object readStringIndex(
     TruffleString string, long index,
     @Cached @Cached.Shared("lengthNode") TruffleString.CodePointLengthNode lengthNode,
-    @Cached(value = "length(string, lengthNode)", neverDefault = false) long stringLength,
     @Cached TruffleString.SubstringNode substringNode
   ) {
+    long stringLength = BString.length(string, lengthNode);
     if(index < 0) index = index + stringLength;
 
     return index < 0 || index >= stringLength
@@ -32,10 +32,9 @@ public abstract class NReadStringPropertyNode extends NBaseNode {
   @Specialization(guards = "LENGTH_PROP.equals(name)")
   protected long readLengthProperty(
     TruffleString string, String name,
-    @Cached @Cached.Shared("lengthNode") TruffleString.CodePointLengthNode lengthNode,
-    @Cached(value = "length(string, lengthNode)", neverDefault = false) long stringLength
+    @Cached @Cached.Shared("lengthNode") TruffleString.CodePointLengthNode lengthNode
   ) {
-    return stringLength;
+    return BString.length(string, lengthNode);
   }
 
   @Fallback

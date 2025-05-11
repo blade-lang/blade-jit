@@ -139,7 +139,9 @@ public class Main {
         }
         int lineNo = element.getLineNumber();
 
-        System.err.println("\tat "+fileName+":"+lineNo+" -> "+funcName+"()");
+        if(lineNo > -1) {
+          System.err.println("\tat "+fileName+":"+lineNo+" -> "+funcName+"()");
+        }
       }
     }
   }

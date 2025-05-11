@@ -132,38 +132,24 @@ public class BladeLanguage extends TruffleLanguage<BladeContext> {
 
     GlobalScopeObject globalScope = new GlobalScopeObject(rootShape);
 
-    // built-in functions
-    BuiltinDeclarationAccessor.get(BuiltinFunctions.class).forEach((factory) -> {
-      defineBuiltinFunction(objectLibrary, globalScope, factory.key(), factory.value(), factory.regulator());
-    });
+    // register built-in functions
+    registerBuiltinFunctions(objectLibrary, BuiltinFunctions.class, globalScope);
 
-    // Object class
-    BuiltinDeclarationAccessor.get(ObjectMethods.class).forEach((factory) -> {
-      defineBuiltinMethod(objectLibrary, objectClass, factory.key(), factory.value());
-    });
-
-    // List class
-    BuiltinDeclarationAccessor.get(ListMethods.class).forEach((factory) -> {
-      defineBuiltinMethod(objectLibrary, builtinObjects.listObject, factory.key(), factory.value());
-    });
-
-    // String class
-    BuiltinDeclarationAccessor.get(StringMethods.class).forEach((factory) -> {
-      defineBuiltinMethod(objectLibrary, builtinObjects.stringObject, factory.key(), factory.value());
-    });
-
-    // Range class
-    BuiltinDeclarationAccessor.get(RangeMethods.class).forEach((factory) -> {
-      defineBuiltinMethod(objectLibrary, builtinObjects.rangeObject, factory.key(), factory.value());
-    });
-
-    // global classes
+    // register builtin classes and their methods
     objectLibrary.putConstant(globalScope, "Object", objectClass, 0);
-    objectLibrary.putConstant(globalScope, "String", builtinObjects.stringObject, 0);
+    registerBuiltinMethods(objectLibrary, ObjectMethods.class, objectClass);
+
     objectLibrary.putConstant(globalScope, "List", builtinObjects.listObject, 0);
+    registerBuiltinMethods(objectLibrary, ListMethods.class, builtinObjects.listObject);
+
+    objectLibrary.putConstant(globalScope, "String", builtinObjects.stringObject, 0);
+    registerBuiltinMethods(objectLibrary, StringMethods.class, builtinObjects.stringObject);
+
+    objectLibrary.putConstant(globalScope, "Range", builtinObjects.rangeObject, 0);
+    registerBuiltinMethods(objectLibrary, RangeMethods.class, builtinObjects.rangeObject);
+
     objectLibrary.putConstant(globalScope, "Number", builtinObjects.numberObject, 0);
     objectLibrary.putConstant(globalScope, "Boolean", builtinObjects.booleanObject, 0);
-    objectLibrary.putConstant(globalScope, "Range", builtinObjects.rangeObject, 0);
 
     // add all built-in class prototypes to the global scope
     for (Map.Entry<String, BladeClass> entry : builtinObjects.builtinClasses.entrySet()) {
@@ -204,12 +190,24 @@ public class BladeLanguage extends TruffleLanguage<BladeContext> {
     return globalScope;
   }
 
+  private void registerBuiltinFunctions(DynamicObjectLibrary objectLibrary, Class<? extends BaseBuiltinDeclaration> source, DynamicObject scope) {
+    BuiltinDeclarationAccessor.get(source).forEach((factory) -> {
+      defineBuiltinFunction(objectLibrary, scope, factory.key(), factory.value(), factory.regulator());
+    });
+  }
+
+  private void registerBuiltinMethods(DynamicObjectLibrary objectLibrary, Class<? extends BaseBuiltinDeclaration> source, BladeClass klass) {
+    BuiltinDeclarationAccessor.get(source).forEach((factory) -> {
+      defineBuiltinMethod(objectLibrary, klass, factory.key(), factory.value());
+    });
+  }
+
   private void defineBuiltinFunction(
-    DynamicObjectLibrary objectLibrary, GlobalScopeObject globalScope, String name,
+    DynamicObjectLibrary objectLibrary, DynamicObject scope, String name,
     NodeFactory<? extends NBuiltinFunctionNode> factory, boolean variadic
   ) {
     objectLibrary.putConstant(
-      globalScope,
+      scope,
       name,
       new FunctionObject(rootShape, functionClass, name, createCallTarget(factory, true), factory.getExecutionSignature().size(), variadic),
       0

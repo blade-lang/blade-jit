@@ -16,7 +16,7 @@ import org.blade.language.nodes.functions.*;
 import org.blade.language.nodes.list.NListIndexReadNodeGen;
 import org.blade.language.nodes.list.NListIndexWriteNodeGen;
 import org.blade.language.nodes.list.NListLiteralNode;
-import org.blade.language.nodes.list.NRangeLiteralNodeGen;
+import org.blade.language.nodes.literals.NRangeLiteralNodeGen;
 import org.blade.language.nodes.literals.*;
 import org.blade.language.nodes.statements.*;
 import org.blade.language.nodes.statements.loops.*;
@@ -31,6 +31,7 @@ import org.blade.language.runtime.BladeRuntimeError;
 import org.blade.language.shared.BuiltinClassesModel;
 import org.blade.language.shared.LocalRefSlot;
 
+import java.math.BigInteger;
 import java.util.*;
 
 public class BladeTranslator extends BaseVisitor<NNode> {
@@ -133,10 +134,20 @@ public class BladeTranslator extends BaseVisitor<NNode> {
 
       return sourceSection(new NLongLiteralNode(Long.parseLong(number)), expr);
     } catch (NumberFormatException e) {
-      // it's possible that the long literal is too big to fit in a 32-bit Java `int` -
-      // in that case, fall back to a double literal
-      return sourceSection(new NDoubleLiteralNode(Double.parseDouble(number)), expr);
+      try {
+        // Try to convert it to a big integer.
+        return sourceSection(new NBigIntLiteralNode(new BigInteger(number)), expr);
+      } catch(NumberFormatException ignored) {
+        // it's possible that the long literal is too big to fit in a 32-bit Java `int` -
+        // in that case, and it is not a valid big integer as well, fall back to a double literal
+        return sourceSection(new NDoubleLiteralNode(Double.parseDouble(number)), expr);
+      }
     }
+  }
+
+  @Override
+  public NNode visitBigNumberExpr(Expr.BigNumber expr) {
+    return sourceSection(new NBigIntLiteralNode(new BigInteger(expr.token.literal())), expr);
   }
 
   @Override

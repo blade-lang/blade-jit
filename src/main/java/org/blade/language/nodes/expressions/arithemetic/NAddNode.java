@@ -5,11 +5,14 @@ import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.Fallback;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.interop.InteropLibrary;
+import com.oracle.truffle.api.interop.UnsupportedMessageException;
 import com.oracle.truffle.api.library.CachedLibrary;
 import com.oracle.truffle.api.strings.TruffleString;
 import org.blade.language.nodes.NBinaryNode;
 import org.blade.language.runtime.*;
 import org.blade.language.shared.BuiltinClassesModel;
+
+import static com.oracle.truffle.api.CompilerDirectives.shouldNotReachHere;
 
 public abstract class NAddNode extends NBinaryNode {
 
@@ -29,6 +32,24 @@ public abstract class NAddNode extends NBinaryNode {
   }
 
   @Specialization(replaces = "doLongs")
+  @CompilerDirectives.TruffleBoundary
+  public BigIntObject doBigInts(BigIntObject left, BigIntObject right) {
+    return new BigIntObject(left.get().add(right.get()));
+  }
+
+  @Specialization(replaces = "doBigInts", guards = {"leftLibrary.fitsInBigInteger(left)", "rightLibrary.fitsInBigInteger(right)"}, limit = "3")
+  @CompilerDirectives.TruffleBoundary
+  public static BigIntObject doInteropBigInteger(Object left, Object right,
+                                                 @CachedLibrary("left") InteropLibrary leftLibrary,
+                                                 @CachedLibrary("right") InteropLibrary rightLibrary) {
+    try {
+      return new BigIntObject(leftLibrary.asBigInteger(left).add(rightLibrary.asBigInteger(right)));
+    } catch (UnsupportedMessageException e) {
+      throw shouldNotReachHere(e);
+    }
+  }
+
+  @Specialization(replaces = "doInteropBigInteger")
   protected double doDoubles(double left, double right) {
     return left + right;
   }

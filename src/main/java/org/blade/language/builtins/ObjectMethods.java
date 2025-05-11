@@ -4,10 +4,14 @@ import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.Fallback;
 import com.oracle.truffle.api.dsl.NodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.interop.InteropLibrary;
+import com.oracle.truffle.api.interop.UnknownIdentifierException;
+import com.oracle.truffle.api.interop.UnsupportedMessageException;
 import com.oracle.truffle.api.library.CachedLibrary;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.object.DynamicObject;
 import com.oracle.truffle.api.object.DynamicObjectLibrary;
+import com.oracle.truffle.api.object.Shape;
 import com.oracle.truffle.api.strings.TruffleString;
 import org.blade.language.BaseBuiltinDeclaration;
 import org.blade.language.nodes.functions.NBuiltinFunctionNode;
@@ -27,6 +31,11 @@ public class ObjectMethods implements BaseBuiltinDeclaration {
   }
 
   public abstract static class NObjectToStringMethodNode extends NBuiltinFunctionNode {
+    @Specialization
+    protected TruffleString doString(TruffleString self) {
+      return self;
+    }
+
     @Specialization
     protected TruffleString doObject(DynamicObject self,
                                      @Cached TruffleString.FromJavaStringNode fromJavaStringNode) {
@@ -53,37 +62,71 @@ public class ObjectMethods implements BaseBuiltinDeclaration {
     }
 
     @Fallback
-    protected boolean doPrimitive(Object self, Object property) {
-      // primitives don't own any properties
-      return false;
+    protected boolean doPrimitive(Object self, Object property,
+                                  @Cached(value = "languageContext().objectsModel.objectObject") DynamicObject clasObject,
+                                  @CachedLibrary(value = "languageContext().objectsModel.objectObject") InteropLibrary classInteropLibrary) {
+      try {
+        return evaluateBoolean(classInteropLibrary.readMember(clasObject, BString.toString(property)));
+      } catch (UnsupportedMessageException | UnknownIdentifierException e) {
+        return false;
+      }
     }
   }
 
   public abstract static class GetClassMethodNode extends NBuiltinFunctionNode {
 
     @Specialization
+    protected Object doInt(int object,
+                           @Cached(value = "languageContext().objectsModel", neverDefault = true) @Cached.Shared("objectsModel") BuiltinClassesModel objectsModel,
+                           @Cached(value = "objectsModel.numberObject", neverDefault = true) BladeClass numberObject) {
+      return numberObject;
+    }
+
+    @Specialization
+    protected Object doLong(long object,
+                            @Cached(value = "languageContext().objectsModel", neverDefault = true) @Cached.Shared("objectsModel") BuiltinClassesModel objectsModel,
+                            @Cached(value = "objectsModel.numberObject", neverDefault = true) BladeClass numberObject) {
+      return numberObject;
+    }
+
+    @Specialization
+    protected Object doDouble(double object,
+                              @Cached(value = "languageContext().objectsModel", neverDefault = true) @Cached.Shared("objectsModel") BuiltinClassesModel objectsModel,
+                              @Cached(value = "objectsModel.numberObject", neverDefault = true) BladeClass numberObject) {
+      return numberObject;
+    }
+
+    @Specialization
+    protected Object doBoolean(boolean object,
+                               @Cached(value = "languageContext().objectsModel", neverDefault = true) @Cached.Shared("objectsModel") BuiltinClassesModel objectsModel,
+                               @Cached(value = "objectsModel.booleanObject", neverDefault = true) BladeClass booleanObject) {
+      return booleanObject;
+    }
+
+    @Specialization
+    protected Object doBigInt(BigIntObject object,
+                              @Cached(value = "languageContext().objectsModel", neverDefault = true) @Cached.Shared("objectsModel") BuiltinClassesModel objectsModel,
+                              @Cached(value = "objectsModel.numberObject", neverDefault = true) BladeClass numberObject) {
+      return numberObject;
+    }
+
+    @Specialization
+    protected Object doString(TruffleString object,
+                              @Cached(value = "languageContext().objectsModel", neverDefault = true) @Cached.Shared("objectsModel") BuiltinClassesModel objectsModel,
+                              @Cached(value = "objectsModel.stringObject", neverDefault = true) BladeClass stringObject) {
+      return stringObject;
+    }
+
+    @Specialization
+    protected Object doRange(RangeObject object,
+                             @Cached(value = "languageContext().objectsModel", neverDefault = true) @Cached.Shared("objectsModel") BuiltinClassesModel objectsModel,
+                             @Cached(value = "objectsModel.rangeObject", neverDefault = true) BladeClass rangeObject) {
+      return rangeObject;
+    }
+
+    @Specialization
     protected Object doObject(BladeObject object) {
       return object.classObject;
-    }
-
-    @Specialization
-    protected Object doString(TruffleString object) {
-      return languageContext().objectsModel.stringObject;
-    }
-
-    @Specialization
-    protected Object doLong(long object) {
-      return languageContext().objectsModel.numberObject;
-    }
-
-    @Specialization
-    protected Object doDouble(double object) {
-      return languageContext().objectsModel.numberObject;
-    }
-
-    @Specialization
-    protected Object doBoolean(boolean object) {
-      return languageContext().objectsModel.booleanObject;
     }
 
     @Fallback

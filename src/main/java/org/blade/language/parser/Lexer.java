@@ -309,12 +309,19 @@ public class Lexer {
       }
     }
 
-    while (isDigit(peek())) advance();
+    while (isDigit(peek()) || peek() == '_') advance();
+
+    if(peek() == 'n') {
+      // we've encountered a big integer
+      advance();
+      addToken(BIG_NUMBER, sourceCharacters.subSequence(start, current - 1).toString().replace("_", "").trim());
+      return;
+    }
 
     if (peek() == '.' && isDigit(next())) {
 
       do advance();
-      while (isDigit(peek()));
+      while (isDigit(peek()) || peek() == '_');
 
       // E or e are only valid case followed: by a digit and
       // occurring after a dot.
@@ -326,7 +333,7 @@ public class Lexer {
       }
     }
 
-    addToken(REG_NUMBER);
+    addToken(REG_NUMBER, sourceCharacters.subSequence(start, current).toString().replace("_", "").trim());
   }
 
   /**

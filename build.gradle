@@ -66,6 +66,7 @@ graalvmNative {
         buildArgs.add('--enable-native-access=org.graalvm.truffle')
         buildArgs.add('--enable-native-access=org.graalvm.polyglot')
         buildArgs.add('-Dpolyglot.image-build-time.PreinitializeContexts=blade')
+        buildArgs.add('-H:+ReportExceptionStackTraces')
     }
 
     binaries.test {

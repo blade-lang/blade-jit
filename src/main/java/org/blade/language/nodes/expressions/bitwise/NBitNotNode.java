@@ -1,5 +1,6 @@
 package org.blade.language.nodes.expressions.bitwise;
 
+import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.dsl.Fallback;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.interop.InteropLibrary;
@@ -8,6 +9,7 @@ import com.oracle.truffle.api.interop.UnsupportedMessageException;
 import com.oracle.truffle.api.library.CachedLibrary;
 import org.blade.language.nodes.NUnaryNode;
 import org.blade.language.nodes.functions.NMethodDispatchNodeGen;
+import org.blade.language.runtime.BigIntObject;
 import org.blade.language.runtime.BladeObject;
 import org.blade.language.runtime.BladeRuntimeError;
 import org.blade.language.runtime.FunctionObject;
@@ -15,12 +17,18 @@ import org.blade.language.runtime.FunctionObject;
 public abstract class NBitNotNode extends NUnaryNode {
 
   @Specialization
-  protected long doLongs(long value) {
+  protected long doLong(long value) {
     return ~(int)value;
   }
 
-  @Specialization(replaces = "doLongs")
-  protected long doDoubles(double value) {
+  @Specialization(replaces = "doLong")
+  @CompilerDirectives.TruffleBoundary
+  public BigIntObject doBigInt(BigIntObject left) {
+    return new BigIntObject(left.get().not());
+  }
+
+  @Specialization(replaces = "doBigInt")
+  protected long doDouble(double value) {
     return ~(int)value;
   }
 

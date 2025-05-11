@@ -33,6 +33,7 @@ public class GenerateAst {
       "Nil                :",
       "Boolean            : boolean value",
       "Number             : Token token",
+      "BigNumber             : Token token",
       "Literal            : Token token",
       "Unary              : Token op, Expr right",
       "Binary             : Expr left, Token op, Expr right",

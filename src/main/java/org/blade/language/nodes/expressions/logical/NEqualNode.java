@@ -8,6 +8,7 @@ import com.oracle.truffle.api.library.CachedLibrary;
 import com.oracle.truffle.api.strings.TruffleString;
 import org.blade.language.BladeLanguage;
 import org.blade.language.nodes.NBinaryNode;
+import org.blade.language.runtime.BigIntObject;
 import org.blade.language.runtime.BladeObject;
 import org.blade.language.runtime.BladeRuntimeError;
 
@@ -23,13 +24,23 @@ public abstract class NEqualNode extends NBinaryNode {
     return left == right;
   }
 
-  @Specialization(replaces = "doLongs")
+  @Specialization
+  protected boolean doBigInts(BigIntObject left, BigIntObject right) {
+    return left.equals(right);
+  }
+
+  @Specialization
   protected boolean doDoubles(double left, double right) {
     return left == right;
   }
 
   @Specialization
-  protected boolean doStrings(TruffleString left, TruffleString right,
+  protected boolean doStrings(String left, String right) {
+    return left.equals(right);
+  }
+
+  @Specialization
+  protected boolean doTruffleStrings(TruffleString left, TruffleString right,
                            @Cached TruffleString.EqualNode equalNode) {
     return equalNode.execute(left, right, BladeLanguage.ENCODING);
   }

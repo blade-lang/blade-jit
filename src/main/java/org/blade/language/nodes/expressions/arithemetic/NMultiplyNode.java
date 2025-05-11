@@ -1,20 +1,21 @@
 package org.blade.language.nodes.expressions.arithemetic;
 
+import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.Fallback;
 import com.oracle.truffle.api.dsl.ImportStatic;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.interop.InteropLibrary;
+import com.oracle.truffle.api.interop.UnsupportedMessageException;
 import com.oracle.truffle.api.library.CachedLibrary;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.strings.TruffleString;
 import org.blade.language.BladeLanguage;
 import org.blade.language.nodes.NBinaryNode;
-import org.blade.language.runtime.BladeObject;
-import org.blade.language.runtime.ListObject;
-import org.blade.language.runtime.BladeContext;
-import org.blade.language.runtime.BladeRuntimeError;
+import org.blade.language.runtime.*;
 import org.blade.language.shared.BuiltinClassesModel;
+
+import static com.oracle.truffle.api.CompilerDirectives.shouldNotReachHere;
 
 @ImportStatic(Integer.class)
 public abstract class NMultiplyNode extends NBinaryNode {
@@ -24,7 +25,25 @@ public abstract class NMultiplyNode extends NBinaryNode {
     return Math.multiplyExact(left, right);
   }
 
-  @Specialization(replaces = {"doLongs"})
+  @Specialization(replaces = "doLongs")
+  @CompilerDirectives.TruffleBoundary
+  public BigIntObject doBigInts(BigIntObject left, BigIntObject right) {
+    return new BigIntObject(left.get().multiply(right.get()));
+  }
+
+  @Specialization(replaces = "doBigInts", guards = {"leftLibrary.fitsInBigInteger(left)", "rightLibrary.fitsInBigInteger(right)"}, limit = "3")
+  @CompilerDirectives.TruffleBoundary
+  public static BigIntObject doInteropBigInteger(Object left, Object right,
+                                                 @CachedLibrary("left") InteropLibrary leftLibrary,
+                                                 @CachedLibrary("right") InteropLibrary rightLibrary) {
+    try {
+      return new BigIntObject(leftLibrary.asBigInteger(left).multiply(rightLibrary.asBigInteger(right)));
+    } catch (UnsupportedMessageException e) {
+      throw shouldNotReachHere(e);
+    }
+  }
+
+  @Specialization(replaces = {"doInteropBigInteger"})
   protected double doDoubles(double left, double right) {
     return left * right;
   }

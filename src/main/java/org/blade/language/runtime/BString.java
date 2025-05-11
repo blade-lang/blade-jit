@@ -36,6 +36,10 @@ public final class BString {
     return fromCodePointNode.execute(codepoint, BladeLanguage.ENCODING);
   }
 
+  public static int toCodePoint(TruffleString string, TruffleString.CodePointAtIndexNode codePointNode, int index) {
+    return codePointNode.execute(string, index, BladeLanguage.ENCODING);
+  }
+
   @CompilerDirectives.TruffleBoundary
   public static Object fromObject(InteropLibrary interopLibrary, Object object) {
     return interopLibrary.toDisplayString(object);

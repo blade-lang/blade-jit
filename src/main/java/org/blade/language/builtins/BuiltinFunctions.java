@@ -13,8 +13,12 @@ import org.blade.language.runtime.*;
 import org.blade.language.shared.BuiltinClassesModel;
 import org.blade.utility.RegulatedMap;
 
+import java.math.BigInteger;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.concurrent.ThreadLocalRandom;
 
 public final class BuiltinFunctions implements BaseBuiltinDeclaration {
   @Override
@@ -31,6 +35,9 @@ public final class BuiltinFunctions implements BaseBuiltinDeclaration {
       add("instance_of", false, BuiltinFunctionsFactory.InstanceOfMethodNodeFactory.getInstance());
       add("max", false, BuiltinFunctionsFactory.MaxFunctionNodeFactory.getInstance());
       add("min", false, BuiltinFunctionsFactory.MinFunctionNodeFactory.getInstance());
+      add("oct", false, BuiltinFunctionsFactory.OctFunctionNodeFactory.getInstance());
+      add("ord", false, BuiltinFunctionsFactory.OrdFunctionNodeFactory.getInstance());
+      add("rand", false, BuiltinFunctionsFactory.RandFunctionNodeFactory.getInstance());
       add("to_number", false, BuiltinFunctionsFactory.ToNumberFunctionNodeFactory.getInstance());
     }};
   }
@@ -131,6 +138,9 @@ public final class BuiltinFunctions implements BaseBuiltinDeclaration {
     protected TruffleString doLong(long arg,
                                    @Cached TruffleString.FromCodePointNode fromCodePointNode,
                                    @Cached TruffleString.FromJavaStringNode fromJavaStringNode) {
+      if(arg >= 0x110000) {
+        throw BladeRuntimeError.valueError(this, "chr() argument out of maximum UTF-16 character range 0x10FFFE");
+      }
       return BString.fromObject(fromJavaStringNode, BString.fromCodePoint(fromCodePointNode, (int)arg));
     }
 
@@ -283,6 +293,158 @@ public final class BuiltinFunctions implements BaseBuiltinDeclaration {
     }
   }
 
+  public abstract static class OctFunctionNode extends NBuiltinFunctionNode {
+    @Specialization
+    protected TruffleString doLong(long arg,
+                                   @Cached TruffleString.FromJavaStringNode fromJavaStringNode) {
+      return BString.fromObject(fromJavaStringNode, Long.toString(arg, 8));
+    }
+
+    @Fallback
+    protected double doInvalid(Object object) {
+      throw BladeRuntimeError.argumentError(this, "oct", object);
+    }
+  }
+
+  public abstract static class OrdFunctionNode extends NBuiltinFunctionNode {
+    @Specialization
+    protected long doLong(TruffleString string,
+                                   @Cached TruffleString.CodePointAtIndexNode codePointNode,
+                                   @Cached TruffleString.CodePointLengthNode lengthNode) {
+      long stringLength = BString.length(string, lengthNode);
+      if(stringLength != 1) {
+        throw BladeRuntimeError.valueError(this, "ord() expected a character, but string of length ", stringLength, " given");
+      }
+      return BString.toCodePoint(string, codePointNode, 0);
+    }
+
+    @Fallback
+    protected double doInvalid(Object object) {
+      throw BladeRuntimeError.argumentError(this, "ord", object);
+    }
+  }
+
+  public abstract static class RandFunctionNode extends NBuiltinFunctionNode {
+    private SecureRandom secureRandom = null;
+
+    @CompilerDirectives.TruffleBoundary
+    @Specialization
+    protected double doNilNilNil(BladeNil min, BladeNil max, BladeNil secure) {
+      return ThreadLocalRandom.current().nextDouble();
+    }
+
+    @CompilerDirectives.TruffleBoundary
+    @Specialization(guards = "secure == true")
+    protected double doTrueNilNil(boolean secure, BladeNil min, BladeNil max) {
+      return getSecureRandom().nextDouble();
+    }
+
+    @CompilerDirectives.TruffleBoundary
+    @Specialization(guards = "secure == false")
+    protected double doFalseNilNil(boolean secure, BladeNil min, BladeNil max) {
+      return ThreadLocalRandom.current().nextDouble();
+    }
+
+    @CompilerDirectives.TruffleBoundary
+    @Specialization
+    protected long doLongNilNil(long max, BladeNil ignored, BladeNil secure) {
+      return ThreadLocalRandom.current().nextLong(max);
+    }
+
+    @CompilerDirectives.TruffleBoundary
+    @Specialization(guards = "min < max")
+    protected long doLongLongNil(long min, long max, BladeNil secure) {
+      return ThreadLocalRandom.current().nextLong(min, max);
+    }
+
+    @Specialization(guards = "max <= min")
+    protected Object doLongLongNilInvalid(long min, long max, BladeNil secure) {
+      return invalidOrder(min, max, secure);
+    }
+
+    @CompilerDirectives.TruffleBoundary
+    @Specialization(guards = {"secure == true", "min < max"})
+    protected long doLongLongTrue(long min, long max, boolean secure) {
+      return getSecureRandom().nextLong(min, max);
+    }
+
+    @Specialization(guards = {"secure == true", "max >= min"})
+    protected Object doLongLongTrueInvalid(long min, long max, boolean secure) {
+      return invalidOrder(min, max, secure);
+    }
+
+    @CompilerDirectives.TruffleBoundary
+    @Specialization(guards = {"secure == false", "min < max"})
+    protected long doLongLongFalse(long min, long max, boolean secure) {
+      return ThreadLocalRandom.current().nextLong(min, max);
+    }
+
+    @Specialization(guards = {"secure == false", "max <= min"})
+    protected Object doLongLongFalseInvalid(long min, long max, boolean secure) {
+      return invalidOrder(min, max, secure);
+    }
+
+    @CompilerDirectives.TruffleBoundary
+    @Specialization
+    protected double doDoubleNilNil(double max, BladeNil ignored, BladeNil secure) {
+      return ThreadLocalRandom.current().nextDouble(max);
+    }
+
+    @CompilerDirectives.TruffleBoundary
+    @Specialization(guards = "min < max")
+    protected double doDoubleDoubleNil(double min, double max, BladeNil secure) {
+      return ThreadLocalRandom.current().nextDouble(min, max);
+    }
+
+    @Specialization(guards = "max <= min")
+    protected Object doDoubleDoubleNilInvalid(double min, double max, BladeNil secure) {
+      return invalidOrder(min, max, secure);
+    }
+
+    @CompilerDirectives.TruffleBoundary
+    @Specialization(guards = {"secure == true", "min < max"})
+    protected double doDoubleDoubleTrue(double min, double max, boolean secure) {
+      return getSecureRandom().nextDouble(min, max);
+    }
+
+    @Specialization(guards = {"secure == true", "max <= min"})
+    protected Object doDoubleDoubleTrueInvalid(double min, double max, boolean secure) {
+      return invalidOrder(min, max, true);
+    }
+
+    @CompilerDirectives.TruffleBoundary
+    @Specialization(guards = {"secure == false", "min < max"})
+    protected double doDoubleDoubleFalse(double min, double max, boolean secure) {
+      return ThreadLocalRandom.current().nextDouble(min, max);
+    }
+
+    @Specialization(guards = {"secure == false", "max <= min"})
+    protected Object doDoubleDoubleFalseInvalid(double min, double max, boolean secure) {
+      return invalidOrder(min, max, secure);
+    }
+
+    private Object invalidOrder(Object min, Object max, Object secure) {
+      throw BladeRuntimeError.valueError(this, "ranged rand() requires that min value < max boundary");
+    }
+
+    @Fallback
+    protected double invalid(Object min, Object max, Object secure) {
+      throw BladeRuntimeError.argumentError(this, "rand()", min, max, secure);
+    }
+
+    @CompilerDirectives.TruffleBoundary
+    private SecureRandom getSecureRandom() {
+      if(secureRandom == null) {
+        try {
+          secureRandom = SecureRandom.getInstanceStrong(); // Get the strongest available algorithm
+        } catch (NoSuchAlgorithmException e) {
+          secureRandom = new SecureRandom(); // Fallback to default SecureRandom
+        }
+      }
+      return secureRandom;
+    }
+  }
+
   @ImportStatic(BString.class)
   public abstract static class ToNumberFunctionNode extends NBuiltinFunctionNode {
     @Specialization
@@ -301,6 +463,11 @@ public final class BuiltinFunctions implements BaseBuiltinDeclaration {
     }
 
     @Specialization
+    protected long doBigInt(BigIntObject value) {
+      return getBigIntValue(value.get());
+    }
+
+    @Specialization
     protected Object doString(TruffleString string) {
       try {
         return string.parseLongUncached();
@@ -316,6 +483,11 @@ public final class BuiltinFunctions implements BaseBuiltinDeclaration {
     @Fallback
     protected long doOthers(Object object) {
       return 0;
+    }
+
+    @CompilerDirectives.TruffleBoundary
+    protected long getBigIntValue(BigInteger bigInteger) {
+      return bigInteger.intValue();
     }
   }
 }

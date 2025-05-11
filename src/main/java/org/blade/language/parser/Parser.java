@@ -268,6 +268,10 @@ public class Parser {
         return new Expr.Number(previous());
       }
 
+      if(match(BIG_NUMBER)) {
+        return new Expr.BigNumber(previous());
+      }
+
       if (match(LITERAL)) {
         return literal();
       }
