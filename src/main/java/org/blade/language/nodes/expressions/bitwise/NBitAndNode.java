@@ -47,12 +47,12 @@ public abstract class NBitAndNode extends NBinaryNode {
 
   @Specialization
   protected long doDoubleBigInt(double left, BigIntObject right) {
-    return (long) left & right.get().intValue();
+    return (long) left & bigToLong(right.get());
   }
 
   @Specialization
   protected long doDoubleBigInt(BigIntObject left, double right) {
-    return left.get().intValue() & (long)right;
+    return bigToLong(left.get()) & (long)right;
   }
 
   @Specialization(limit = "3")

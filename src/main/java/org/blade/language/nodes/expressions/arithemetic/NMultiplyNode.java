@@ -62,12 +62,12 @@ public abstract class NMultiplyNode extends NBinaryNode {
 
   @Specialization
   protected double doDoubleBigInt(double left, BigIntObject right) {
-    return left * right.get().intValue();
+    return left * bigToLong(right.get());
   }
 
   @Specialization
   protected double doDoubleBigInt(BigIntObject left, double right) {
-    return left.get().intValue() * right;
+    return bigToLong(left.get()) * right;
   }
 
   @Specialization

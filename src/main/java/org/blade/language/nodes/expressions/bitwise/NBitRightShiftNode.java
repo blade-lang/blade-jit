@@ -47,12 +47,12 @@ public abstract class NBitRightShiftNode extends NBinaryNode {
 
   @Specialization
   protected long doDoubleBigInt(double left, BigIntObject right) {
-    return (long) left >> (toUInt32(right.get().intValue()) & 31);
+    return (long) left >> (toUInt32(bigToLong(right.get())) & 31);
   }
 
   @Specialization
   protected long doDoubleBigInt(BigIntObject left, double right) {
-    return left.get().intValue() >> (toUInt32((long)right) & 31);
+    return bigToLong(left.get()) >> (toUInt32((long)right) & 31);
   }
 
   @Specialization(limit = "3")

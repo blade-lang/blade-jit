@@ -62,12 +62,12 @@ public abstract class NPowNode extends NBinaryNode {
 
   @Specialization
   protected double doDoubleBigInt(double left, BigIntObject right) {
-    return Math.pow(left, right.get().intValue());
+    return Math.pow(left, bigToLong(right.get()));
   }
 
   @Specialization
   protected double doDoubleBigInt(BigIntObject left, double right) {
-    return Math.pow(left.get().intValue(), right);
+    return Math.pow(bigToLong(left.get()), right);
   }
 
   @Specialization(limit = "3")

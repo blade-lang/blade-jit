@@ -47,12 +47,12 @@ public abstract class NFloorDivideNode extends NBinaryNode {
 
   @Specialization
   protected double doDoubleBigInt(double left, BigIntObject right) {
-    return Math.floor(left / right.get().intValue());
+    return Math.floor(left / bigToLong(right.get()));
   }
 
   @Specialization
   protected double doDoubleBigInt(BigIntObject left, double right) {
-    return Math.floor(left.get().intValue() / right);
+    return Math.floor(bigToLong(left.get()) / right);
   }
 
   @Specialization(limit = "3")
