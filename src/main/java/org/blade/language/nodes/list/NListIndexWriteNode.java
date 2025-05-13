@@ -19,7 +19,7 @@ import org.blade.language.runtime.ListObject;
 @ImportStatic(BString.class)
 public abstract class NListIndexWriteNode extends NNode {
   @Specialization(guards = "listLibrary.isArrayElementWritable(list, index)", limit = "3")
-  protected Object doLong(Object list, long index, Object value,
+  protected Object doLong(Object list, int index, Object value,
                           @CachedLibrary("list") InteropLibrary listLibrary) {
     try {
       listLibrary.writeArrayElement(list, index, value);
@@ -53,7 +53,7 @@ public abstract class NListIndexWriteNode extends NNode {
 
   @Specialization(guards = {"isBool(list)"}, limit = "3")
   protected Object doBool(
-    Object list, long index, Object value,
+    Object list, int index, Object value,
     @CachedLibrary("list") InteropLibrary listLibrary
   ) {
     throw BladeRuntimeError.create("Cannot set properties of nil (reading '" , index, "')", this);
@@ -61,7 +61,7 @@ public abstract class NListIndexWriteNode extends NNode {
 
   @Specialization(guards = {"listLibrary.isNull(list)"}, limit = "3")
   protected Object doNil(
-    Object list, long index, Object value,
+    Object list, int index, Object value,
     @CachedLibrary("list") InteropLibrary listLibrary
   ) {
     throw BladeRuntimeError.create("Cannot set properties of boolean value (reading '" , index, "')", this);

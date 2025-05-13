@@ -32,7 +32,7 @@ public class NAddNodeTest {
   }
 
   @Test
-  public void adding_1_to_long_max_does_not_overflow() {
+  public void adding_1_to_int_max_does_not_overflow() {
     NNode exprNode = NAddNodeGen.create(
         new NIntLiteralNode(Integer.MAX_VALUE),
         new NIntLiteralNode(1));
@@ -41,7 +41,7 @@ public class NAddNodeTest {
 
     var result = callTarget.call();
 
-    assertEquals(Long.MAX_VALUE + 1D, result);
+    assertEquals(Integer.MAX_VALUE + 1D, result);
   }
 
   @Test

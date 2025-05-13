@@ -31,7 +31,7 @@ dependencies {
 }
 
 test {
-//    useJUnitPlatform()
+    useJUnitPlatform()
 }
 
 tasks.register('jarWithDeps', Copy) {

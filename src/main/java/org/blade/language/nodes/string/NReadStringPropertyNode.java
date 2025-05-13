@@ -21,7 +21,7 @@ public abstract class NReadStringPropertyNode extends NBaseNode {
     @Cached @Cached.Shared("lengthNode") TruffleString.CodePointLengthNode lengthNode,
     @Cached TruffleString.SubstringNode substringNode
   ) {
-    long stringLength = BString.length(string, lengthNode);
+    int stringLength = BString.length(string, lengthNode);
     if(index < 0) index = index + stringLength;
 
     return index < 0 || index >= stringLength

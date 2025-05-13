@@ -25,8 +25,8 @@ public abstract class NDivideNode extends NBinaryNode {
     throw new ArithmeticException();
   }
 
-  @Specialization(guards = {"isDouble(left)", "isLong(right)"})
-  protected double doDoubleLong(double left, long right) {
+  @Specialization(guards = {"isDouble(left)", "isInt(right)"})
+  protected double doDoubleInt(double left, int right) {
     return left / right;
   }
 
@@ -37,13 +37,13 @@ public abstract class NDivideNode extends NBinaryNode {
 
   @Specialization
   @CompilerDirectives.TruffleBoundary
-  public BigIntObject doBigIntLong(BigIntObject left, long right) {
+  public BigIntObject doBigIntInt(BigIntObject left, int right) {
     return new BigIntObject(left.get().divide(BigInteger.valueOf(right)));
   }
 
   @Specialization
   @CompilerDirectives.TruffleBoundary
-  public BigIntObject doLongBigInt(long left, BigIntObject right) {
+  public BigIntObject doIntBigInt(int left, BigIntObject right) {
     return new BigIntObject(BigInteger.valueOf(left).divide(right.get()));
   }
 

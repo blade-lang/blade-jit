@@ -56,7 +56,7 @@ public class ListObject extends BladeObject {
 
   @ExportMessage
   boolean isArrayElementInsertable(long index) {
-    return false;
+    return true;
   }
 
   @ExportMessage

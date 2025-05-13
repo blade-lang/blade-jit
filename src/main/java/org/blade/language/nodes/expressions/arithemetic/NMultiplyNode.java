@@ -23,29 +23,29 @@ import static com.oracle.truffle.api.CompilerDirectives.shouldNotReachHere;
 public abstract class NMultiplyNode extends NBinaryNode {
 
   @Specialization(rewriteOn = ArithmeticException.class)
-  protected long doLongs(long left, long right) {
+  protected long doInts(int left, int right) {
     return Math.multiplyExact(left, right);
   }
 
-  @Specialization(guards = {"isDouble(left)", "isLong(right)"})
-  protected double doDoubleLong(double left, long right) {
+  @Specialization(guards = {"isDouble(left)", "isInt(right)"})
+  protected double doDoubleInt(double left, int right) {
     return left * (double) right;
   }
 
-  @Specialization(guards = {"isLong(left)", "isDouble(right)"})
-  protected double doLongDouble(long left, double right) {
+  @Specialization(guards = {"isInt(left)", "isDouble(right)"})
+  protected double doIntDouble(int left, double right) {
     return (double) left * right;
   }
 
   @Specialization
   @CompilerDirectives.TruffleBoundary
-  public BigIntObject doBigIntLong(BigIntObject left, long right) {
+  public BigIntObject doBigIntInt(BigIntObject left, int right) {
     return new BigIntObject(left.get().multiply(BigInteger.valueOf(right)));
   }
 
   @Specialization
   @CompilerDirectives.TruffleBoundary
-  public BigIntObject doLongBigInt(long left, BigIntObject right) {
+  public BigIntObject doIntBigInt(int left, BigIntObject right) {
     return new BigIntObject(BigInteger.valueOf(left).multiply(right.get()));
   }
 
@@ -55,7 +55,7 @@ public abstract class NMultiplyNode extends NBinaryNode {
     return new BigIntObject(left.get().multiply(right.get()));
   }
 
-  @Specialization(replaces = {"doLongs"})
+  @Specialization(replaces = {"doInts"})
   protected double doDoubles(double left, double right) {
     return left * right;
   }
@@ -71,13 +71,13 @@ public abstract class NMultiplyNode extends NBinaryNode {
   }
 
   @Specialization
-  protected TruffleString doStringMultiplication(TruffleString string, long count,
+  protected TruffleString doStringMultiplication(TruffleString string, int count,
                                                  @Cached TruffleString.RepeatNode repeatNode) {
-    return repeatNode.execute(string, (int)count, BladeLanguage.ENCODING);
+    return repeatNode.execute(string, count, BladeLanguage.ENCODING);
   }
 
   @Specialization(guards = "count <= MAX_VALUE")
-  protected ListObject doListMultiplication(ListObject list, long count) {
+  protected ListObject doListMultiplication(ListObject list, int count) {
     BuiltinClassesModel objectModel = BladeContext.get(this).objectsModel;
     return new ListObject(
       objectModel.listShape,
@@ -87,14 +87,14 @@ public abstract class NMultiplyNode extends NBinaryNode {
   }
 
   @Specialization(guards = "count > MAX_VALUE")
-  protected ListObject doListMultiplicationOutOfBound(ListObject list, long count) {
+  protected ListObject doListMultiplicationOutOfBound(ListObject list, int count) {
     throw BladeRuntimeError.create("List multiplication count out of bounds (", count, " > ", Integer.MAX_VALUE, ")");
   }
 
   @ExplodeLoop
-  private Object[] repeatList(ListObject list, long count) {
+  private Object[] repeatList(ListObject list, int count) {
     int size = (int) list.getArraySize();
-    int finalSize = (int)(size * count);
+    int finalSize = size * count;
 
     Object[] objects = new Object[finalSize];
 
