@@ -48,7 +48,7 @@ public final class DictionaryMethods implements BaseBuiltinDeclaration {
     private Object getNextKey(Object[] keys, Object key, int keysLength) {
       int index = 0;
       for(int i = 0; i < keysLength; i++) {
-        if(key.equals(keys[i])) {
+        if(objectEquals(key, keys[i])) {
           index = i;
           break;
         }

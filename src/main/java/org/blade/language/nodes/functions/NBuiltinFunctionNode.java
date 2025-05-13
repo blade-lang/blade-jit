@@ -1,5 +1,6 @@
 package org.blade.language.nodes.functions;
 
+import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.NodeChild;
 import com.oracle.truffle.api.strings.TruffleString;
@@ -18,5 +19,10 @@ public abstract class NBuiltinFunctionNode extends NNode {
 
   protected boolean isString(Object object) {
     return object instanceof TruffleString;
+  }
+
+  @CompilerDirectives.TruffleBoundary
+  protected boolean objectEquals(Object first, Object second) {
+    return first.equals(second);
   }
 }
