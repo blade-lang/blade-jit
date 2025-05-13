@@ -90,7 +90,7 @@ public abstract class DebugObject implements TruffleObject {
     }
 
     @Specialization(replaces = "doCached")
-    @CompilerDirectives.TruffleBoundary
+//    @CompilerDirectives.TruffleBoundary
     static Object doUncached(DebugObject receiver, String member) throws UnknownIdentifierException {
       RefObject refObject = receiver.findReference(member);
       return readMember(receiver, member, refObject);

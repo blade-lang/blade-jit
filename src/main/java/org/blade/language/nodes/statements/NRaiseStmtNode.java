@@ -57,34 +57,39 @@ public abstract class NRaiseStmtNode extends NStmtNode {
 
     List<TruffleStackTraceElement> truffleStackTraceEls = TruffleStackTrace.getStackTrace(easyScriptException);
     for (TruffleStackTraceElement truffleStackTracEl : truffleStackTraceEls) {
-      sb.appendStringUncached(BString.fromJavaString("\n\tat "));
 
       Node location = truffleStackTracEl.getLocation();
-      RootNode rootNode = location.getRootNode();
-      String funcName = rootNode.getName();
-
       SourceSection sourceSection = location.getEncapsulatingSourceSection();
-      sb.appendStringUncached(BString.fromJavaString(sourceSection.getSource().getName()));
-      sb.appendStringUncached(BString.fromJavaString(":"));
-      sb.appendStringUncached(BString.fromObject(sourceSection.getStartLine()));
-      sb.appendStringUncached(BString.fromJavaString(":"));
-      sb.appendStringUncached(BString.fromObject(sourceSection.getStartColumn()));
+      int startLine = sourceSection.getStartLine();
 
-      sb.appendStringUncached(BString.fromJavaString(" -> "));
+      if(startLine > -1) {
+        RootNode rootNode = location.getRootNode();
+        String funcName = rootNode.getName();
 
-      // we want to ignore the top-level program RootNode type in this stack trace
-      boolean isFunc = !":program".equals(funcName);
-      if (isFunc) {
-        sb.appendStringUncached(BString.fromJavaString(funcName));
-      } else {
-        sb.appendStringUncached(BString.fromJavaString("@.script"));
+        sb.appendStringUncached(BString.fromJavaString("\n\tat "));
+
+        sb.appendStringUncached(BString.fromJavaString(sourceSection.getSource().getName()));
+        sb.appendStringUncached(BString.fromJavaString(":"));
+        sb.appendStringUncached(BString.fromObject(startLine));
+        sb.appendStringUncached(BString.fromJavaString(":"));
+        sb.appendStringUncached(BString.fromObject(sourceSection.getStartColumn()));
+
+        sb.appendStringUncached(BString.fromJavaString(" -> "));
+
+        // we want to ignore the top-level program RootNode type in this stack trace
+        boolean isFunc = !":program".equals(funcName);
+        if (isFunc) {
+          sb.appendStringUncached(BString.fromJavaString(funcName));
+        } else {
+          sb.appendStringUncached(BString.fromJavaString("@.script"));
+        }
+
+        sb.appendStringUncached(BString.fromJavaString("()"));
+
+        // TODO: Really consider if you want to show source for each stack trace
+        /*String nearSection = location.getEncapsulatingSourceSection().getCharacters().toString();
+        sb.appendStringUncached(BString.fromJavaString("\n\t\t\t" + nearSection.trim()));*/
       }
-
-      sb.appendStringUncached(BString.fromJavaString("()"));
-
-      // TODO: Really consider if you want to show source for each stack trace
-      /*String nearSection = location.getEncapsulatingSourceSection().getCharacters().toString();
-      sb.appendStringUncached(BString.fromJavaString("\n\t\t\t" + nearSection.trim()));*/
     }
     return sb.toStringUncached();
   }

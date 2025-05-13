@@ -56,7 +56,6 @@ graalvmNative {
         mainClass = 'org.blade.Main'
 
         fallback = true
-        sharedLibrary = true
 
         buildArgs.add('-O3')
         buildArgs.add('-march=native')

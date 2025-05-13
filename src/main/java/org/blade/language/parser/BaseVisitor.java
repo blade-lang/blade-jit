@@ -20,6 +20,11 @@ public class BaseVisitor<T> implements Expr.Visitor<T>, Stmt.Visitor<T> {
   }
 
   @Override
+  public T visitBigNumberExpr(Expr.BigNumber expr) {
+    return null;
+  }
+
+  @Override
   public T visitLiteralExpr(Expr.Literal expr) {
     return null;
   }
@@ -150,11 +155,6 @@ public class BaseVisitor<T> implements Expr.Visitor<T>, Stmt.Visitor<T> {
   }
 
   @Override
-  public T visitForStmt(Stmt.For stmt) {
-    return null;
-  }
-
-  @Override
   public T visitContinueStmt(Stmt.Continue stmt) {
     return null;
   }
@@ -196,11 +196,6 @@ public class BaseVisitor<T> implements Expr.Visitor<T>, Stmt.Visitor<T> {
 
   @Override
   public T visitBlockStmt(Stmt.Block stmt) {
-    return null;
-  }
-
-  @Override
-  public T visitAssignStmt(Stmt.Assign stmt) {
     return null;
   }
 

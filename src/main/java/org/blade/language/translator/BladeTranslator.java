@@ -16,6 +16,7 @@ import org.blade.language.nodes.functions.*;
 import org.blade.language.nodes.list.NListIndexReadNodeGen;
 import org.blade.language.nodes.list.NListIndexWriteNodeGen;
 import org.blade.language.nodes.list.NListLiteralNode;
+import org.blade.language.nodes.literals.NRangeLiteralNodeGen;
 import org.blade.language.nodes.literals.*;
 import org.blade.language.nodes.statements.*;
 import org.blade.language.nodes.statements.loops.*;
@@ -30,6 +31,7 @@ import org.blade.language.runtime.BladeRuntimeError;
 import org.blade.language.shared.BuiltinClassesModel;
 import org.blade.language.shared.LocalRefSlot;
 
+import java.math.BigInteger;
 import java.util.*;
 
 public class BladeTranslator extends BaseVisitor<NNode> {
@@ -132,10 +134,20 @@ public class BladeTranslator extends BaseVisitor<NNode> {
 
       return sourceSection(new NIntLiteralNode(Integer.parseInt(number)), expr);
     } catch (NumberFormatException e) {
-      // it's possible that the int literal is too big to fit in a 32-bit Java `int` -
-      // in that case, fall back to a double literal
-      return sourceSection(new NDoubleLiteralNode(Double.parseDouble(number)), expr);
+      try {
+        // Try to convert it to a big integer.
+        return sourceSection(new NBigIntLiteralNode(new BigInteger(number)), expr);
+      } catch(NumberFormatException ignored) {
+        // it's possible that the int literal is too big to fit in a 32-bit Java `int` -
+        // in that case, and it is not a valid big integer as well, fall back to a double literal
+        return sourceSection(new NDoubleLiteralNode(Double.parseDouble(number)), expr);
+      }
     }
+  }
+
+  @Override
+  public NNode visitBigNumberExpr(Expr.BigNumber expr) {
+    return sourceSection(new NBigIntLiteralNode(new BigInteger(expr.token.literal())), expr);
   }
 
   @Override
@@ -303,10 +315,11 @@ public class BladeTranslator extends BaseVisitor<NNode> {
 
   @Override
   public NNode visitIndexExpr(Expr.Index expr) {
-    if (expr.arguments.size() == 1) {
-      return sourceSection(NListIndexReadNodeGen.create(visitExpr(expr.callee), visitExpr(expr.arguments.getFirst())), expr);
+    NNode callee = visitExpr(expr.callee);
+    for(Expr argument : expr.arguments) {
+      callee = NListIndexReadNodeGen.create(callee, visitExpr(argument));
     }
-    throw BladeRuntimeError.create("Slices are not yet supported");
+    return callee;
   }
 
   @Override
@@ -316,6 +329,32 @@ public class BladeTranslator extends BaseVisitor<NNode> {
       nodes.add(visitExpr(e));
     }
     return sourceSection(new NListLiteralNode(nodes), expr);
+  }
+
+  @Override
+  public NNode visitDictExpr(Expr.Dict expr) {
+    List<NNode> keys = new ArrayList<>();
+    List<NNode> values = new ArrayList<>();
+
+    for(Expr e : expr.keys) {
+      keys.add(visitExpr(e));
+    }
+
+    for(Expr e : expr.values) {
+      values.add(visitExpr(e));
+    }
+
+//    for (int i = 0; i < expr.keys.size(); i++) {
+//      keys.add(visitExpr(expr.keys.get(i)));
+//      values.add(visitExpr(expr.values.get(i)));
+//    }
+
+    return sourceSection(new NDictionaryLiteralNode(keys, values), expr);
+  }
+
+  @Override
+  public NNode visitRangeExpr(Expr.Range expr) {
+    return NRangeLiteralNodeGen.create(visitExpr(expr.lower), visitExpr(expr.upper));
   }
 
   @Override
@@ -363,6 +402,15 @@ public class BladeTranslator extends BaseVisitor<NNode> {
 
     // default to global value
     return sourceSection(NGlobalDeclNodeGen.create(globalScopeNode, value, name, isConstant), stmt);
+  }
+
+  @Override
+  public NNode visitPropertyStmt(Stmt.Property stmt) {
+    return sourceSection(NSetPropertyNodeGen.create(
+      new NDynamicObjectRefNode(currentClass),
+      stmt.value == null ? new NNilLiteralNode() : visitExpr(stmt.value),
+      stmt.name.literal()
+    ), stmt);
   }
 
   @Override
@@ -483,12 +531,29 @@ public class BladeTranslator extends BaseVisitor<NNode> {
 
     localScopes.getFirst().put(className, new NFrameMember.ClassObject(classObject));
 
+    List<NNode> methods = new ArrayList<>();
+    List<NNode> properties = new ArrayList<>();
+    List<NNode> operators = new ArrayList<>();
+
     // set current class
     currentClass = classObject;
 
-    List<NNode> methods = new ArrayList<>();
+    for(Stmt.Property property : stmt.properties) {
+      properties.add(visitPropertyStmt(property));
+    }
 
     for (Stmt.Method method : stmt.methods) {
+      methods.add(translateFunction(
+        method,
+        method.name.literal(),
+        method.parameters,
+        method.body,
+        new NDynamicObjectRefNode(classObject),
+        method.isVariadic
+      ));
+    }
+
+    for (Stmt.Method method : stmt.operators) {
       methods.add(translateFunction(
         method,
         method.name.literal(),
@@ -506,7 +571,7 @@ public class BladeTranslator extends BaseVisitor<NNode> {
     // in class declarations and their global variable
     return NGlobalDeclNodeGen.create(
       NGlobalScopeObjectNodeGen.create(),
-      new NClassDeclNode(methods, classObject),
+      new NClassDeclNode(methods, properties, operators, classObject),
       className,
       false
     );

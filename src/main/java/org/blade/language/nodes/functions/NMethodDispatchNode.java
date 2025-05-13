@@ -39,15 +39,14 @@ public abstract class NMethodDispatchNode extends Node {
   @ExplodeLoop
   private Object[] extendArguments(FunctionObject function, Object receiver, Object[] arguments) {
     int finalLength = function.argumentsCount + 1;
+    int argumentLength = arguments.length;
+
     Object[] ret = new Object[finalLength];
     ret[0] = receiver;
 
-    if (arguments.length >= 1) {
-      System.arraycopy(arguments, 0, ret, 1, arguments.length);
-    }
-
-    for(int i = arguments.length + 1; i < finalLength; i++) {
-      ret[i] = BladeNil.SINGLETON;
+    for(int i = 1; i < finalLength; i++) {
+      int j = i - 1;
+      ret[i] = j < argumentLength ? arguments[j] : BladeNil.SINGLETON;
     }
 
     return ret;

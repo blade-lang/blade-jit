@@ -95,6 +95,7 @@ public enum TokenType {
 
   // types token
   LITERAL,  // string literal token
+  BIG_NUMBER,  // big number token
   REG_NUMBER,  // regular number token
   BIN_NUMBER,  // binary number token
   OCT_NUMBER,  // octal number token

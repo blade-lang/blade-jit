@@ -8,13 +8,8 @@ import com.oracle.truffle.api.library.ExportLibrary;
 import com.oracle.truffle.api.library.ExportMessage;
 
 @ExportLibrary(InteropLibrary.class)
-public final class MemberNamesObject implements TruffleObject {
-  @CompilerDirectives.CompilationFinal(dimensions = 1)
-  private final Object[] names;
-
-  public MemberNamesObject(Object[] names) {
-    this.names = names;
-  }
+public record MemberNamesObject(
+  @CompilerDirectives.CompilationFinal(dimensions = 1) Object[] names) implements TruffleObject {
 
   @ExportMessage
   boolean hasArrayElements() {
@@ -32,10 +27,14 @@ public final class MemberNamesObject implements TruffleObject {
   }
 
   @ExportMessage
-  Object readArrayElement(long index) throws InvalidArrayIndexException {
+  public Object readArrayElement(long index) throws InvalidArrayIndexException {
     if (!isArrayElementReadable(index)) {
       throw InvalidArrayIndexException.create(index);
     }
     return names[(int) index];
+  }
+
+  public Object[] getNames() {
+    return names;
   }
 }

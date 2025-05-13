@@ -15,7 +15,6 @@ public abstract class Stmt extends AST {
     T visitIterStmt(Iter stmt);
     T visitWhileStmt(While stmt);
     T visitDoWhileStmt(DoWhile stmt);
-    T visitForStmt(For stmt);
     T visitContinueStmt(Continue stmt);
     T visitBreakStmt(Break stmt);
     T visitRaiseStmt(Raise stmt);
@@ -25,7 +24,6 @@ public abstract class Stmt extends AST {
     T visitImportStmt(Import stmt);
     T visitCatchStmt(Catch stmt);
     T visitBlockStmt(Block stmt);
-    T visitAssignStmt(Assign stmt);
     T visitVarStmt(Var stmt);
     T visitFunctionStmt(Function stmt);
     T visitMethodStmt(Method stmt);
@@ -118,22 +116,6 @@ public abstract class Stmt extends AST {
 
     public <T> T accept(Visitor<T> visitor) {
       return visitor.visitDoWhileStmt(this);
-    }
-  }
-
-  public static class For extends Stmt {
-    public final List<Expr.Identifier> variables;
-    public final Expr iterable;
-    public final Stmt body;
-
-    public For(List<Expr.Identifier> variables, Expr iterable, Stmt body) {
-      this.variables = variables;
-      this.iterable = iterable;
-      this.body = body;
-    }
-
-    public <T> T accept(Visitor<T> visitor) {
-      return visitor.visitForStmt(this);
     }
   }
 
@@ -254,22 +236,6 @@ public abstract class Stmt extends AST {
 
     public <T> T accept(Visitor<T> visitor) {
       return visitor.visitBlockStmt(this);
-    }
-  }
-
-  public static class Assign extends Stmt {
-    public final Expr expression;
-    public final Token type;
-    public final Expr value;
-
-    public Assign(Expr expression, Token type, Expr value) {
-      this.expression = expression;
-      this.type = type;
-      this.value = value;
-    }
-
-    public <T> T accept(Visitor<T> visitor) {
-      return visitor.visitAssignStmt(this);
     }
   }
 

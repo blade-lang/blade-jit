@@ -8,11 +8,7 @@ graal_dumps/
 *.bgv
 
 ### IntelliJ IDEA ###
-.idea/modules.xml
-.idea/jarRepositories.xml
-.idea/compiler.xml
-.idea/libraries/
-.idea/runConfigurations
+.idea/
 *.iws
 *.iml
 *.ipr
@@ -46,5 +42,5 @@ bin/
 .DS_Store
 
 ### Others ###
-src/main/generated/
-src/jmh/generated/
+generated/
+*.iprof

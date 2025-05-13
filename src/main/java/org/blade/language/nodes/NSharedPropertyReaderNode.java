@@ -38,9 +38,7 @@ public abstract class NSharedPropertyReaderNode extends NBaseNode {
   @Specialization(guards = "interopLibrary.isNull(target)", limit = "3")
   protected Object doNil(
     Object target, Object property,
-    @CachedLibrary("target") InteropLibrary interopLibrary,
-    @CachedLibrary(limit = "3") @Cached.Shared("objectLibrary") DynamicObjectLibrary objectLibrary,
-    @Cached(value = "languageContext().objectsModel", neverDefault = false) BuiltinClassesModel classesModel
+    @CachedLibrary("target") InteropLibrary interopLibrary
   ) {
     throw BladeRuntimeError.typeError(this, BString.concatString("Cannot read properties of nil (reading '", property, "')"));
   }
@@ -50,7 +48,7 @@ public abstract class NSharedPropertyReaderNode extends NBaseNode {
     @SuppressWarnings("unused") Object target,
     @SuppressWarnings("unused") Object property,
     @Cached(value = "languageContext().objectsModel.objectObject", neverDefault = false) BObject objectObject,
-    @CachedLibrary(limit = "3") @Cached.Shared("objectLibrary") DynamicObjectLibrary objectLibrary
+    @CachedLibrary(limit = "3") DynamicObjectLibrary objectLibrary
   ) {
     return objectLibrary.getOrDefault(objectObject, BString.toString(property), BladeNil.SINGLETON);
   }

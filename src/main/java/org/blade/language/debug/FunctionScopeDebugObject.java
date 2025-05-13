@@ -1,5 +1,6 @@
 package org.blade.language.debug;
 
+import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.frame.Frame;
 import com.oracle.truffle.api.interop.InteropLibrary;
 import com.oracle.truffle.api.library.ExportLibrary;
@@ -20,6 +21,7 @@ public final class FunctionScopeDebugObject extends DebugObject {
     return node.getArgAndLocalVarRefs();
   }
 
+  @CompilerDirectives.TruffleBoundary
   @ExportMessage
   Object toDisplayString(boolean allowSideEffects) {
     return node.getRootNode().getName();

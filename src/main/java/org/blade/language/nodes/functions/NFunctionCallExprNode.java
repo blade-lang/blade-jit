@@ -82,13 +82,16 @@ public abstract class NFunctionCallExprNode extends NNode {
 
   @ExplodeLoop
   private Object[] extendArguments(FunctionObject function, Object[] arguments) {
-    Object[] ret = new Object[function.argumentsCount];
+    int finalLength = function.argumentsCount + 1;
+    int argumentLength = arguments.length;
 
-    if (arguments.length > 0) {
-      System.arraycopy(arguments, 0, ret, 0, arguments.length);
+    Object[] ret = new Object[finalLength];
+
+    if (argumentLength > 0) {
+      System.arraycopy(arguments, 1, ret, 1, argumentLength - 1);
     }
 
-    for (int i = arguments.length; i < function.argumentsCount; i++) {
+    for (int i = argumentLength; i < finalLength; i++) {
       ret[i] = BladeNil.SINGLETON;
     }
 
@@ -100,18 +103,21 @@ public abstract class NFunctionCallExprNode extends NNode {
    */
   @ExplodeLoop
   private Object[] expandLessVarArguments(BladeContext context, FunctionObject function, Object[] arguments) {
-    int finalLength = function.argumentsCount + 1;
+    int functionArity = function.argumentsCount;
+    int argumentLength = arguments.length;
+
+    int finalLength = functionArity + 1;
     Object[] ret = new Object[finalLength];
 
-    if (arguments.length > 0) {
-      System.arraycopy(arguments, 1, ret, 1, arguments.length - 1);
+    if (argumentLength > 0) {
+      System.arraycopy(arguments, 1, ret, 1, argumentLength - 1);
     }
 
-    for (int i = arguments.length; i < function.argumentsCount; i++) {
+    for (int i = argumentLength; i < functionArity; i++) {
       ret[i] = BladeNil.SINGLETON;
     }
 
-    ret[function.argumentsCount] = new ListObject(
+    ret[functionArity] = new ListObject(
       context.objectsModel.listShape,
       context.objectsModel.listObject,
       new Object[0]
@@ -125,16 +131,17 @@ public abstract class NFunctionCallExprNode extends NNode {
    */
   @ExplodeLoop
   private Object[] expandMoreVarArguments(BladeContext context, FunctionObject function, Object[] arguments) {
-    int finalLength = function.argumentsCount + 1;
+    int functionArity = function.argumentsCount;
+    int finalLength = functionArity + 1;
     Object[] ret = new Object[finalLength];
 
-    System.arraycopy(arguments, 1, ret, 1, function.argumentsCount - 1);
+    System.arraycopy(arguments, 1, ret, 1, functionArity - 1);
 
-    int varLength = arguments.length - function.argumentsCount;
+    int varLength = arguments.length - functionArity;
     Object[] variadic = new Object[varLength];
-    System.arraycopy(arguments, function.argumentsCount, variadic, 0, varLength);
+    System.arraycopy(arguments, functionArity, variadic, 0, varLength);
 
-    ret[function.argumentsCount] = new ListObject(
+    ret[functionArity] = new ListObject(
       context.objectsModel.listShape,
       context.objectsModel.listObject,
       variadic
@@ -149,9 +156,10 @@ public abstract class NFunctionCallExprNode extends NNode {
   @ExplodeLoop
   private Object[] expandNoVarArguments(BladeContext context, FunctionObject function, Object[] arguments) {
     Object[] ret = new Object[2];
+    int argumentLength = arguments.length;
 
-    Object[] variadic = new Object[arguments.length - 1];
-    System.arraycopy(arguments, 1, variadic, 0, arguments.length - 1);
+    Object[] variadic = new Object[argumentLength - 1];
+    System.arraycopy(arguments, 1, variadic, 0, argumentLength - 1);
 
     ret[1] = new ListObject(
       context.objectsModel.listShape,

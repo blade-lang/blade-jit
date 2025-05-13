@@ -11,6 +11,7 @@ import org.blade.language.nodes.NNode;
 import org.blade.language.nodes.NSharedPropertyWriterNode;
 import org.blade.language.runtime.BString;
 import org.blade.language.runtime.BladeRuntimeError;
+import org.blade.language.runtime.ListObject;
 
 @NodeChild("listExpr")
 @NodeChild("indexExpr")
@@ -71,7 +72,7 @@ public abstract class NListIndexWriteNode extends NNode {
     Object target, Object index, Object value,
     @Cached @Cached.Shared("sharedPropertyWriterNode") NSharedPropertyWriterNode sharedPropertyWriterNode
   ) {
-    if(index instanceof Long || index instanceof Double) {
+    if(target instanceof ListObject && (index instanceof Long || index instanceof Double)) {
       throw BladeRuntimeError.create("List index ", index," out of range");
     }
 

@@ -39,7 +39,7 @@ public class Parser {
     }
   };
   private static final TokenType[] OPERATORS = new TokenType[]{
-    PLUS, MINUS, MULTIPLY, POW, DIVIDE, FLOOR, EQUAL, LESS,
+    PLUS, MINUS, MULTIPLY, POW, DIVIDE, FLOOR, EQUAL_EQ, LESS,
     LSHIFT, GREATER, RSHIFT, URSHIFT, PERCENT, AMP, BAR,
     TILDE, XOR,
   };
@@ -268,6 +268,10 @@ public class Parser {
         return new Expr.Number(previous());
       }
 
+      if(match(BIG_NUMBER)) {
+        return new Expr.BigNumber(previous());
+      }
+
       if (match(LITERAL)) {
         return literal();
       }
@@ -275,7 +279,9 @@ public class Parser {
       if (match(IDENTIFIER)) return identifier();
 
       if (match(LPAREN)) return grouping();
-      if (match(LBRACE)) return dict();
+      if (match(LBRACE)) {
+        return dict();
+      }
       if (match(LBRACKET)) return list();
       if (match(AT)) return anonymous();
 
@@ -283,24 +289,39 @@ public class Parser {
     });
   }
 
-  private Expr call() {
+  private Expr range() {
     return wrapExpr(() -> {
-      var expr = primary();
+      Expr expr = primary();
 
+      while (match(RANGE)) {
+        ignoreNewlines();
+        expr = new Expr.Range(expr, primary());
+      }
+
+      return expr;
+    });
+  }
+
+  private Expr doCall(Expr e) {
+    return (Expr) wrap((expr) -> {
       while (true) {
         if (match(DOT)) {
-          expr = finishDot(expr);
+          expr = finishDot((Expr)expr);
         } else if (match(LPAREN)) {
-          expr = finishCall(expr);
+          expr = finishCall((Expr)expr);
         } else if (match(LBRACKET)) {
-          expr = finishIndex(expr);
+          expr = finishIndex((Expr)expr);
         } else {
           break;
         }
       }
 
       return expr;
-    });
+    }, e);
+  }
+
+  private Expr call() {
+    return wrapExpr(() -> doCall(range()));
   }
 
   private Expr assignExpr() {
@@ -395,27 +416,14 @@ public class Parser {
     });
   }
 
-  private Expr range() {
-    return wrapExpr(() -> {
-      Expr expr = term();
-
-      while (match(RANGE)) {
-        ignoreNewlines();
-        expr = new Expr.Range(expr, term());
-      }
-
-      return expr;
-    });
-  }
-
   private Expr shift() {
     return wrapExpr(() -> {
-      Expr expr = range();
+      Expr expr = term();
 
       while (match(LSHIFT, RSHIFT, URSHIFT)) {
         var op = previous();
         ignoreNewlines();
-        expr = new Expr.Binary(expr, op, range());
+        expr = new Expr.Binary(expr, op, term());
       }
 
       return expr;
@@ -577,23 +585,41 @@ public class Parser {
           ignoreNewlines();
 
           if (!check(RBRACE)) {
+            Expr key;
             if (match(IDENTIFIER)) {
-              keys.add(literal());
+              key = literal();
             } else {
-              keys.add(expression());
+              key = expression();
             }
+            keys.add(key);
             ignoreNewlines();
 
             if (!match(COLON)) {
-              values.add(literal());
+              if(key instanceof Expr.Literal literal) {
+                values.add(new Expr.Identifier(literal.token));
+              } else {
+                throw new ParserException(
+                  lexer.getSource(),
+                  previous(), false, "missing value in dictionary definition"
+                );
+              }
             } else {
               ignoreNewlines();
               values.add(expression());
             }
 
             ignoreNewlines();
+          } else {
+            break;
           }
         } while (match(COMMA));
+      }
+
+      if(keys.size() != values.size()) {
+        throw new ParserException(
+          lexer.getSource(),
+          previous(), false, "key/value count mismatch dictionary definition"
+        );
       }
 
       ignoreNewlines();
@@ -614,6 +640,8 @@ public class Parser {
           if (!check(RBRACKET)) {
             items.add(expression());
             ignoreNewlines();
+          } else {
+            break;
           }
         } while (match(COMMA));
       }
@@ -691,20 +719,77 @@ public class Parser {
 
   private Stmt forStatement() {
     return wrapStmt(() -> {
-      List<Expr.Identifier> vars = new ArrayList<>();
-      vars.add(
-        new Expr.Identifier(consume(IDENTIFIER, "variable name expected"))
-      );
+      consume(IDENTIFIER, "variable name expected");
+
+      // var key = nil
+      Stmt.Var key = new Stmt.Var(previous().copyToType(IDENTIFIER, " key "), null, false);
+      // var value = nil
+      Stmt.Var value = new Stmt.Var(previous(), null, false);
 
       if (match(COMMA)) {
-        vars.add(
-          new Expr.Identifier(consume(IDENTIFIER, "variable name expected"))
-        );
+        consume(IDENTIFIER, "variable name expected");
+        key = value;
+        value = new Stmt.Var(previous(), null, false);
       }
 
       consume(IN, "'in' expected after for statement variables");
 
-      return new Stmt.For(vars, expression(), statement());
+      // object
+      Expr iterable = expression();
+
+      List<Stmt> stmtList = new ArrayList<>();
+
+      // key = object.@key(key)
+      stmtList.add(new Stmt.Expression(
+        new Expr.Assign(
+          new Expr.Identifier(key.name),
+          new Expr.Call(
+            new Expr.Get(
+              iterable,
+              new Expr.Identifier(previous().copyToType(IDENTIFIER, "@key"))
+            ),
+            List.of(new Expr.Identifier(key.name))
+          )
+        )
+      ));
+
+      // if key == nil {
+      //   break
+      // }
+      stmtList.add(new Stmt.If(
+        new Expr.Binary(
+          new Expr.Identifier(key.name),
+          key.name.copyToType(EQUAL_EQ, "=="),
+          new Expr.Nil()
+        ),
+        new Stmt.Break(),
+        null
+      ));
+
+      // value = object.@value(key)
+      stmtList.add(new Stmt.Expression(
+        new Expr.Assign(
+          new Expr.Identifier(value.name),
+          new Expr.Call(
+            new Expr.Get(
+              iterable,
+              new Expr.Identifier(previous().copyToType(IDENTIFIER, "@value"))
+            ),
+            List.of(new Expr.Identifier(key.name))
+          )
+        )
+      ));
+
+      // parse the loop body
+      stmtList.add(statement());
+
+      return new Stmt.Block(
+        List.of(
+          key,
+          value,
+          new Stmt.While(new Expr.Boolean(true), new Stmt.Block(stmtList))
+        )
+      );
     });
   }
 
@@ -1069,9 +1154,12 @@ public class Parser {
       consumeAny("non-assignment operator expected", OPERATORS);
       var name = previous();
 
+      List<Expr.Identifier> params = new ArrayList<>();
+      params.add(new Expr.Identifier(previous().copyToType(IDENTIFIER, "__arg__")));
+
       var body = matchBlock("'{' expected after operator declaration");
 
-      return new Stmt.Method(name, new ArrayList<>(), body, false, false);
+      return new Stmt.Method(name, params, body, false, false);
     });
   }
 
@@ -1081,10 +1169,9 @@ public class Parser {
       Token name = previous();
 
       List<Expr.Identifier> params = new ArrayList<>();
-      boolean isVariadic = false;
 
       consume(LPAREN, "'(' expected after method name");
-      isVariadic = functionArgs(params);
+      boolean isVariadic = functionArgs(params);
       consume(RPAREN, "')' expected after method arguments");
 
       var body = matchBlock("'{' expected after method declaration");
@@ -1153,7 +1240,7 @@ public class Parser {
         result = classDeclaration();
       } else if (match(LBRACE)) {
         if (!check(NEWLINE) && blockCount == 0) {
-          result = new Stmt.Expression(dict());
+          result = new Stmt.Expression(doCall(dict()));
         } else {
           result = block();
         }
