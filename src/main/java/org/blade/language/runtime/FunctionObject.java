@@ -60,7 +60,8 @@ public final class FunctionObject extends BladeObject {
 
   @Override
   public String toString() {
-    return BString.format("<function %s() at 0x%x>", name, callTarget.hashCode());
+    String format = variadic ? "<function %s(%d...) at 0x%x>" : "<function %s(%d) at 0x%x>";
+    return BString.format(format, name, argumentsCount, callTarget.hashCode());
   }
 
   @ExplodeLoop

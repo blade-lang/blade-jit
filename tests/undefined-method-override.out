@@ -1,0 +1,2 @@
+^^^
+ArgumentError: '+' is not defined for call signature (A, A)

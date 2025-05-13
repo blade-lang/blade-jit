@@ -4,10 +4,17 @@ import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.Fallback;
 import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.interop.InteropLibrary;
+import com.oracle.truffle.api.interop.UnsupportedMessageException;
+import com.oracle.truffle.api.library.CachedLibrary;
 import com.oracle.truffle.api.strings.TruffleString;
 import org.blade.language.nodes.NBinaryNode;
-import org.blade.language.runtime.BString;
-import org.blade.language.runtime.BladeRuntimeError;
+import org.blade.language.runtime.*;
+import org.blade.language.shared.BuiltinClassesModel;
+
+import java.math.BigInteger;
+
+import static com.oracle.truffle.api.CompilerDirectives.shouldNotReachHere;
 
 public abstract class NAddNode extends NBinaryNode {
 
@@ -26,9 +33,37 @@ public abstract class NAddNode extends NBinaryNode {
     return left + right;
   }
 
-  @Specialization(replaces = "doLongs")
+  @Specialization
+  @CompilerDirectives.TruffleBoundary
+  public BigIntObject doBigIntLong(BigIntObject left, long right) {
+    return new BigIntObject(left.get().add(BigInteger.valueOf(right)));
+  }
+
+  @Specialization
+  @CompilerDirectives.TruffleBoundary
+  public BigIntObject doLongBigInt(long left, BigIntObject right) {
+    return new BigIntObject(BigInteger.valueOf(left).add(right.get()));
+  }
+
+  @Specialization
+  @CompilerDirectives.TruffleBoundary
+  public BigIntObject doBigInts(BigIntObject left, BigIntObject right) {
+    return new BigIntObject(left.get().add(right.get()));
+  }
+
+  @Specialization(replaces = {"doLongs"})
   protected double doDoubles(double left, double right) {
     return left + right;
+  }
+
+  @Specialization
+  protected double doDoubleBigInt(double left, BigIntObject right) {
+    return left + bigToLong(right.get());
+  }
+
+  @Specialization
+  protected double doDoubleBigInt(BigIntObject left, double right) {
+    return bigToLong(left.get()) + right;
   }
 
   @Specialization
@@ -62,6 +97,31 @@ public abstract class NAddNode extends NBinaryNode {
       BString.fromObject(leftFromJavaNode, left),
       BString.fromObject(rightFromJavaNode, right)
     );
+  }
+
+  @Specialization(limit = "3")
+  protected Object doLists(ListObject left, ListObject right, @CachedLibrary("left") InteropLibrary interopLibrary) {
+    Object[] leftItems = left.items;
+    Object[] rightItems = right.items;
+    int leftLength = leftItems.length;
+    int rightLength = rightItems.length;
+
+    Object[] items =  new Object[leftLength + rightLength];
+    System.arraycopy(leftItems, 0, items, 0, leftLength);
+    System.arraycopy(rightItems, 0, items, leftLength, rightLength);
+
+    BuiltinClassesModel model = languageContext().objectsModel;
+    return new ListObject(model.listShape, model.listObject, items);
+  }
+
+  @Specialization(limit = "3")
+  protected Object doObjects(BladeObject left, BladeObject right, @CachedLibrary("left") InteropLibrary interopLibrary) {
+    Object overrideValue = methodOverride("+", left, right, interopLibrary);
+    if(overrideValue != null) {
+      return overrideValue;
+    }
+
+    return doUnsupported(left, right);
   }
 
   @Fallback

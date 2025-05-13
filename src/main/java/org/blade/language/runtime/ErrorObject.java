@@ -7,8 +7,6 @@ import com.oracle.truffle.api.object.Shape;
 
 public final class ErrorObject extends BladeObject {
   public final String type, message;
-
-//  private static final InteropLibrary UNCACHED_LIB = InteropLibrary.getFactory().getUncached();
   private static final DynamicObjectLibrary UNCACHED_OBJ = DynamicObjectLibrary.getUncached();
 
   public ErrorObject(String message, DynamicObjectLibrary objectLibrary, Shape shape, BladeClass prototype) {

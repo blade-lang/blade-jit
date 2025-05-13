@@ -7,10 +7,6 @@ class Tree {
   }
 }
 
-def max(a, b) {
-  return a > b ? a : b
-}
-
 def make_tree(depth) {
   if depth <= 0 return new Tree(nil, nil)
   depth -= 1

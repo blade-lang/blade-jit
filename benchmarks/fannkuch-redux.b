@@ -1,8 +1,3 @@
-def max(a, b)
-{
-    return a > b ? a : b
-}
-
 def fannkuchredux(n)
 {
     var perm = [0] * n

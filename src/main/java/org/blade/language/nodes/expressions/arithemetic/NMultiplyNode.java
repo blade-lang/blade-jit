@@ -1,17 +1,23 @@
 package org.blade.language.nodes.expressions.arithemetic;
 
+import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.Fallback;
 import com.oracle.truffle.api.dsl.ImportStatic;
 import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.interop.InteropLibrary;
+import com.oracle.truffle.api.interop.UnsupportedMessageException;
+import com.oracle.truffle.api.library.CachedLibrary;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.strings.TruffleString;
 import org.blade.language.BladeLanguage;
 import org.blade.language.nodes.NBinaryNode;
-import org.blade.language.runtime.ListObject;
-import org.blade.language.runtime.BladeContext;
-import org.blade.language.runtime.BladeRuntimeError;
+import org.blade.language.runtime.*;
 import org.blade.language.shared.BuiltinClassesModel;
+
+import java.math.BigInteger;
+
+import static com.oracle.truffle.api.CompilerDirectives.shouldNotReachHere;
 
 @ImportStatic(Integer.class)
 public abstract class NMultiplyNode extends NBinaryNode {
@@ -21,9 +27,47 @@ public abstract class NMultiplyNode extends NBinaryNode {
     return Math.multiplyExact(left, right);
   }
 
+  @Specialization(guards = {"isDouble(left)", "isLong(right)"})
+  protected double doDoubleLong(double left, long right) {
+    return left * (double) right;
+  }
+
+  @Specialization(guards = {"isLong(left)", "isDouble(right)"})
+  protected double doLongDouble(long left, double right) {
+    return (double) left * right;
+  }
+
+  @Specialization
+  @CompilerDirectives.TruffleBoundary
+  public BigIntObject doBigIntLong(BigIntObject left, long right) {
+    return new BigIntObject(left.get().multiply(BigInteger.valueOf(right)));
+  }
+
+  @Specialization
+  @CompilerDirectives.TruffleBoundary
+  public BigIntObject doLongBigInt(long left, BigIntObject right) {
+    return new BigIntObject(BigInteger.valueOf(left).multiply(right.get()));
+  }
+
+  @Specialization
+  @CompilerDirectives.TruffleBoundary
+  public BigIntObject doBigInts(BigIntObject left, BigIntObject right) {
+    return new BigIntObject(left.get().multiply(right.get()));
+  }
+
   @Specialization(replaces = {"doLongs"})
   protected double doDoubles(double left, double right) {
     return left * right;
+  }
+
+  @Specialization
+  protected double doDoubleBigInt(double left, BigIntObject right) {
+    return left * bigToLong(right.get());
+  }
+
+  @Specialization
+  protected double doDoubleBigInt(BigIntObject left, double right) {
+    return bigToLong(left.get()) * right;
   }
 
   @Specialization
@@ -59,6 +103,16 @@ public abstract class NMultiplyNode extends NBinaryNode {
     }
 
     return objects;
+  }
+
+  @Specialization(limit = "3")
+  protected Object doObjects(BladeObject left, BladeObject right, @CachedLibrary("left") InteropLibrary interopLibrary) {
+    Object overrideValue = methodOverride("*", left, right, interopLibrary);
+    if(overrideValue != null) {
+      return overrideValue;
+    }
+
+    return doUnsupported(left, right);
   }
 
   @Fallback

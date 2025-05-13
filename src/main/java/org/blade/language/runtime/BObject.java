@@ -32,11 +32,11 @@ public class BObject extends BladeClass {
 
   @ExportMessage
   boolean isMemberModifiable(String member, @CachedLibrary("this") DynamicObjectLibrary objectLibrary) {
-    return this.isMemberReadable(member, objectLibrary);
+    return isMemberReadable(member, objectLibrary);
   }
 
   @ExportMessage
   boolean isMemberInsertable(String member, @CachedLibrary("this") DynamicObjectLibrary objectLibrary) {
-    return !this.isMemberModifiable(member, objectLibrary);
+    return !isMemberModifiable(member, objectLibrary);
   }
 }

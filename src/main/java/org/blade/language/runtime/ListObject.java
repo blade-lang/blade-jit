@@ -68,25 +68,6 @@ public class ListObject extends BladeObject {
       : BladeNil.SINGLETON;
   }
 
-//  static class ReadArrayElement {
-//    @Specialization(guards = {"index < length", "index >= 0"})
-//    static Object doWithinLength(ListObject list, long index,
-//                               @Cached(value = "list.items.length", neverDefault = true) @Cached.Shared("length") int length) {
-//      return list.readArrayElement(index);
-//    }
-//
-//    @Specialization(guards = {"index < 0"})
-//    static Object doIndexLessThanZero(ListObject list, long index,
-//                                    @Cached(value = "list.items.length", neverDefault = true) @Cached.Shared("length") int length) {
-//      return list.readArrayElement(index + length);
-//    }
-//
-//    @Fallback
-//    static Object doInvalid(ListObject list, long index) {
-//      return BladeNil.SINGLETON;
-//    }
-//  }
-
   @ExportMessage
   Object readMember(String member,
                     @CachedLibrary("this") DynamicObjectLibrary objectLibrary,
