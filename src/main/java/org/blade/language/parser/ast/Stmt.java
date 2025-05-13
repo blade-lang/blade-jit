@@ -24,7 +24,6 @@ public abstract class Stmt extends AST {
     T visitImportStmt(Import stmt);
     T visitCatchStmt(Catch stmt);
     T visitBlockStmt(Block stmt);
-    T visitAssignStmt(Assign stmt);
     T visitVarStmt(Var stmt);
     T visitFunctionStmt(Function stmt);
     T visitMethodStmt(Method stmt);
@@ -237,22 +236,6 @@ public abstract class Stmt extends AST {
 
     public <T> T accept(Visitor<T> visitor) {
       return visitor.visitBlockStmt(this);
-    }
-  }
-
-  public static class Assign extends Stmt {
-    public final Expr expression;
-    public final Token type;
-    public final Expr value;
-
-    public Assign(Expr expression, Token type, Expr value) {
-      this.expression = expression;
-      this.type = type;
-      this.value = value;
-    }
-
-    public <T> T accept(Visitor<T> visitor) {
-      return visitor.visitAssignStmt(this);
     }
   }
 

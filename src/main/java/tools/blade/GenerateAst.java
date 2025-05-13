@@ -71,7 +71,6 @@ public class GenerateAst {
       "Import     : String path, List<Token> elements, boolean all",
       "Catch      : Block body, Block catchBody, Block finallyBody, Expr.Identifier name",
       "Block      : List<Stmt> body",
-      "Assign     : Expr expression, Token type, Expr value",
       "Var        : Token name, Expr value, boolean isConstant",
       "Function   : Token name, List<Expr.Identifier> parameters, Stmt.Block body, boolean isVariadic",
       "Method     : Token name, List<Expr.Identifier> parameters, Stmt.Block body, boolean isVariadic, boolean isStatic",

@@ -200,11 +200,6 @@ public class BaseVisitor<T> implements Expr.Visitor<T>, Stmt.Visitor<T> {
   }
 
   @Override
-  public T visitAssignStmt(Stmt.Assign stmt) {
-    return null;
-  }
-
-  @Override
   public T visitVarStmt(Stmt.Var stmt) {
     return null;
   }

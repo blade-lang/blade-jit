@@ -18,13 +18,14 @@ public final class BladeType implements TruffleObject {
   public static final BladeType NIL = new BladeType("Nil", InteropLibrary::isNull);
   public static final BladeType STRING = new BladeType("String", InteropLibrary::isString);
   public static final BladeType LIST = new BladeType("List", (l, v) -> v instanceof ListObject);
+  public static final BladeType DICTIONARY = new BladeType("Dictionary", (l, v) -> v instanceof DictionaryObject);
   public static final BladeType BOOLEAN = new BladeType("Boolean", InteropLibrary::isBoolean);
   public static final BladeType CLASS = new BladeType("Class", (l, v) -> v instanceof BladeClass);
   public static final BladeType OBJECT = new BladeType("Object", InteropLibrary::hasMembers);
   public static final BladeType FUNCTION = new BladeType("Function", InteropLibrary::isExecutable);
 
   @CompilerDirectives.CompilationFinal(dimensions = 1)
-  public static final BladeType[] PRECEDENCE = new BladeType[]{NIL, BOOLEAN, NUMBER, STRING, LIST, FUNCTION, CLASS, OBJECT};
+  public static final BladeType[] PRECEDENCE = new BladeType[]{NIL, BOOLEAN, NUMBER, STRING, LIST, DICTIONARY, FUNCTION, CLASS, OBJECT};
 
   @CompilerDirectives.CompilationFinal
   private final String name;

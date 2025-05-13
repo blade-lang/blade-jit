@@ -279,7 +279,9 @@ public class Parser {
       if (match(IDENTIFIER)) return identifier();
 
       if (match(LPAREN)) return grouping();
-      if (match(LBRACE)) return dict();
+      if (match(LBRACE)) {
+        return dict();
+      }
       if (match(LBRACKET)) return list();
       if (match(AT)) return anonymous();
 
@@ -300,24 +302,26 @@ public class Parser {
     });
   }
 
-  private Expr call() {
-    return wrapExpr(() -> {
-      var expr = range();
-
+  private Expr doCall(Expr e) {
+    return (Expr) wrap((expr) -> {
       while (true) {
         if (match(DOT)) {
-          expr = finishDot(expr);
+          expr = finishDot((Expr)expr);
         } else if (match(LPAREN)) {
-          expr = finishCall(expr);
+          expr = finishCall((Expr)expr);
         } else if (match(LBRACKET)) {
-          expr = finishIndex(expr);
+          expr = finishIndex((Expr)expr);
         } else {
           break;
         }
       }
 
       return expr;
-    });
+    }, e);
+  }
+
+  private Expr call() {
+    return wrapExpr(() -> doCall(range()));
   }
 
   private Expr assignExpr() {
@@ -581,23 +585,41 @@ public class Parser {
           ignoreNewlines();
 
           if (!check(RBRACE)) {
+            Expr key;
             if (match(IDENTIFIER)) {
-              keys.add(literal());
+              key = literal();
             } else {
-              keys.add(expression());
+              key = expression();
             }
+            keys.add(key);
             ignoreNewlines();
 
             if (!match(COLON)) {
-              values.add(literal());
+              if(key instanceof Expr.Literal literal) {
+                values.add(new Expr.Identifier(literal.token));
+              } else {
+                throw new ParserException(
+                  lexer.getSource(),
+                  previous(), false, "missing value in dictionary definition"
+                );
+              }
             } else {
               ignoreNewlines();
               values.add(expression());
             }
 
             ignoreNewlines();
+          } else {
+            break;
           }
         } while (match(COMMA));
+      }
+
+      if(keys.size() != values.size()) {
+        throw new ParserException(
+          lexer.getSource(),
+          previous(), false, "key/value count mismatch dictionary definition"
+        );
       }
 
       ignoreNewlines();
@@ -618,6 +640,8 @@ public class Parser {
           if (!check(RBRACKET)) {
             items.add(expression());
             ignoreNewlines();
+          } else {
+            break;
           }
         } while (match(COMMA));
       }
@@ -1216,7 +1240,7 @@ public class Parser {
         result = classDeclaration();
       } else if (match(LBRACE)) {
         if (!check(NEWLINE) && blockCount == 0) {
-          result = new Stmt.Expression(dict());
+          result = new Stmt.Expression(doCall(dict()));
         } else {
           result = block();
         }

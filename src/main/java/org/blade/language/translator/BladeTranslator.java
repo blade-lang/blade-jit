@@ -332,6 +332,27 @@ public class BladeTranslator extends BaseVisitor<NNode> {
   }
 
   @Override
+  public NNode visitDictExpr(Expr.Dict expr) {
+    List<NNode> keys = new ArrayList<>();
+    List<NNode> values = new ArrayList<>();
+
+    for(Expr e : expr.keys) {
+      keys.add(visitExpr(e));
+    }
+
+    for(Expr e : expr.values) {
+      values.add(visitExpr(e));
+    }
+
+//    for (int i = 0; i < expr.keys.size(); i++) {
+//      keys.add(visitExpr(expr.keys.get(i)));
+//      values.add(visitExpr(expr.values.get(i)));
+//    }
+
+    return sourceSection(new NDictionaryLiteralNode(keys, values), expr);
+  }
+
+  @Override
   public NNode visitRangeExpr(Expr.Range expr) {
     return NRangeLiteralNodeGen.create(visitExpr(expr.lower), visitExpr(expr.upper));
   }

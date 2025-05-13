@@ -5,6 +5,7 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.UnexpectedResultException;
 import com.oracle.truffle.api.source.SourceSection;
 import com.oracle.truffle.api.strings.TruffleString;
+import org.blade.language.runtime.DictionaryObject;
 import org.blade.language.runtime.ListObject;
 import org.blade.language.runtime.BladeNil;
 
@@ -54,8 +55,6 @@ public abstract class NNode extends NBaseNode {
     } else if(value instanceof ListObject list) {
       return list.getArraySize() != 0L;
     }
-
-    // TODO: Handle dictionaries here...
 
     return true;
   }

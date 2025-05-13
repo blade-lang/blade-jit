@@ -66,6 +66,7 @@ public class BladeLanguage extends TruffleLanguage<BladeContext> {
   // Shapes
   public final Shape rootShape = Shape.newBuilder().build();
   public final Shape listShape = createShape(ListObject.class);
+  public final Shape dictionayShape = createShape(DictionaryObject.class);
   // models
   private final BObject objectClass = new BObject(rootShape);
   private final BladeClass functionClass = new BladeClass(rootShape, "Function", objectClass);
@@ -107,9 +108,11 @@ public class BladeLanguage extends TruffleLanguage<BladeContext> {
     return new BuiltinClassesModel(
       rootShape,
       listShape,
+      dictionayShape,
       objectClass,
       functionClass,
       new BladeClass(rootShape, "List", objectClass),
+      new BladeClass(rootShape, "Dictionary", objectClass),
       new BladeClass(rootShape, "String", objectClass),
       new BladeClass(rootShape, "Number", objectClass),
       new BladeClass(rootShape, "Boolean", objectClass),
@@ -138,6 +141,9 @@ public class BladeLanguage extends TruffleLanguage<BladeContext> {
     // register builtin classes and their methods
     objectLibrary.putConstant(globalScope, "Object", objectClass, 0);
     registerBuiltinMethods(objectLibrary, ObjectMethods.class, objectClass);
+
+    objectLibrary.putConstant(globalScope, "Dictionary", builtinObjects.dictionaryObject, 0);
+    registerBuiltinMethods(objectLibrary, DictionaryMethods.class, builtinObjects.dictionaryObject);
 
     objectLibrary.putConstant(globalScope, "List", builtinObjects.listObject, 0);
     registerBuiltinMethods(objectLibrary, ListMethods.class, builtinObjects.listObject);
