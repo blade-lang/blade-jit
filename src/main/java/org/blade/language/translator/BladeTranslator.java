@@ -290,7 +290,7 @@ public class BladeTranslator extends BaseVisitor<NNode> {
       arguments.add(visitExpr(arg));
     }
 
-    if (expr.callee instanceof Expr.Identifier) {
+    if (expr.callee instanceof Expr.Identifier || expr.callee instanceof Expr.Anonymous) {
       return sourceSection(NFunctionCallExprNodeGen.create(visitExpr(expr.callee), arguments), expr);
     }
     return sourceSection(new NMethodCallExprNode(visitExpr(expr.callee), arguments), expr);
