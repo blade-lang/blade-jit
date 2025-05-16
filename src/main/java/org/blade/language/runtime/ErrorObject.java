@@ -33,6 +33,7 @@ public final class ErrorObject extends BladeObject {
         case "ArgumentError" -> context.objectsModel.errorsModel.argumentError;
         case "TypeError" -> context.objectsModel.errorsModel.typeError;
         case "ValueError" -> context.objectsModel.errorsModel.valueError;
+        case "AssertError" -> context.objectsModel.errorsModel.assertError;
         default -> context.objectsModel.errorsModel.error;
       }
     );

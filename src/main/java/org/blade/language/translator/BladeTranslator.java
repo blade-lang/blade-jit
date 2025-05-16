@@ -16,7 +16,6 @@ import org.blade.language.nodes.functions.*;
 import org.blade.language.nodes.list.NListIndexReadNodeGen;
 import org.blade.language.nodes.list.NListIndexWriteNodeGen;
 import org.blade.language.nodes.list.NListLiteralNode;
-import org.blade.language.nodes.literals.NRangeLiteralNodeGen;
 import org.blade.language.nodes.literals.*;
 import org.blade.language.nodes.statements.*;
 import org.blade.language.nodes.statements.loops.*;
@@ -115,17 +114,17 @@ public class BladeTranslator extends BaseVisitor<NNode> {
     String number = expr.token.literal();
 
     try {
-      if(number.startsWith("0x")) {
+      if (number.startsWith("0x")) {
         return sourceSection(
           new NLongLiteralNode(Long.parseLong(number.substring(2), 16)),
           expr
         );
-      } else if(number.startsWith("0b")) {
+      } else if (number.startsWith("0b")) {
         return sourceSection(
           new NLongLiteralNode(Long.parseLong(number.substring(2), 2)),
           expr
         );
-      } else if(number.startsWith("0c")) {
+      } else if (number.startsWith("0c")) {
         return sourceSection(
           new NLongLiteralNode(Long.parseLong(number.substring(2), 8)),
           expr
@@ -137,7 +136,7 @@ public class BladeTranslator extends BaseVisitor<NNode> {
       try {
         // Try to convert it to a big integer.
         return sourceSection(new NBigIntLiteralNode(new BigInteger(number)), expr);
-      } catch(NumberFormatException ignored) {
+      } catch (NumberFormatException ignored) {
         // it's possible that the long literal is too big to fit in a 32-bit Java `int` -
         // in that case, and it is not a valid big integer as well, fall back to a double literal
         return sourceSection(new NDoubleLiteralNode(Double.parseDouble(number)), expr);
@@ -338,11 +337,11 @@ public class BladeTranslator extends BaseVisitor<NNode> {
     List<NNode> keys = new ArrayList<>();
     List<NNode> values = new ArrayList<>();
 
-    for(Expr e : expr.keys) {
+    for (Expr e : expr.keys) {
       keys.add(visitExpr(e));
     }
 
-    for(Expr e : expr.values) {
+    for (Expr e : expr.values) {
       values.add(visitExpr(e));
     }
 
@@ -540,7 +539,7 @@ public class BladeTranslator extends BaseVisitor<NNode> {
     // set current class
     currentClass = classObject;
 
-    for(Stmt.Property property : stmt.properties) {
+    for (Stmt.Property property : stmt.properties) {
       properties.add(visitPropertyStmt(property));
     }
 
@@ -581,7 +580,7 @@ public class BladeTranslator extends BaseVisitor<NNode> {
 
   @Override
   public NNode visitSelfExpr(Expr.Self expr) {
-    if(currentClass == null) {
+    if (currentClass == null) {
       throw BladeRuntimeError.create("`self` keyword not allowed outside a class");
     }
 
@@ -590,7 +589,7 @@ public class BladeTranslator extends BaseVisitor<NNode> {
 
   @Override
   public NNode visitParentExpr(Expr.Parent expr) {
-    if(currentClass == null) {
+    if (currentClass == null) {
       throw BladeRuntimeError.create("`parent` keyword not allowed outside a class");
     }
 
@@ -599,7 +598,23 @@ public class BladeTranslator extends BaseVisitor<NNode> {
 
   @Override
   public NNode visitRaiseStmt(Stmt.Raise stmt) {
-    return sourceSection(NRaiseStmtNodeGen.create(visitExpr(stmt.exception)), stmt);
+    return sourceSection(NRaiseStmtNodeGen.create(visitExpr(stmt.exception), false), stmt);
+  }
+
+  @Override
+  public NNode visitAssertStmt(Stmt.Assert stmt) {
+    return sourceSection(new NAssertStmtNode(
+      sourceSection(visitExpr(stmt.expression), stmt.expression),
+      sourceSection(NRaiseStmtNodeGen.create(
+        stmt.message == null ?
+          NNewExprNodeGen.create(
+            NGlobalVarRefExprNodeGen.create(globalScopeNode, "AssertError"),
+            List.of(new NStringLiteralNode("Failed assertion"))
+          ) :
+          visitExpr(stmt.message),
+        true
+      ), stmt.message)
+    ), stmt);
   }
 
   @Override
@@ -609,7 +624,7 @@ public class BladeTranslator extends BaseVisitor<NNode> {
     NNode asBody = null;
     int slot = -1;
 
-    if(stmt.name != null) {
+    if (stmt.name != null) {
       String errorName = stmt.name.token.literal();
       LocalRefSlot slotId = new LocalRefSlot(errorName, ++localsCount);
       slot = frameDescriptor.addSlot(FrameSlotKind.Object, slotId, 1);
@@ -685,11 +700,8 @@ public class BladeTranslator extends BaseVisitor<NNode> {
     return expr instanceof Expr.Identifier;
   }
 
-  // State management
-  private enum ParserState {TOP_LEVEL, NESTED_TOP_LEVEL, FUNC_DEF}
-
   private NNode sourceSection(NNode node, Object object) {
-    if(object instanceof AST ast) {
+    if (object instanceof AST ast) {
 //      System.out.println("SL = " +ast.startLine+", EL = " +ast.endLine+", SC = " + ast.startColumn + ", EC = " +ast.endColumn);
       return node.setSourceSection(parser.lexer.source.createSection(
         ast.startLine, ast.startColumn + 1,
@@ -703,6 +715,9 @@ public class BladeTranslator extends BaseVisitor<NNode> {
   public SourceSection getRootSourceSection() {
     return parser.lexer.source.createSection(0, parser.lexer.source.getLength());
   }
+
+  // State management
+  private enum ParserState {TOP_LEVEL, NESTED_TOP_LEVEL, FUNC_DEF}
 
   interface Callback {
     NNode run();

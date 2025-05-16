@@ -126,7 +126,8 @@ public class BladeLanguage extends TruffleLanguage<BladeContext> {
       new BladeClass(rootShape, "Error", objectClass),
       new BladeClass(rootShape, "TypeError", objectClass),
       new BladeClass(rootShape, "ArgumentError", objectClass),
-      new BladeClass(rootShape, "ValueError", objectClass)
+      new BladeClass(rootShape, "ValueError", objectClass),
+      new BladeClass(rootShape, "AssertError", objectClass)
     );
   }
 

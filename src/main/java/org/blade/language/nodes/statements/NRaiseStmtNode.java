@@ -4,6 +4,7 @@ import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.TruffleStackTrace;
 import com.oracle.truffle.api.TruffleStackTraceElement;
 import com.oracle.truffle.api.dsl.Executed;
+import com.oracle.truffle.api.dsl.NodeField;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.library.CachedLibrary;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
@@ -24,8 +25,11 @@ public abstract class NRaiseStmtNode extends NStmtNode {
   @Executed
   @Child protected NNode error;
 
-  public NRaiseStmtNode(NNode error) {
+  private final boolean isAssert;
+
+  public NRaiseStmtNode(NNode error, boolean isAssert) {
     this.error = error;
+    this.isAssert = isAssert;
   }
 
   @Specialization(limit = "3")
@@ -40,7 +44,18 @@ public abstract class NRaiseStmtNode extends NStmtNode {
   }
 
   @Specialization
-  protected Object doInvalidError(Object value) {
+  protected Object doStringError(TruffleString value) {
+    if(isAssert) {
+      throw BladeRuntimeError.assertError(this, value.toJavaStringUncached());
+    }
+    throw BladeRuntimeError.create(value, this);
+  }
+
+  @Specialization
+  protected Object doOtherError(Object value) {
+    if(isAssert) {
+      throw BladeRuntimeError.assertError(this, BString.toString(value));
+    }
     throw BladeRuntimeError.create(value, this);
   }
 

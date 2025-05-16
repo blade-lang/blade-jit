@@ -82,6 +82,14 @@ public class BladeRuntimeError extends AbstractTruffleException {
     return create(ErrorObject.create(node, "ValueError", BString.concatString(message, values)), node);
   }
 
+  public static AbstractTruffleException assertError(Node node, String message) {
+    return create(ErrorObject.create(node, "AssertError", message), node);
+  }
+
+  public static AbstractTruffleException assertError(Node node, String message, Object ...values) {
+    return create(ErrorObject.create(node, "AssertError", BString.concatString(message, values)), node);
+  }
+
   @ExplodeLoop
   @CompilerDirectives.TruffleBoundary
   public static AbstractTruffleException argumentError(Node node, String operation, Object ...values) {
