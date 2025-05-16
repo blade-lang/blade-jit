@@ -1,11 +1,14 @@
 package org.blade;
 
+import com.oracle.truffle.api.nodes.RootNode;
+import org.blade.language.runtime.BString;
 import org.graalvm.polyglot.*;
 import org.blade.language.BladeLanguage;
 
 import java.io.*;
 import java.nio.file.NoSuchFileException;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
 public class Main {
@@ -92,7 +95,7 @@ public class Main {
           // TODO: Robust handling...
           e.printStackTrace();
         } else {
-          printStackTrace(e.getMessage(), e.getStackTrace());
+          printStackTrace(e.getMessage(), e.getPolyglotStackTrace().iterator());
         }
       }
     } catch (IllegalArgumentException e) {
@@ -129,19 +132,23 @@ public class Main {
     return true;
   }
 
-  private static void printStackTrace(String message, StackTraceElement[] elements) {
+  private static void printStackTrace(String message, Iterator<PolyglotException.StackFrame> elements) {
     System.err.println(message);
-    for (StackTraceElement element : elements) {
-      if(element.getClassName().equals("<" + BladeLanguage.ID+ ">")) {
-        String fileName = element.getFileName();
-        String funcName = element.getMethodName();
-        if(funcName.equals("@.script")) {
-          funcName = "@.script";
-        }
-        int lineNo = element.getLineNumber();
+    while(elements.hasNext()) {
+      PolyglotException.StackFrame frame = elements.next();
+      if(frame.isGuestFrame()) {
+        SourceSection sourceSection = frame.getSourceLocation();
+        if(sourceSection != null) {
+          String funcName = frame.getRootName();
 
-        if(lineNo > -1) {
-          System.err.println("\tat "+fileName+":"+lineNo+" -> "+funcName+"()");
+          String fileName = sourceSection.getSource().getName();
+          String filePath = sourceSection.getSource().getPath();
+
+          int lineNo = sourceSection.getStartLine();
+
+          if(lineNo > -1) {
+            System.err.println("    at "+(filePath == null ? fileName : filePath)+":"+lineNo+" -> "+funcName+"()");
+          }
         }
       }
     }

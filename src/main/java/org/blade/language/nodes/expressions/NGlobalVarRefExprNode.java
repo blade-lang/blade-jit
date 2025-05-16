@@ -22,7 +22,7 @@ public abstract class NGlobalVarRefExprNode extends NNode {
 
     Object value = objectLibrary.getOrDefault(globalScope, name, null);
     if (value == null) {
-      throw BladeRuntimeError.create("'", name, "' is not defined in this scope");
+      throw BladeRuntimeError.error(this, "'", name, "' is not defined in this scope");
     }
     return value;
   }

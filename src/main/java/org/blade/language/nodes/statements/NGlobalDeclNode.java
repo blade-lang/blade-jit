@@ -34,7 +34,7 @@ public abstract class NGlobalDeclNode extends NStmtNode {
       exists = false;
 
       if (objectLibrary.containsKey(globalScope, name)) {
-        throw BladeRuntimeError.create("'", name, "' already declared in this scope");
+        throw BladeRuntimeError.error(this, "'", name, "' already declared in this scope");
       }
     }
 

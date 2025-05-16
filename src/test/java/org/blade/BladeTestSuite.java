@@ -47,7 +47,7 @@ import java.lang.annotation.Target;
 
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
-public @interface NimTestSuite {
+public @interface BladeTestSuite {
 
     /**
      * Defines the base path of the test suite. Multiple base paths can be specified. However only
@@ -60,7 +60,7 @@ public @interface NimTestSuite {
      * directory}. If the property is not specified, the class that declares the annotation is used,
      * i.e., the test cases must be in the same project as the test class.
      */
-    Class<?> testCaseDirectory() default NimTestSuite.class;
+    Class<?> testCaseDirectory() default BladeTestSuite.class;
 
     /**
      * The options passed to {@code Context.Builder} to configure the {@code Context} executing the

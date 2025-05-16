@@ -31,7 +31,7 @@ public abstract class NSharedPropertyReaderNode extends NBaseNode {
     } catch (UnknownIdentifierException e) {
       return BladeNil.SINGLETON;
     } catch (UnsupportedMessageException e) {
-      throw BladeRuntimeError.create(e.getMessage());
+      throw BladeRuntimeError.error(this, e.getMessage());
     }
   }
 

@@ -44,7 +44,7 @@ public abstract class NBitNotNode extends NUnaryNode {
     try {
       overrideFunction = interopLibrary.readMember(value, "~");
     } catch (UnsupportedMessageException e) {
-      throw BladeRuntimeError.create(e.getMessage());
+      throw BladeRuntimeError.error(this, e.getMessage());
     } catch (UnknownIdentifierException e) {
       // fallthrough
     }

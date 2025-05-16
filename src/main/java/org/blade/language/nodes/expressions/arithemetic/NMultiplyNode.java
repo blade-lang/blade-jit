@@ -88,7 +88,7 @@ public abstract class NMultiplyNode extends NBinaryNode {
 
   @Specialization(guards = "count > MAX_VALUE")
   protected ListObject doListMultiplicationOutOfBound(ListObject list, long count) {
-    throw BladeRuntimeError.create("List multiplication count out of bounds (", count, " > ", Integer.MAX_VALUE, ")");
+    throw BladeRuntimeError.error(this, "List multiplication count out of bounds (", count, " > ", Integer.MAX_VALUE, ")");
   }
 
   @ExplodeLoop

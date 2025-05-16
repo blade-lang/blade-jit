@@ -108,16 +108,18 @@ public class ListObject extends BladeObject {
     }
 
     @Fallback
-    static void doInvalid(ListObject list, long index, Object value) {
-      throw BladeRuntimeError.create("List index ", index, " out of range");
+    static void doInvalid(ListObject list, long index, Object value,
+                          @Bind Node node) {
+      throw BladeRuntimeError.error(node, "List index ", index, " out of range");
     }
   }
 
   @ExportMessage
   static class WriteMember {
     @Specialization(guards = "LENGTH_PROP.equals(member)")
-    static void writeLength(ListObject list, String member, Object value) {
-      throw BladeRuntimeError.create("Direct modification of list.length prohibited");
+    static void writeLength(ListObject list, String member, Object value,
+                            @Bind Node node) {
+      throw BladeRuntimeError.error(node, "Direct modification of list.length prohibited");
     }
 
     @Fallback

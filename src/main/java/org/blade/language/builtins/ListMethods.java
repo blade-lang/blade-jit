@@ -84,7 +84,7 @@ public final class ListMethods implements BaseBuiltinDeclaration {
         list.resize(size + 1, objectLibrary);
         interopLibrary.writeArrayElement(self, size, item);
       } catch (UnsupportedMessageException | UnsupportedTypeException | InvalidArrayIndexException e) {
-        throw BladeRuntimeError.create(e.getMessage());
+        throw BladeRuntimeError.error(this, e.getMessage());
       }
       return item;
     }

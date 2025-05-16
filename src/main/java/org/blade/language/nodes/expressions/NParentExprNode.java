@@ -40,7 +40,7 @@ public final class NParentExprNode extends NNode {
     try {
       return interopLibrary.readMember(bladeClass.classObject, "@new");
     } catch (UnsupportedMessageException e) {
-      throw BladeRuntimeError.create(e.getMessage());
+      throw BladeRuntimeError.error(this, e.getMessage());
     } catch (UnknownIdentifierException e) {
       return languageContext().emptyFunction;
     }

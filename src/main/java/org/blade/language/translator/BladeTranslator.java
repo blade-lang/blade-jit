@@ -237,9 +237,9 @@ public class BladeTranslator extends BaseVisitor<NNode> {
 
   @Override
   public NNode visitAssignExpr(Expr.Assign expr) {
+    NNode value = visitExpr(expr.value);
     if (expr.expression instanceof Expr.Identifier identifier) {
       String name = identifier.token.literal();
-      NNode value = visitExpr(expr.value);
 
       NFrameMember member = findFrameMember(name);
       if (member == null) {
@@ -252,7 +252,7 @@ public class BladeTranslator extends BaseVisitor<NNode> {
         } else {
           NFrameMember.LocalVariable local = (NFrameMember.LocalVariable) member;
           if (local.constant) {
-            throw BladeRuntimeError.create("Assignment to constant variable '", name, "'");
+            throw BladeRuntimeError.error(value, "Assignment to constant variable '", name, "'");
           }
 
           return sourceSection(NLocalAssignNodeGen.create(value, name, local.index), expr);
@@ -262,11 +262,11 @@ public class BladeTranslator extends BaseVisitor<NNode> {
       return sourceSection(NListIndexWriteNodeGen.create(
         visitExpr(index.callee),
         visitExpr(index.argument),
-        visitExpr(expr.value)
+        value
       ), expr);
     }
 
-    throw BladeRuntimeError.create("Invalid assignment expression");
+    throw BladeRuntimeError.error(value, "Invalid assignment expression");
   }
 
   @Override
@@ -384,17 +384,17 @@ public class BladeTranslator extends BaseVisitor<NNode> {
     boolean isConstant = stmt.isConstant;
     String name = stmt.name.literal();
 
-    if (isConstant && stmt.value == null) {
-      throw BladeRuntimeError.create("Constant '", name, "' not initialized");
-    }
+    NNode value = stmt.value != null ? visitExpr(stmt.value) : sourceSection(new NNilLiteralNode(), stmt);
 
-    NNode value = stmt.value != null ? visitExpr(stmt.value) : new NNilLiteralNode();
+    if (isConstant && stmt.value == null) {
+      throw BladeRuntimeError.error(value, "Constant '", name, "' not initialized");
+    }
 
     if (state != ParserState.TOP_LEVEL) {
       LocalRefSlot slotId = new LocalRefSlot(name, ++localsCount);
       int slot = frameDescriptor.addSlot(FrameSlotKind.Illegal, slotId, isConstant);
       if (localScopes.peek().putIfAbsent(name, new NFrameMember.LocalVariable(slot, isConstant)) != null) {
-        throw BladeRuntimeError.create("'", name, "' is already declared in this scope");
+        throw BladeRuntimeError.error(value, "'", name, "' is already declared in this scope");
       }
 
       NLocalAssignNode assignment = NLocalAssignNodeGen.create(value, name, slot);
@@ -409,7 +409,7 @@ public class BladeTranslator extends BaseVisitor<NNode> {
   public NNode visitPropertyStmt(Stmt.Property stmt) {
     return sourceSection(NSetPropertyNodeGen.create(
       new NDynamicObjectRefNode(currentClass),
-      stmt.value == null ? new NNilLiteralNode() : visitExpr(stmt.value),
+      stmt.value == null ? new NNilLiteralNode() : sourceSection(visitExpr(stmt.value), stmt.value),
       stmt.name.literal()
     ), stmt);
   }
@@ -499,15 +499,15 @@ public class BladeTranslator extends BaseVisitor<NNode> {
 
   @Override
   public NNode visitReturnStmt(Stmt.Return stmt) {
+    NNode value = stmt.value == null ?
+      new NNilLiteralNode() :
+      visitExpr(stmt.value);
+
     if (state != ParserState.FUNC_DEF) {
-      throw BladeRuntimeError.create("`return` keyword is not allowed in this scope");
+      throw BladeRuntimeError.error(value, "`return` keyword is not allowed in this scope");
     }
 
-    return sourceSection(new NReturnStmtNode(
-      stmt.value == null ?
-        new NNilLiteralNode() :
-        visitExpr(stmt.value)
-    ), stmt);
+    return sourceSection(new NReturnStmtNode(value), stmt);
   }
 
   @Override
@@ -570,12 +570,12 @@ public class BladeTranslator extends BaseVisitor<NNode> {
 
     // deliberately not wrapped in sourceSection so that debuggers won't stop
     // in class declarations and their global variable
-    return NGlobalDeclNodeGen.create(
+    return sourceSection(NGlobalDeclNodeGen.create(
       NGlobalScopeObjectNodeGen.create(),
-      new NClassDeclNode(methods, properties, operators, classObject),
+      sourceSection(new NClassDeclNode(methods, properties, operators, classObject), stmt),
       className,
       false
-    );
+    ), stmt);
   }
 
   @Override
@@ -584,7 +584,7 @@ public class BladeTranslator extends BaseVisitor<NNode> {
       throw BladeRuntimeError.create("`self` keyword not allowed outside a class");
     }
 
-    return new NSelfLiteralNode();
+    return sourceSection(new NSelfLiteralNode(), expr);
   }
 
   @Override
@@ -593,7 +593,7 @@ public class BladeTranslator extends BaseVisitor<NNode> {
       throw BladeRuntimeError.create("`parent` keyword not allowed outside a class");
     }
 
-    return new NParentExprNode(currentClass);
+    return sourceSection(new NParentExprNode(currentClass), expr);
   }
 
   @Override
@@ -607,13 +607,13 @@ public class BladeTranslator extends BaseVisitor<NNode> {
       sourceSection(visitExpr(stmt.expression), stmt.expression),
       sourceSection(NRaiseStmtNodeGen.create(
         stmt.message == null ?
-          NNewExprNodeGen.create(
+          sourceSection(NNewExprNodeGen.create(
             NGlobalVarRefExprNodeGen.create(globalScopeNode, "AssertError"),
             List.of(new NStringLiteralNode("Failed assertion"))
-          ) :
+          ), stmt) :
           visitExpr(stmt.message),
         true
-      ), stmt.message)
+      ), stmt.message == null ? stmt : stmt.message)
     ), stmt);
   }
 
@@ -625,11 +625,12 @@ public class BladeTranslator extends BaseVisitor<NNode> {
     int slot = -1;
 
     if (stmt.name != null) {
+
       String errorName = stmt.name.token.literal();
       LocalRefSlot slotId = new LocalRefSlot(errorName, ++localsCount);
       slot = frameDescriptor.addSlot(FrameSlotKind.Object, slotId, 1);
       if (localScopes.peek().putIfAbsent(errorName, new NFrameMember.LocalVariable(slot, true)) != null) {
-        throw BladeRuntimeError.create("'", errorName, "' is already declared in this scope");
+        throw BladeRuntimeError.error(thenBody, "'", errorName, "' is already declared in this scope");
       }
 
       // parse the 'catch' statement block
@@ -665,7 +666,7 @@ public class BladeTranslator extends BaseVisitor<NNode> {
       root,
       name,
       frameDescriptor,
-      new NFunctionBodyNode(statements),
+      (NFunctionBodyNode) sourceSection(new NFunctionBodyNode(statements), body),
       parameters.size(),
       isVariadic ? 1 : 0
     ), source);
@@ -709,6 +710,8 @@ public class BladeTranslator extends BaseVisitor<NNode> {
       ));
     }
 
+//    System.out.println(node);
+//    System.out.println(object);
     return node.setSourceSection(parser.lexer.source.createSection(1));
   }
 

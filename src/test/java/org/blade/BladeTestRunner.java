@@ -32,9 +32,10 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.stream.Collectors;
 
+import static org.blade.BStringMatches.matchesAs;
 import static org.hamcrest.core.StringStartsWith.startsWith;
 
-public class NimTestRunner extends ParentRunner<NimTestRunner.TestCase> {
+public class BladeTestRunner extends ParentRunner<BladeTestRunner.TestCase> {
 
   private static final String SOURCE_SUFFIX = ".b";
   private static final String INPUT_SUFFIX = ".in";
@@ -51,8 +52,9 @@ public class NimTestRunner extends ParentRunner<NimTestRunner.TestCase> {
     protected final Map<String, String> options;
     protected String actualOutput;
     protected boolean expectStackTrace;
+    protected boolean expectRegex;
 
-    protected TestCase(Class<?> testClass, String baseName, String sourceName, Path path, String testInput, String expectedOutput, boolean expectStackTrace, Map<String, String> options) {
+    protected TestCase(Class<?> testClass, String baseName, String sourceName, Path path, String testInput, String expectedOutput, boolean expectStackTrace, boolean expectRegex, Map<String, String> options) {
       this.name = Description.createTestDescription(testClass, baseName);
       this.sourceName = sourceName;
       this.path = path;
@@ -60,12 +62,13 @@ public class NimTestRunner extends ParentRunner<NimTestRunner.TestCase> {
       this.expectedOutput = expectedOutput;
       this.options = options;
       this.expectStackTrace = expectStackTrace;
+      this.expectRegex = expectRegex;
     }
   }
 
   private final List<TestCase> testCases;
 
-  public NimTestRunner(Class<?> runningClass) throws InitializationError {
+  public BladeTestRunner(Class<?> runningClass) throws InitializationError {
     super(runningClass);
     try {
       testCases = createTests(runningClass);
@@ -85,9 +88,9 @@ public class NimTestRunner extends ParentRunner<NimTestRunner.TestCase> {
   }
 
   protected static List<TestCase> createTests(final Class<?> c) throws IOException, InitializationError {
-    NimTestSuite suite = c.getAnnotation(NimTestSuite.class);
+    BladeTestSuite suite = c.getAnnotation(BladeTestSuite.class);
     if (suite == null) {
-      throw new InitializationError(String.format("@%s annotation required on class '%s' to run with '%s'.", NimTestSuite.class.getSimpleName(), c.getName(), NimTestRunner.class.getSimpleName()));
+      throw new InitializationError(String.format("@%s annotation required on class '%s' to run with '%s'.", BladeTestSuite.class.getSimpleName(), c.getName(), BladeTestRunner.class.getSimpleName()));
     }
 
     String[] paths = suite.value();
@@ -98,7 +101,7 @@ public class NimTestRunner extends ParentRunner<NimTestRunner.TestCase> {
     }
 
     Class<?> testCaseDirectory = c;
-    if (suite.testCaseDirectory() != NimTestSuite.class) {
+    if (suite.testCaseDirectory() != BladeTestSuite.class) {
       testCaseDirectory = suite.testCaseDirectory();
     }
     Path root = getRootViaResourceURL(testCaseDirectory, paths);
@@ -146,7 +149,15 @@ public class NimTestRunner extends ParentRunner<NimTestRunner.TestCase> {
             }
           }
 
-          foundCases.add(new TestCase(c, baseName, sourceName, sourceFile, testInput, expectedOutput, expectStackTrace, options));
+          boolean expectRegex = false;
+          if(expectedOutput.lines().findFirst().isPresent()) {
+            if(expectedOutput.lines().findFirst().get().startsWith(">>>")) {
+              expectedOutput = expectedOutput.lines().skip(1).collect(Collectors.joining("\n"));
+              expectRegex = true;
+            }
+          }
+
+          foundCases.add(new TestCase(c, baseName, sourceName, sourceFile, testInput, expectedOutput, expectStackTrace, expectRegex, options));
         }
         return FileVisitResult.CONTINUE;
       }
@@ -280,7 +291,9 @@ public class NimTestRunner extends ParentRunner<NimTestRunner.TestCase> {
       printer.flush();
 
       String actualOutput = new String(out.toByteArray());
-      if(testCase.expectStackTrace) {
+      if(testCase.expectRegex) {
+        MatcherAssert.assertThat(testCase.name.toString(), actualOutput, matchesAs(testCase.expectedOutput));
+      } else if(testCase.expectStackTrace) {
         MatcherAssert.assertThat(testCase.name.toString(), actualOutput, startsWith(testCase.expectedOutput));
       } else {
         Assert.assertEquals(testCase.name.toString(), testCase.expectedOutput, actualOutput);
@@ -315,7 +328,7 @@ public class NimTestRunner extends ParentRunner<NimTestRunner.TestCase> {
   public static void runInMain(Class<?> testClass, String[] args) throws InitializationError, NoTestsRemainException {
     JUnitCore core = new JUnitCore();
     core.addListener(new TextListener(System.out));
-    NimTestRunner suite = new NimTestRunner(testClass);
+    BladeTestRunner suite = new BladeTestRunner(testClass);
     if (args.length > 0) {
       suite.filter(new NameFilter(args[0]));
     }

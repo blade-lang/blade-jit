@@ -1,3 +1,2 @@
-Error: Something happened
-	at try-catch-finally.b:3:3 -> @.script()
-Cleaning up
+>>>
+Error: Something happened\n\s+at.*try\-catch\-finally\.b:3:3 \-\> @\.script\(\)\nCleaning up

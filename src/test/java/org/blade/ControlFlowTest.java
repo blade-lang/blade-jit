@@ -221,7 +221,7 @@ public class ControlFlowTest {
     } catch (PolyglotException e) {
       assertTrue(e.isGuestException());
 //      assertFalse(e.isInternalError());
-      assertEquals("`return` keyword is not allowed in this scope", e.getMessage());
+      assertEquals("Error: `return` keyword is not allowed in this scope", e.getMessage());
     }
   }
 

@@ -177,9 +177,10 @@ public class ClassTest {
       );
       fail("expected PolyglotException to be thrown");
     } catch (PolyglotException e) {
+      e.printStackTrace();
       assertTrue(e.isGuestException());
       assertFalse(e.isInternalError());
-      assertEquals("'A' already declared in this scope", e.getMessage());
+      assertEquals("Error: 'A' already declared in this scope", e.getMessage());
     }
   }
 
@@ -192,7 +193,7 @@ public class ClassTest {
     } catch (PolyglotException e) {
       assertTrue(e.isGuestException());
       assertFalse(e.isInternalError());
-      assertEquals("'3' is not a constructor", e.getMessage());
+      assertEquals("Error: '3' is not a constructor", e.getMessage());
     }
   }
 }

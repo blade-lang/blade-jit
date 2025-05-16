@@ -32,6 +32,6 @@ public abstract class NFunctionDispatchNode extends Node {
 
   @Fallback
   protected Object invalidFunctionCall(Object object, Object[] arguments) {
-    throw BladeRuntimeError.create("cannot call non-function '", object, "'");
+    throw BladeRuntimeError.error(this, "cannot call non-function '", object, "'");
   }
 }
