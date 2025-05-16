@@ -12,9 +12,9 @@ def f3() {
   raise new Error('Exception in f3()')
 }
 
-catch {
+try {
   main()
-} as e {
+} catch e {
   echo e.stacktrace
 }
 
@@ -36,10 +36,10 @@ def countdown(n) {
   var ret = 0
 
   iter ;; {
-    catch {
+    try {
       countdown.decrement()
       ret = ret + 1
-    } as e {
+    } catch e {
       echo e.stacktrace
       break
     }

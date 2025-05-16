@@ -31,9 +31,7 @@ public final class ListMethods implements BaseBuiltinDeclaration {
   public abstract static class NKeyDecoratorNode extends NBuiltinFunctionNode {
     @Specialization
     protected Object doAny(ListObject list, Object item,
-                           @Cached(value = "list.items", neverDefault = true, dimensions = 1) Object[] items,
-                           @CachedLibrary(limit = "3") DynamicObjectLibrary objectLibrary,
-                           @CachedLibrary(limit = "3") InteropLibrary interopLibrary) {
+                           @Cached(value = "list.items", neverDefault = true, dimensions = 1) Object[] items) {
       int length = items.length;
       if(length == 0) {
         return BladeNil.SINGLETON;
@@ -61,9 +59,7 @@ public final class ListMethods implements BaseBuiltinDeclaration {
   public abstract static class NValueDecoratorNode extends NBuiltinFunctionNode {
     @Specialization
     protected Object doAny(ListObject list, long index,
-                           @Cached(value = "list.items", neverDefault = true, dimensions = 1) Object[] items,
-                           @CachedLibrary(limit = "3") DynamicObjectLibrary objectLibrary,
-                           @CachedLibrary(limit = "3") InteropLibrary interopLibrary) {
+                           @Cached(value = "list.items", neverDefault = true, dimensions = 1) Object[] items) {
       if(index > -1 && index < items.length) {
         return items[(int)index];
       }

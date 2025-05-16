@@ -260,13 +260,11 @@ public class BladeTranslator extends BaseVisitor<NNode> {
         }
       }
     } else if (expr.expression instanceof Expr.Index index) {
-      if (index.arguments.size() == 1) {
-        return sourceSection(NListIndexWriteNodeGen.create(
-          visitExpr(index.callee),
-          visitExpr(index.arguments.getFirst()),
-          visitExpr(expr.value)
-        ), expr);
-      }
+      return sourceSection(NListIndexWriteNodeGen.create(
+        visitExpr(index.callee),
+        visitExpr(index.argument),
+        visitExpr(expr.value)
+      ), expr);
     }
 
     throw BladeRuntimeError.create("Invalid assignment expression");
@@ -315,11 +313,15 @@ public class BladeTranslator extends BaseVisitor<NNode> {
 
   @Override
   public NNode visitIndexExpr(Expr.Index expr) {
+    return sourceSection(NListIndexReadNodeGen.create(visitExpr(expr.callee), visitExpr(expr.argument)), expr);
+  }
+
+  @Override
+  public NNode visitSliceExpr(Expr.Slice expr) {
     NNode callee = visitExpr(expr.callee);
-    for(Expr argument : expr.arguments) {
-      callee = NListIndexReadNodeGen.create(callee, visitExpr(argument));
-    }
-    return callee;
+    NNode lower = expr.lower == null ? new NLongLiteralNode(0) : visitExpr(expr.lower);
+    NNode upper = expr.upper == null ? new NDoubleLiteralNode(0.0) : visitExpr(expr.upper);
+    return sourceSection(NGetSliceNodeGen.create(callee, lower, upper), expr);
   }
 
   @Override

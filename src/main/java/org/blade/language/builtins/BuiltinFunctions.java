@@ -480,14 +480,15 @@ public final class BuiltinFunctions implements BaseBuiltinDeclaration {
       }
     }
 
-    @Fallback
-    protected long doOthers(Object object) {
-      return 0;
-    }
-
+    @Specialization
     @CompilerDirectives.TruffleBoundary
     protected long getBigIntValue(BigInteger bigInteger) {
       return bigInteger.intValue();
+    }
+
+    @Fallback
+    protected long doOthers(Object object) {
+      return 0;
     }
   }
 }

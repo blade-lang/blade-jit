@@ -85,6 +85,11 @@ public class BaseVisitor<T> implements Expr.Visitor<T>, Stmt.Visitor<T> {
   }
 
   @Override
+  public T visitSliceExpr(Expr.Slice expr) {
+    return null;
+  }
+
+  @Override
   public T visitArrayExpr(Expr.Array expr) {
     return null;
   }

@@ -1,6 +1,7 @@
 package org.blade.language.runtime;
 
 import com.oracle.truffle.api.CompilerDirectives;
+import com.oracle.truffle.api.dsl.Bind;
 import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.Fallback;
 import com.oracle.truffle.api.dsl.Specialization;
@@ -11,8 +12,10 @@ import com.oracle.truffle.api.library.CachedLibrary;
 import com.oracle.truffle.api.library.ExportLibrary;
 import com.oracle.truffle.api.library.ExportMessage;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
+import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.object.DynamicObjectLibrary;
 import com.oracle.truffle.api.object.Shape;
+import com.oracle.truffle.api.profiles.InlinedConditionProfile;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -43,15 +46,17 @@ public class ListObject extends BladeObject {
   }
 
   @ExportMessage
-  public boolean isArrayElementReadable(long index) {
+  public boolean isArrayElementReadable(long index,
+                                        @Bind Node node,
+                                        @Cached @Cached.Shared("profile") InlinedConditionProfile profile) {
     long length = items.length;
-    index = effectiveIndex(index, length);
+    index = effectiveIndex(node, profile, index, length);
     return index < length && index >= 0;
   }
 
   @ExportMessage
-  boolean isArrayElementModifiable(long index) {
-    return isArrayElementReadable(index);
+  boolean isArrayElementModifiable(long index, @Bind Node node, @Cached @Cached.Shared("profile") InlinedConditionProfile profile) {
+    return isArrayElementReadable(index, node, profile);
   }
 
   @ExportMessage
@@ -60,10 +65,10 @@ public class ListObject extends BladeObject {
   }
 
   @ExportMessage
-  Object readArrayElement(long index) {
-    index = effectiveIndex(index, items.length);
+  Object readArrayElement(long index, @Bind Node node, @Cached @Cached.Shared("profile") InlinedConditionProfile profile) {
+    index = effectiveIndex(node, profile, index, items.length);
 
-    return isArrayElementReadable(index)
+    return isArrayElementReadable(index, node, profile)
       ? items[(int) index]
       : BladeNil.SINGLETON;
   }
@@ -154,7 +159,10 @@ public class ListObject extends BladeObject {
     this.setArrayElements(newItems, objectLibrary);
   }
 
-  private long effectiveIndex(long index, long length) {
-    return index + (length & -(index >> 31));
+  private long effectiveIndex(Node node, InlinedConditionProfile profile, long index, long length) {
+    if(profile.profile(node, index < 0)) {
+      return index + length;
+    }
+    return index;
   }
 }
