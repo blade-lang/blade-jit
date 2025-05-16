@@ -8,7 +8,7 @@ import org.blade.language.nodes.functions.NFunctionBodyNode;
 
 public final class NFunctionRootNode extends RootNode {
   @SuppressWarnings("FieldMayBeFinal")
-  @Child private NFunctionBodyNode block;
+  @Child private NStmtNode block;
 
   private final String name;
 

@@ -24,7 +24,7 @@ public abstract class NListIndexWriteNode extends NNode {
     try {
       listLibrary.writeArrayElement(list, index, value);
     } catch (UnsupportedMessageException | InvalidArrayIndexException | UnsupportedTypeException e) {
-      throw BladeRuntimeError.create(e.getMessage());
+      throw BladeRuntimeError.error(this, e.getMessage());
     }
 
     return value;
@@ -56,7 +56,7 @@ public abstract class NListIndexWriteNode extends NNode {
     Object list, long index, Object value,
     @CachedLibrary("list") InteropLibrary listLibrary
   ) {
-    throw BladeRuntimeError.create("Cannot set properties of nil (reading '" , index, "')", this);
+    throw BladeRuntimeError.error(this, "Cannot set properties of nil (reading '" , index, "')", this);
   }
 
   @Specialization(guards = {"listLibrary.isNull(list)"}, limit = "3")
@@ -64,7 +64,7 @@ public abstract class NListIndexWriteNode extends NNode {
     Object list, long index, Object value,
     @CachedLibrary("list") InteropLibrary listLibrary
   ) {
-    throw BladeRuntimeError.create("Cannot set properties of boolean value (reading '" , index, "')", this);
+    throw BladeRuntimeError.error(this, "Cannot set properties of boolean value (reading '" , index, "')", this);
   }
 
   @Fallback
@@ -73,7 +73,7 @@ public abstract class NListIndexWriteNode extends NNode {
     @Cached @Cached.Shared("sharedPropertyWriterNode") NSharedPropertyWriterNode sharedPropertyWriterNode
   ) {
     if(target instanceof ListObject && (index instanceof Long || index instanceof Double)) {
-      throw BladeRuntimeError.create("List index ", index," out of range");
+      throw BladeRuntimeError.error(this, "List index ", index," out of range");
     }
 
     return sharedPropertyWriterNode.executeWrite(target, BString.toString(index), value);

@@ -41,7 +41,7 @@ public abstract class NNewExprNode extends NNode {
     try {
       constructor = interopLibrary.readMember(classObject, "@new");
     } catch (UnsupportedMessageException e) {
-      throw BladeRuntimeError.create(e.getMessage());
+      throw BladeRuntimeError.error(this, e.getMessage());
     } catch (UnknownIdentifierException e) {
       // fallthrough
     }
@@ -57,7 +57,7 @@ public abstract class NNewExprNode extends NNode {
   @Fallback
   protected Object doNonConstructor(VirtualFrame frame, Object object) {
     consumeArguments(frame);
-    throw BladeRuntimeError.create("'", object, "' is not a constructor");
+    throw BladeRuntimeError.error(this, "'", object, "' is not a constructor");
   }
 
   @ExplodeLoop

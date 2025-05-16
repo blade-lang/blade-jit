@@ -1,2 +1,2 @@
-Error: Something happened
-	at try-catch.b:3:3 -> @.script()
+>>>
+Error: Something happened\n\s+at.*try\-catch\.b:3:3 \-\> @\.script\(\)

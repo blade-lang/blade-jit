@@ -24,9 +24,9 @@ public abstract class NGlobalAssignExprNode extends NNode {
 
     Property property = objectLibrary.getProperty(globalScope, name);
     if (property == null) {
-      throw BladeRuntimeError.create("'", name, "' is not defined in this scope");
+      throw BladeRuntimeError.error(this, "'", name, "' is not defined in this scope");
     } else if (property.getFlags() == 1) {
-      throw BladeRuntimeError.create("Assignment to constant variable '", name, "'");
+      throw BladeRuntimeError.error(this, "Assignment to constant variable '", name, "'");
     }
 
     objectLibrary.put(globalScope, name, value);

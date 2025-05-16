@@ -33,7 +33,7 @@ public abstract class NMethodDispatchNode extends Node {
 
   @Fallback
   protected Object invalidFunctionCall(Object object, Object receiver, Object[] arguments) {
-    throw BladeRuntimeError.create("cannot call non-function '", object, "'");
+    throw BladeRuntimeError.error(this, "cannot call non-function '", object, "'");
   }
 
   @ExplodeLoop

@@ -68,7 +68,7 @@ public abstract class NFunctionCallExprNode extends NNode {
   @Fallback
   protected Object instantiateNonConstructor(VirtualFrame frame, Object object) {
     consumeArguments(frame);
-    throw BladeRuntimeError.create("'", object, "' is not a callable function");
+    throw BladeRuntimeError.error(this, "'", object, "' is not a callable function");
   }
 
   @ExplodeLoop

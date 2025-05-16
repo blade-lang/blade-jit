@@ -19,7 +19,7 @@ public abstract class NSharedPropertyWriterNode extends NBaseNode {
     try {
       interopLibrary.writeMember(target, name, value);
     } catch (UnsupportedMessageException | UnsupportedTypeException | UnknownIdentifierException e) {
-      throw BladeRuntimeError.create(e.getMessage());
+      throw BladeRuntimeError.error(this, e.getMessage());
     }
     return value;
   }
@@ -27,11 +27,11 @@ public abstract class NSharedPropertyWriterNode extends NBaseNode {
   @Specialization(guards = "interopLibrary.isNull(target)", limit = "3")
   protected Object doWriteNil(Object target, Object name, Object value,
                                             @CachedLibrary("target") InteropLibrary interopLibrary) {
-    throw BladeRuntimeError.create("Cannot set properties of nil (setting '", name, "')");
+    throw BladeRuntimeError.error(this, "Cannot set properties of nil (setting '", name, "')");
   }
 
   @Fallback
   protected Object doUnknown(Object target, Object name, Object value) {
-    throw BladeRuntimeError.create("Object of type cannot hold properties");
+    throw BladeRuntimeError.error(this, "Object of type cannot hold properties");
   }
 }

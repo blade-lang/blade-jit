@@ -3,11 +3,11 @@ package org.blade;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-@RunWith(NimTestRunner.class)
-@NimTestSuite({"tests"})
-public class NimTests {
+@RunWith(BladeTestRunner.class)
+@BladeTestSuite({"tests"})
+public class BladeTests {
   public static void main(String[] args) throws Exception {
-    NimTestRunner.runInMain(NimTestSuite.class, args);
+    BladeTestRunner.runInMain(BladeTestSuite.class, args);
   }
 
   /*

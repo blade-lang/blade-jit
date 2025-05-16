@@ -83,7 +83,10 @@ public abstract class NRaiseStmtNode extends NStmtNode {
 
         sb.appendStringUncached(BString.fromJavaString("\n\tat "));
 
-        sb.appendStringUncached(BString.fromJavaString(sourceSection.getSource().getName()));
+        String fileName = sourceSection.getSource().getName();
+        String filePath = sourceSection.getSource().getPath();
+
+        sb.appendStringUncached(BString.fromJavaString(filePath == null ? fileName : filePath));
         sb.appendStringUncached(BString.fromJavaString(":"));
         sb.appendStringUncached(BString.fromObject(startLine));
         sb.appendStringUncached(BString.fromJavaString(":"));

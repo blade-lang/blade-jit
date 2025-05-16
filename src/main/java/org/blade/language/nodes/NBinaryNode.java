@@ -47,7 +47,7 @@ public abstract class NBinaryNode extends NNode {
     try {
       overrideFunction = interopLibrary.readMember(left, def);
     } catch (UnsupportedMessageException e) {
-      throw BladeRuntimeError.create(e.getMessage());
+      throw BladeRuntimeError.error(this, e.getMessage());
     } catch (UnknownIdentifierException e) {
       // fallthrough
     }

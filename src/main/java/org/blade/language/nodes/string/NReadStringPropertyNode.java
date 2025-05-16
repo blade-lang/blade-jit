@@ -46,7 +46,7 @@ public abstract class NReadStringPropertyNode extends NBaseNode {
     try {
       return interopLibrary.readMember(stringClass, BString.tryToString(property));
     } catch (UnsupportedMessageException e) {
-      throw BladeRuntimeError.create(e.getMessage());
+      throw BladeRuntimeError.error(this, e.getMessage());
     } catch (UnknownIdentifierException e) {
       return BladeNil.SINGLETON;
     }

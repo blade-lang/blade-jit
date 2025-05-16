@@ -2,10 +2,12 @@ package org.blade.language.runtime;
 
 import com.oracle.truffle.api.CallTarget;
 import com.oracle.truffle.api.CompilerDirectives;
+import com.oracle.truffle.api.dsl.Bind;
 import com.oracle.truffle.api.interop.InteropLibrary;
 import com.oracle.truffle.api.library.ExportLibrary;
 import com.oracle.truffle.api.library.ExportMessage;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
+import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.object.Shape;
 import com.oracle.truffle.api.strings.TruffleString;
 import org.blade.language.nodes.BladeTypesGen;
@@ -66,10 +68,11 @@ public final class FunctionObject extends BladeObject {
 
   @ExplodeLoop
   @ExportMessage
-  Object execute(Object[] arguments) {
+  Object execute(Object[] arguments,
+                 @Bind Node node) {
     for (Object argument : arguments) {
       if (!isRemValue(argument)) {
-        throw BladeRuntimeError.create("invalid function argument value '", argument, "'");
+        throw BladeRuntimeError.error(node, "invalid function argument value '", argument, "'");
       }
     }
 

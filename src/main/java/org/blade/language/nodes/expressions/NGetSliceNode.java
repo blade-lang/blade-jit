@@ -86,6 +86,6 @@ public abstract class NGetSliceNode extends NNode {
 
   @Fallback
   protected Object doFallback(Object object, Object lower, Object upper) {
-    throw BladeRuntimeError.create("Object of type ", BladeUtil.getObjectType(object), " does not support slice operations");
+    throw BladeRuntimeError.error(this, "Object of type ", BladeUtil.getObjectType(object), " does not support slice operations");
   }
 }
