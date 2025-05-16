@@ -88,7 +88,8 @@ public class Main {
         return 0;
       } catch (PolyglotException e) {
         if (e.isInternalError()) {
-//           for internal errors we print the full stack trace
+//           for internal errors, we print the full stack trace for now
+          // TODO: Robust handling...
           e.printStackTrace();
         } else {
           printStackTrace(e.getMessage(), e.getStackTrace());

@@ -6,6 +6,7 @@ import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.nodes.Node;
 import org.blade.annotations.NAnnotationHelper;
 import org.blade.language.nodes.NNode;
+import org.blade.language.shared.BladeUtil;
 
 public class BladeRuntimeError extends AbstractTruffleException {
   public final Object value;
@@ -81,6 +82,14 @@ public class BladeRuntimeError extends AbstractTruffleException {
     return create(ErrorObject.create(node, "ValueError", BString.concatString(message, values)), node);
   }
 
+  public static AbstractTruffleException assertError(Node node, String message) {
+    return create(ErrorObject.create(node, "AssertError", message), node);
+  }
+
+  public static AbstractTruffleException assertError(Node node, String message, Object ...values) {
+    return create(ErrorObject.create(node, "AssertError", BString.concatString(message, values)), node);
+  }
+
   @ExplodeLoop
   @CompilerDirectives.TruffleBoundary
   public static AbstractTruffleException argumentError(Node node, String operation, Object ...values) {
@@ -102,13 +111,7 @@ public class BladeRuntimeError extends AbstractTruffleException {
       if(o instanceof BladeObject classInstance) {
         result.append(classInstance.getClassName());
       } else {
-        String[] qualifiedName = o == null ? new String[]{"Unknown"} : NAnnotationHelper.getObjectName(o.getClass()).split("[.]");
-        String name = qualifiedName[qualifiedName.length - 1];
-        if(name.equals("TruffleString")) {
-          name = "String";
-        }
-
-        result.append(name);
+        result.append(BladeUtil.getObjectType(o));
         result.append(" \"");
         result.append(o);
         result.append("\"");

@@ -154,20 +154,21 @@ public class Parser {
     });
   }
 
-  private Expr.Index finishIndex(Expr callee) {
-    return (Expr.Index) wrapExpr(() -> {
+  private Expr finishIndex(Expr callee) {
+    return wrapExpr(() -> {
       ignoreNewlines();
-      List<Expr> args = new ArrayList<>();
-      args.add(expression());
+      Expr expr = expression();
 
       if (match(COMMA)) {
         ignoreNewlines();
-        args.add(expression());
+        expr = new Expr.Slice(callee, expr, expression());
+      } else {
+        expr = new Expr.Index(callee, expr);
       }
 
       ignoreNewlines();
       consume(RBRACKET, "']' expected at end of indexer");
-      return new Expr.Index(callee, args);
+      return expr;
     });
   }
 

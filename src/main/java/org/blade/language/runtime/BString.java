@@ -53,6 +53,10 @@ public final class BString {
     return lengthNode.execute(string, BladeLanguage.ENCODING);
   }
 
+  public static int intLength(TruffleString string, TruffleString.CodePointLengthNode lengthNode) {
+    return lengthNode.execute(string, BladeLanguage.ENCODING);
+  }
+
   public static Object substring(TruffleString string, int startIndex, int length, TruffleString.SubstringNode substringNode) {
     return substringNode.execute(string, startIndex, length, BladeLanguage.ENCODING, true);
   }

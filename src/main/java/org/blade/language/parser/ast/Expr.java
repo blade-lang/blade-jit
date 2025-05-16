@@ -25,6 +25,7 @@ public abstract class Expr extends AST {
     T visitGetExpr(Get expr);
     T visitSetExpr(Set expr);
     T visitIndexExpr(Index expr);
+    T visitSliceExpr(Slice expr);
     T visitArrayExpr(Array expr);
     T visitDictExpr(Dict expr);
     T visitNewExpr(New expr);
@@ -238,15 +239,31 @@ public abstract class Expr extends AST {
 
   public static class Index extends Expr {
     public final Expr callee;
-    public final List<Expr> arguments;
+    public final Expr argument;
 
-    public Index(Expr callee, List<Expr> arguments) {
+    public Index(Expr callee, Expr argument) {
       this.callee = callee;
-      this.arguments = arguments;
+      this.argument = argument;
     }
 
     public <T> T accept(Visitor<T> visitor) {
       return visitor.visitIndexExpr(this);
+    }
+  }
+
+  public static class Slice extends Expr {
+    public final Expr callee;
+    public final Expr lower;
+    public final Expr upper;
+
+    public Slice(Expr callee, Expr lower, Expr upper) {
+      this.callee = callee;
+      this.lower = lower;
+      this.upper = upper;
+    }
+
+    public <T> T accept(Visitor<T> visitor) {
+      return visitor.visitSliceExpr(this);
     }
   }
 

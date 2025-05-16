@@ -1,9 +1,8 @@
 package org.blade.language.builtins;
 
+import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.dsl.*;
-import com.oracle.truffle.api.interop.InteropLibrary;
-import com.oracle.truffle.api.library.CachedLibrary;
-import com.oracle.truffle.api.object.DynamicObjectLibrary;
+import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.strings.TruffleString;
 import org.blade.language.BaseBuiltinDeclaration;
 import org.blade.language.BladeLanguage;
@@ -11,7 +10,6 @@ import org.blade.language.nodes.functions.NBuiltinFunctionNode;
 import org.blade.language.runtime.BString;
 import org.blade.language.runtime.BladeNil;
 import org.blade.language.runtime.BladeRuntimeError;
-import org.blade.language.runtime.ListObject;
 import org.blade.utility.RegulatedMap;
 
 public class StringMethods implements BaseBuiltinDeclaration {
@@ -20,12 +18,19 @@ public class StringMethods implements BaseBuiltinDeclaration {
     return new RegulatedMap<>() {{
       add("@key", false, StringMethodsFactory.NKeyDecoratorNodeFactory.getInstance());
       add("@value", false, StringMethodsFactory.NValueDecoratorNodeFactory.getInstance());
-      add("index_of", false, StringMethodsFactory.NStringIndexOfMethodNodeFactory.getInstance());
-      add("upper", false, StringMethodsFactory.NStringUpperMethodNodeFactory.getInstance());
-      add("lower", false, StringMethodsFactory.NStringLowerMethodNodeFactory.getInstance());
+      add("index_of", false, StringMethodsFactory.NIndexOfMethodNodeFactory.getInstance());
+      add("upper", false, StringMethodsFactory.NUpperMethodNodeFactory.getInstance());
+      add("lower", false, StringMethodsFactory.NLowerMethodNodeFactory.getInstance());
+      add("is_alpha", false, StringMethodsFactory.NIsAlphaMethodNodeFactory.getInstance());
+      add("is_alnum", false, StringMethodsFactory.NIsAlNumMethodNodeFactory.getInstance());
+      add("is_number", false, StringMethodsFactory.NIsNumberMethodNodeFactory.getInstance());
+      add("is_lower", false, StringMethodsFactory.NIsLowerMethodNodeFactory.getInstance());
+      add("is_upper", false, StringMethodsFactory.NIsUpperMethodNodeFactory.getInstance());
+      add("is_space", false, StringMethodsFactory.NIsSpaceMethodNodeFactory.getInstance());
+      add("starts_with", false, StringMethodsFactory.NStartsWithMethodNodeFactory.getInstance());
+      add("ends_with", false, StringMethodsFactory.NEndsWithMethodNodeFactory.getInstance());
     }};
   }
-
 
 
   @ImportStatic(BString.class)
@@ -78,7 +83,7 @@ public class StringMethods implements BaseBuiltinDeclaration {
     }
   }
 
-  public abstract static class NStringIndexOfMethodNode extends NBuiltinFunctionNode {
+  public abstract static class NIndexOfMethodNode extends NBuiltinFunctionNode {
 
     @Specialization(guards = "isNil(extra)")
     protected long indexOfNil(
@@ -112,13 +117,14 @@ public class StringMethods implements BaseBuiltinDeclaration {
 
     @Fallback
     protected Object unknownArguments(Object self, Object other, Object object) {
-      throw BladeRuntimeError.argumentError(this, "string.index_of", other, object);
+      throw BladeRuntimeError.argumentError(this, "string.index_of", self, other, object);
     }
   }
 
-  public abstract static class NStringUpperMethodNode extends NBuiltinFunctionNode {
+  public abstract static class NUpperMethodNode extends NBuiltinFunctionNode {
+    @ExplodeLoop
     @Specialization
-    protected TruffleString upper(TruffleString self,
+    protected TruffleString doValid(TruffleString self,
                                   @Cached TruffleString.FromJavaStringNode fromJavaStringNode) {
       if(self == BString.EMPTY) {
         return self;
@@ -131,28 +137,269 @@ public class StringMethods implements BaseBuiltinDeclaration {
     }
 
     @Fallback
-    protected Object upper(Object self) {
-      throw BladeRuntimeError.create("invalid call to string.upper()");
+    protected Object doInvalid(Object self) {
+      throw BladeRuntimeError.argumentError(this, "string.upper", self);
     }
   }
 
-  public abstract static class NStringLowerMethodNode extends NBuiltinFunctionNode {
+  public abstract static class NLowerMethodNode extends NBuiltinFunctionNode {
+    @ExplodeLoop
     @Specialization
-    protected TruffleString upper(TruffleString self,
+    protected TruffleString doValid(TruffleString self,
                                   @Cached TruffleString.FromJavaStringNode fromJavaStringNode) {
       if(self == BString.EMPTY) {
         return self;
       }
 
-      return fromJavaStringNode.execute(
-        BString.toLower(self.toJavaStringUncached()),
-        BladeLanguage.ENCODING
-      );
+      return BString.fromObject(fromJavaStringNode, BString.toLower(self.toJavaStringUncached()));
     }
 
     @Fallback
-    protected Object upper(Object self) {
-      throw BladeRuntimeError.create("invalid call to string.lower()");
+    protected Object doInvalid(Object self) {
+      throw BladeRuntimeError.argumentError(this, "string.lower", self);
+    }
+  }
+
+  public abstract static class NIsAlphaMethodNode extends NBuiltinFunctionNode {
+    @ExplodeLoop
+    @Specialization
+    protected boolean doValid(TruffleString self,
+                                  @Cached TruffleString.ToJavaStringNode toJavaStringNode,
+                                  @Cached TruffleString.CodePointLengthNode lengthNode,
+                              @Cached TruffleString.CodePointAtIndexNode codePointNode) {
+      if(self == BString.EMPTY) {
+        return false;
+      }
+
+      int length = BString.intLength(self, lengthNode);
+      for (int i = 0; i < length; i++) {
+        int c = codePointNode.execute(self, i, BladeLanguage.ENCODING);
+        if (!isAlpha(c)) {
+          return false;
+        }
+      }
+
+      return true;
+    }
+
+    @Fallback
+    protected Object doInvalid(Object self) {
+      throw BladeRuntimeError.argumentError(this, "string.is_alpha", self);
+    }
+
+    @ExplodeLoop
+    @CompilerDirectives.TruffleBoundary
+    private boolean isAlpha(int c) {
+      return Character.isLetter(c);
+    }
+  }
+
+  public abstract static class NIsAlNumMethodNode extends NBuiltinFunctionNode {
+    @ExplodeLoop
+    @Specialization
+    protected boolean doValid(TruffleString self,
+                                  @Cached TruffleString.CodePointLengthNode lengthNode,
+                              @Cached TruffleString.CodePointAtIndexNode codePointNode) {
+      if(self == BString.EMPTY) {
+        return false;
+      }
+
+      int length = BString.intLength(self, lengthNode);
+      for (int i = 0; i < length; i++) {
+        int c = codePointNode.execute(self, i, BladeLanguage.ENCODING);
+        if (!isAlphaNumeric(c)) {
+          return false;
+        }
+      }
+
+      return true;
+    }
+
+    @Fallback
+    protected Object doInvalid(Object self) {
+      throw BladeRuntimeError.argumentError(this, "string.is_alnum", self);
+    }
+
+    @ExplodeLoop
+    @CompilerDirectives.TruffleBoundary
+    private boolean isAlphaNumeric(int c) {
+      return Character.isLetterOrDigit(c);
+    }
+  }
+
+  public abstract static class NIsNumberMethodNode extends NBuiltinFunctionNode {
+    @ExplodeLoop
+    @Specialization
+    protected boolean doValid(TruffleString self,
+                                  @Cached TruffleString.CodePointLengthNode lengthNode,
+                              @Cached TruffleString.CodePointAtIndexNode codePointNode) {
+      if(self == BString.EMPTY) {
+        return false;
+      }
+
+      int length = BString.intLength(self, lengthNode);
+      for (int i = 0; i < length; i++) {
+        int c = codePointNode.execute(self, i, BladeLanguage.ENCODING);
+        if (!isDigit(c)) {
+          return false;
+        }
+      }
+
+      return true;
+    }
+
+    @Fallback
+    protected Object doInvalid(Object self) {
+      throw BladeRuntimeError.argumentError(this, "string.is_number", self);
+    }
+
+    @ExplodeLoop
+    @CompilerDirectives.TruffleBoundary
+    private boolean isDigit(int c) {
+      return Character.isDigit(c);
+    }
+  }
+
+  public abstract static class NIsLowerMethodNode extends NBuiltinFunctionNode {
+    @ExplodeLoop
+    @Specialization
+    protected boolean doValid(TruffleString self,
+                                  @Cached TruffleString.CodePointLengthNode lengthNode,
+                              @Cached TruffleString.CodePointAtIndexNode codePointNode) {
+      if(self == BString.EMPTY) {
+        return false;
+      }
+
+      int length = BString.intLength(self, lengthNode);
+      for (int i = 0; i < length; i++) {
+        int c = codePointNode.execute(self, i, BladeLanguage.ENCODING);
+        if (!isLower(c)) {
+          return false;
+        }
+      }
+
+      return true;
+    }
+
+    @Fallback
+    protected Object doInvalid(Object self) {
+      throw BladeRuntimeError.argumentError(this, "string.is_lower", self);
+    }
+
+    @ExplodeLoop
+    @CompilerDirectives.TruffleBoundary
+    private boolean isLower(int c) {
+      return Character.isLowerCase(c);
+    }
+  }
+
+  public abstract static class NIsUpperMethodNode extends NBuiltinFunctionNode {
+    @ExplodeLoop
+    @Specialization
+    protected boolean doValid(TruffleString self,
+                                  @Cached TruffleString.CodePointLengthNode lengthNode,
+                              @Cached TruffleString.CodePointAtIndexNode codePointNode) {
+      if(self == BString.EMPTY) {
+        return false;
+      }
+
+      int length = BString.intLength(self, lengthNode);
+      for (int i = 0; i < length; i++) {
+        int c = codePointNode.execute(self, i, BladeLanguage.ENCODING);
+        if (!isUpper(c)) {
+          return false;
+        }
+      }
+
+      return true;
+    }
+
+    @Fallback
+    protected Object doInvalid(Object self) {
+      throw BladeRuntimeError.argumentError(this, "string.is_upper", self);
+    }
+
+    @ExplodeLoop
+    @CompilerDirectives.TruffleBoundary
+    private boolean isUpper(int c) {
+      return Character.isUpperCase(c);
+    }
+  }
+
+  public abstract static class NIsSpaceMethodNode extends NBuiltinFunctionNode {
+
+    @ExplodeLoop
+    @Specialization
+    protected boolean doValid(TruffleString self,
+                                  @Cached TruffleString.CodePointLengthNode lengthNode,
+                                @Cached TruffleString.CodePointAtIndexNode codePointNode) {
+      if(self == BString.EMPTY) {
+        return false;
+      }
+
+      int length = BString.intLength(self, lengthNode);
+      for (int i = 0; i < length; i++) {
+        int c = codePointNode.execute(self, i, BladeLanguage.ENCODING);
+        if (!isSpace(c)) {
+          return false;
+        }
+      }
+
+      return true;
+    }
+
+    @Fallback
+    protected Object doInvalid(Object self) {
+      throw BladeRuntimeError.argumentError(this, "string.is_space", self);
+    }
+
+    @CompilerDirectives.TruffleBoundary
+    private boolean isSpace(int c) {
+      return Character.isSpaceChar(c);
+    }
+  }
+
+  public abstract static class NStartsWithMethodNode extends NBuiltinFunctionNode {
+
+    @ExplodeLoop
+    @Specialization
+    protected boolean doValid(TruffleString self, TruffleString other,
+                                  @Cached TruffleString.CodePointLengthNode lengthNode,
+                                @Cached TruffleString.IndexOfStringNode indexOfNode) {
+      if(self == BString.EMPTY) {
+        return false;
+      }
+
+      return BString.indexOf(indexOfNode, lengthNode, self, other, 0) == 0;
+    }
+
+    @Fallback
+    protected Object doInvalid(Object self, Object other) {
+      throw BladeRuntimeError.argumentError(this, "string.starts_with", self, other);
+    }
+  }
+
+  public abstract static class NEndsWithMethodNode extends NBuiltinFunctionNode {
+
+    @ExplodeLoop
+    @Specialization
+    protected boolean doValid(TruffleString self, TruffleString other,
+                                  @Cached TruffleString.CodePointLengthNode lengthNode,
+                                @Cached TruffleString.IndexOfStringNode indexOfNode) {
+      if(self == BString.EMPTY) {
+        return false;
+      }
+
+      long thisLength = BString.length(self, lengthNode);
+      long otherLength = BString.length(other, lengthNode);
+      long index = BString.indexOf(indexOfNode, lengthNode, self, other, 0);
+
+      return index > -1 && index + otherLength == thisLength;
+    }
+
+    @Fallback
+    protected Object doInvalid(Object self, Object other) {
+      throw BladeRuntimeError.argumentError(this, "string.ends_with", self, other);
     }
   }
 }
