@@ -47,7 +47,7 @@ public final class NMethodCallExprNode extends NNode {
       values[i] = arguments[i].execute(frame);
     }
 
-    if(branchProfile.profile(receiver instanceof BladeClass)) {
+    if(branchProfile.profile(receiver instanceof BladeClass bladeClass && bladeClass.isBuiltin)) {
       return functionDispatchNode.executeDispatch(function, values);
     }
 

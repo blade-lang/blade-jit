@@ -13,10 +13,16 @@ import org.blade.annotations.ObjectName;
 @ObjectName("Class")
 public class BladeClass extends BladeObject {
   public final String name;
+  public final boolean isBuiltin;
 
   public BladeClass(Shape shape, String name, DynamicObject classObject) {
+    this(shape, name, classObject, false);
+  }
+
+  public BladeClass(Shape shape, String name, DynamicObject classObject, boolean isBuiltin) {
     super(shape, classObject);
     this.name = name;
+    this.isBuiltin = isBuiltin;
   }
 
   @CompilerDirectives.TruffleBoundary

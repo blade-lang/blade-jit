@@ -12,7 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @ExportLibrary(InteropLibrary.class)
-public class DictionaryObject extends BladeObject {
+public final class DictionaryObject extends BladeObject {
   private static final DynamicObjectLibrary UNCACHED_OBJ = DynamicObjectLibrary.getUncached();
 
   public DictionaryObject(Shape shape, BladeClass classObject, Object[] keys, Object[] values) {

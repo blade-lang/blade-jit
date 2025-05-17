@@ -606,10 +606,13 @@ public class BladeTranslator extends BaseVisitor<NNode> {
     return sourceSection(new NAssertStmtNode(
       sourceSection(visitExpr(stmt.expression), stmt.expression),
       sourceSection(NRaiseStmtNodeGen.create(
-        stmt.message == null ?
+        stmt.message == null || stmt.message instanceof Expr.Literal ?
           sourceSection(NNewExprNodeGen.create(
             NGlobalVarRefExprNodeGen.create(globalScopeNode, "AssertError"),
-            List.of(new NStringLiteralNode("Failed assertion"))
+            List.of(new NStringLiteralNode(stmt.message instanceof Expr.Literal literal ?
+              literal.token.literal() :
+              "Failed assertion"
+            ))
           ), stmt) :
           visitExpr(stmt.message),
         true
@@ -638,6 +641,20 @@ public class BladeTranslator extends BaseVisitor<NNode> {
     }
 
     return new NTryCatchStmtNode(body, slot, asBody, thenBody);
+  }
+
+  @Override
+  public NNode visitAnonymousExpr(Expr.Anonymous expr) {
+    return new NAnonymousExprNode(
+      translateFunction(
+        expr.function,
+        "@anonymous",
+        expr.function.parameters,
+        expr.function.body,
+        globalScopeNode,
+        expr.function.isVariadic
+      )
+    );
   }
 
   private NNode translateFunction(Stmt source, String name, List<Expr.Identifier> parameters, Stmt.Block body, NNode root, boolean isVariadic) {

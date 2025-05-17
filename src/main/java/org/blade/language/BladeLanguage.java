@@ -111,23 +111,23 @@ public class BladeLanguage extends TruffleLanguage<BladeContext> {
       dictionayShape,
       objectClass,
       functionClass,
-      new BladeClass(rootShape, "List", objectClass),
-      new BladeClass(rootShape, "Dictionary", objectClass),
-      new BladeClass(rootShape, "String", objectClass),
-      new BladeClass(rootShape, "Number", objectClass),
-      new BladeClass(rootShape, "Boolean", objectClass),
-      new BladeClass(rootShape, "Range", objectClass),
+      new BladeClass(rootShape, "List", objectClass, true),
+      new BladeClass(rootShape, "Dictionary", objectClass, true),
+      new BladeClass(rootShape, "String", objectClass, true),
+      new BladeClass(rootShape, "Number", objectClass, true),
+      new BladeClass(rootShape, "Boolean", objectClass, true),
+      new BladeClass(rootShape, "Range", objectClass, true),
       createErrorsModel()
     );
   }
 
   private ErrorsModel createErrorsModel() {
     return new ErrorsModel(
-      new BladeClass(rootShape, "Error", objectClass),
-      new BladeClass(rootShape, "TypeError", objectClass),
-      new BladeClass(rootShape, "ArgumentError", objectClass),
-      new BladeClass(rootShape, "ValueError", objectClass),
-      new BladeClass(rootShape, "AssertError", objectClass)
+      new BladeClass(rootShape, "Error", objectClass, true),
+      new BladeClass(rootShape, "TypeError", objectClass, true),
+      new BladeClass(rootShape, "ArgumentError", objectClass, true),
+      new BladeClass(rootShape, "ValueError", objectClass, true),
+      new BladeClass(rootShape, "AssertError", objectClass, true)
     );
   }
 
@@ -253,7 +253,7 @@ public class BladeLanguage extends TruffleLanguage<BladeContext> {
   }
 
   @Override
-  protected CallTarget parse(ParsingRequest request) throws Exception {
+  protected CallTarget parse(ParsingRequest request) {
     Source source = request.getSource();
 
     Parser parser = new Parser(new Lexer(source));

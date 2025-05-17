@@ -14,7 +14,7 @@ import org.blade.annotations.ObjectName;
 
 @ExportLibrary(InteropLibrary.class)
 @ObjectName("Range")
-public class RangeObject extends BladeObject {
+public final class RangeObject extends BladeObject {
   public final long lower;
   public final long upper;
   public final long range;

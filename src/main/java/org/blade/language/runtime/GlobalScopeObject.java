@@ -6,6 +6,7 @@ import com.oracle.truffle.api.interop.UnknownIdentifierException;
 import com.oracle.truffle.api.library.CachedLibrary;
 import com.oracle.truffle.api.library.ExportLibrary;
 import com.oracle.truffle.api.library.ExportMessage;
+import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.object.DynamicObject;
 import com.oracle.truffle.api.object.DynamicObjectLibrary;
 import com.oracle.truffle.api.object.Shape;
@@ -94,5 +95,17 @@ public class GlobalScopeObject extends DynamicObject {
   @Override
   public String toString() {
     return "global";
+  }
+
+  @ExplodeLoop
+  public GlobalScopeObject duplicate(DynamicObjectLibrary objectLibrary) {
+    GlobalScopeObject globalScope = new GlobalScopeObject(this.getShape());
+    Object[] keys = objectLibrary.getKeyArray(this);
+
+    for (Object key : keys) {
+      objectLibrary.put(globalScope, key, objectLibrary.getOrDefault(this, key, null));
+    }
+
+    return globalScope;
   }
 }
