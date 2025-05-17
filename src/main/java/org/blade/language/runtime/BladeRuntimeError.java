@@ -112,9 +112,6 @@ public class BladeRuntimeError extends AbstractTruffleException {
         result.append(classInstance.getClassName());
       } else {
         result.append(BladeUtil.getObjectType(o));
-        result.append(" \"");
-        result.append(o);
-        result.append("\"");
       }
 
     }

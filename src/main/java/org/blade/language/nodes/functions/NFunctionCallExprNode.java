@@ -73,8 +73,9 @@ public abstract class NFunctionCallExprNode extends NNode {
 
   @ExplodeLoop
   private Object[] consumeArguments(VirtualFrame frame) {
-    Object[] values = new Object[arguments.length];
-    for (int i = 0; i < arguments.length; i++) {
+    int length = arguments.length;
+    Object[] values = new Object[length];
+    for (int i = 0; i < length; i++) {
       values[i] = arguments[i].execute(frame);
     }
     return values;

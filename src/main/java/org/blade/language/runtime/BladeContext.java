@@ -1,21 +1,23 @@
 package org.blade.language.runtime;
 
+import com.oracle.truffle.api.CallTarget;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.TruffleLanguage;
 import com.oracle.truffle.api.dsl.Bind;
-import com.oracle.truffle.api.interop.ArityException;
-import com.oracle.truffle.api.interop.InteropLibrary;
-import com.oracle.truffle.api.interop.UnsupportedMessageException;
-import com.oracle.truffle.api.interop.UnsupportedTypeException;
+import com.oracle.truffle.api.interop.*;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.object.DynamicObject;
+import com.oracle.truffle.api.object.DynamicObjectLibrary;
+import com.oracle.truffle.api.source.Source;
 import org.blade.language.BladeLanguage;
 import org.blade.language.shared.BuiltinClassesModel;
+import org.graalvm.polyglot.Context;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import static com.oracle.truffle.api.CompilerDirectives.shouldNotReachHere;
@@ -93,5 +95,22 @@ public class BladeContext {
         throw shouldNotReachHere("Shutdown hook is not executable!", e);
       }
     }
+  }
+
+  public CallTarget parse(Source source) {
+    return env.parsePublic(source);
+  }
+
+  public BladeContext duplicate() {
+    return new BladeContext(
+      env,
+      ((GlobalScopeObject)globalScope).duplicate(DynamicObjectLibrary.getUncached()),
+      objectsModel,
+      emptyFunction
+    );
+  }
+
+  public TruffleObject getBindings() {
+    return (TruffleObject) env.getPolyglotBindings();
   }
 }

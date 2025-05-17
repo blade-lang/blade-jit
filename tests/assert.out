@@ -1,0 +1,2 @@
+>>>
+AssertError\: Non empty list expected.*assert\.b\:3\:1 \-\> @\.script\(\)

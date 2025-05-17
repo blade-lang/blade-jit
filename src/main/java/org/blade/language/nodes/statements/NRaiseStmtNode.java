@@ -39,7 +39,7 @@ public abstract class NRaiseStmtNode extends NStmtNode {
     Object type = ((BladeClass)value.classObject).name;
     Object message = messageLibrary.getOrDefault(value, "message", "");
     BladeRuntimeError error = BladeRuntimeError.create(type, message, value, this);
-    traceLibrary.putConstant(value, "stacktrace", formStackTrace(type, message, error), 0);
+    traceLibrary.putConstant(value, "stacktrace", formStackTrace(type, message, error), 1);
     throw error;
   }
 

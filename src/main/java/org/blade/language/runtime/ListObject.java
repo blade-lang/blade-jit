@@ -21,7 +21,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @ExportLibrary(InteropLibrary.class)
-public class ListObject extends BladeObject {
+public final class ListObject extends BladeObject {
   static final String LENGTH_PROP = "length";
 
   @CompilerDirectives.CompilationFinal(dimensions = 1)

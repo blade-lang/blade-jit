@@ -24,11 +24,11 @@ public final class DictionaryMethods implements BaseBuiltinDeclaration {
   }
 
   public abstract static class NKeyDecoratorNode extends NBuiltinFunctionNode {
-    protected static final DynamicObjectLibrary UNCACHED_OBJ = DynamicObjectLibrary.getUncached();
 
     @Specialization
     protected Object doAny(DictionaryObject dictionary, Object key,
-                           @Cached(value = "UNCACHED_OBJ.getKeyArray(dictionary)", neverDefault = true, dimensions = 1) Object[] keys) {
+                           @CachedLibrary(limit = "3") DynamicObjectLibrary objectLibrary) {
+      Object[] keys = objectLibrary.getKeyArray(dictionary);
       int length = keys.length;
       if(length == 0) {
         return BladeNil.SINGLETON;
@@ -63,12 +63,10 @@ public final class DictionaryMethods implements BaseBuiltinDeclaration {
   }
 
   public abstract static class NValueDecoratorNode extends NBuiltinFunctionNode {
-    protected static final DynamicObjectLibrary UNCACHED_OBJ = DynamicObjectLibrary.getUncached();
-
     @Specialization
     protected Object doAny(DictionaryObject dictionary, Object key,
-                           @Cached(value = "UNCACHED_OBJ.getKeyArray(dictionary)", neverDefault = true, dimensions = 1) Object[] keys) {
-      return UNCACHED_OBJ.getOrDefault(dictionary, key, BladeNil.SINGLETON);
+                           @CachedLibrary(limit = "3") DynamicObjectLibrary objectLibrary) {
+      return objectLibrary.getOrDefault(dictionary, key, BladeNil.SINGLETON);
     }
 
     @Fallback
@@ -78,12 +76,11 @@ public final class DictionaryMethods implements BaseBuiltinDeclaration {
   }
 
   public abstract static class NSizeMethodNode extends NBuiltinFunctionNode {
-    protected static final DynamicObjectLibrary UNCACHED_OBJ = DynamicObjectLibrary.getUncached();
 
     @Specialization
     protected long doAny(DictionaryObject dictionary,
-                           @Cached(value = "UNCACHED_OBJ.getKeyArray(dictionary)", neverDefault = true, dimensions = 1) Object[] keys) {
-      return UNCACHED_OBJ.getKeyArray(dictionary).length;
+                         @CachedLibrary(limit = "3") DynamicObjectLibrary objectLibrary) {
+      return objectLibrary.getKeyArray(dictionary).length;
     }
 
     @Fallback

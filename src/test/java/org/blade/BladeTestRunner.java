@@ -136,28 +136,27 @@ public class BladeTestRunner extends ParentRunner<BladeTestRunner.TestCase> {
           }
 
           Path outputFile = sourceFile.resolveSibling(baseName + OUTPUT_SUFFIX);
-          String expectedOutput = "";
           if (Files.exists(outputFile)) {
-            expectedOutput = readAllLines(outputFile);
-          }
+            String expectedOutput = readAllLines(outputFile);
 
-          boolean expectStackTrace = false;
-          if(expectedOutput.lines().findFirst().isPresent()) {
-            if(expectedOutput.lines().findFirst().get().startsWith("^^^")) {
-              expectedOutput = expectedOutput.lines().skip(1).collect(Collectors.joining("\n"));
-              expectStackTrace = true;
+            boolean expectStackTrace = false;
+            if(expectedOutput.lines().findFirst().isPresent()) {
+              if(expectedOutput.lines().findFirst().get().startsWith("^^^")) {
+                expectedOutput = expectedOutput.lines().skip(1).collect(Collectors.joining("\n"));
+                expectStackTrace = true;
+              }
             }
-          }
 
-          boolean expectRegex = false;
-          if(expectedOutput.lines().findFirst().isPresent()) {
-            if(expectedOutput.lines().findFirst().get().startsWith(">>>")) {
-              expectedOutput = expectedOutput.lines().skip(1).collect(Collectors.joining("\n"));
-              expectRegex = true;
+            boolean expectRegex = false;
+            if(expectedOutput.lines().findFirst().isPresent()) {
+              if(expectedOutput.lines().findFirst().get().startsWith(">>>")) {
+                expectedOutput = expectedOutput.lines().skip(1).collect(Collectors.joining("\n"));
+                expectRegex = true;
+              }
             }
-          }
 
-          foundCases.add(new TestCase(c, baseName, sourceName, sourceFile, testInput, expectedOutput, expectStackTrace, expectRegex, options));
+            foundCases.add(new TestCase(c, baseName, sourceName, sourceFile, testInput, expectedOutput, expectStackTrace, expectRegex, options));
+          }
         }
         return FileVisitResult.CONTINUE;
       }

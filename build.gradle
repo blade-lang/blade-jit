@@ -57,6 +57,7 @@ graalvmNative {
 
         fallback = true
 
+        buildArgs.add('--language:nfi')
         buildArgs.add('-O3')
         buildArgs.add('-march=native')
         buildArgs.add('-H:+AddAllCharsets')
