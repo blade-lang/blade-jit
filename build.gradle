@@ -32,22 +32,23 @@ dependencies {
 
 test {
 //    useJUnitPlatform()
+    jvmArgs = ['--enable-native-access=ALL-UNNAMED', '--sun-misc-unsafe-memory-access=allow']
 }
 
 tasks.register('jarWithDeps', Copy) {
     dependsOn 'jar'
-    def conf = configurations.runtimeClasspath
-    from conf.allDependencies.collect { conf.files(it) }
-    from "${project.buildDir}/libs/${project.name}-${project.version}.jar"
-    into "${project.buildDir}/modules"
+    from configurations.runtimeClasspath
+    from project.layout.buildDirectory.dir("libs/${project.name}-${project.version}.jar")
+    into project.layout.buildDirectory.dir('modules')
 }
 build.dependsOn('jarWithDeps')
 
 graalvmNative {
-    binaries.all {
+    binaries.configureEach {
         // common options
-        verbose = true
-        resources.autodetect()
+        it.verbose = true
+        it.resources.autodetect()
+        jvmArgs = ['--sun-misc-unsafe-memory-access=allow']
     }
 
     binaries.main {

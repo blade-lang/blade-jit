@@ -177,7 +177,6 @@ public class ClassTest {
       );
       fail("expected PolyglotException to be thrown");
     } catch (PolyglotException e) {
-      e.printStackTrace();
       assertTrue(e.isGuestException());
       assertFalse(e.isInternalError());
       assertEquals("Error: 'A' already declared in this scope", e.getMessage());
