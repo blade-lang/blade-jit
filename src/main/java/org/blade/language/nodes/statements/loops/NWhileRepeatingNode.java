@@ -23,19 +23,19 @@ public final class NWhileRepeatingNode extends Node implements RepeatingNode {
 
   @Override
   public boolean executeRepeating(VirtualFrame frame) {
-    if (!condition.executeBoolean(frame)) {
-      return false;
+    if (condition.executeBoolean(frame)) {
+      try {
+        body.execute(frame);
+      } catch (NBreakException e) {
+        breakTaken.enter();
+        return false;
+      } catch (NContinueException ignored) {
+        continueTaken.enter();
+      }
+
+      return true;
     }
 
-    try {
-      body.execute(frame);
-    } catch (NBreakException e) {
-      breakTaken.enter();
-      return false;
-    } catch (NContinueException ignored) {
-      continueTaken.enter();
-    }
-
-    return true;
+    return false;
   }
 }

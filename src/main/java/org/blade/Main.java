@@ -12,8 +12,9 @@ import java.util.Iterator;
 import java.util.Map;
 
 public class Main {
+  private static final String SHOW_PID = "show-pid";
+
   public static void main(String[] args) throws IOException {
-//    System.out.println(ProcessHandle.current().pid());
 
     Map<String, String> options = new HashMap<>();
     String file = null;
@@ -23,6 +24,11 @@ public class Main {
           file = arg;
         }
       }
+    }
+
+    if(options.containsKey(SHOW_PID)) {
+      System.out.println(ProcessHandle.current().pid());
+      options.remove(SHOW_PID);
     }
 
     try(
