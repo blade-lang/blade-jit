@@ -147,7 +147,7 @@ public final class ListObject extends BladeObject {
 
   private void setArrayElements(Object[] items, DynamicObjectLibrary objectLibrary) {
     this.items = items;
-    writeMember(LENGTH_PROP, items.length, objectLibrary);
+    writeMember(LENGTH_PROP, (long) items.length, objectLibrary);
   }
 
   @ExplodeLoop

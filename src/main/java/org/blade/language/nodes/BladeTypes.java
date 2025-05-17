@@ -7,7 +7,7 @@ import org.blade.language.runtime.BigIntObject;
 
 import java.math.BigInteger;
 
-@TypeSystem({boolean.class, long.class, double.class})
+@TypeSystem({boolean.class, int.class, long.class, double.class})
 public class BladeTypes {
 
   /*@TypeCheck(double.class)
@@ -25,12 +25,12 @@ public class BladeTypes {
   }*/
   // THE ABOVE COMMENTED CODE DOES THE SAME AS THE NEXT @ImplicitCast METHOD
   @ImplicitCast
-  public static double castLongToDouble(long value) {
+  public static long castIntToLong(int value) {
     return value;
   }
 
   @ImplicitCast
-  public static double castIntToDouble(int value) {
+  public static double castLongToDouble(long value) {
     return value;
   }
 

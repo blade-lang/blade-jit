@@ -21,6 +21,6 @@ public abstract class NRangeLiteralNode extends NNode {
 
   @Fallback
   protected Object doUnsupported(Object lower, Object upper) {
-    throw BladeRuntimeError.valueError(this, "Invalid range parameters");
+    throw BladeRuntimeError.argumentError(this, "..", lower, upper);
   }
 }

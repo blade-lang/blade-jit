@@ -382,7 +382,7 @@ public class Parser {
       if (match(BANG, MINUS, TILDE)) {
         Token op = previous();
         ignoreNewlines();
-        return new Expr.Unary(op, assignExpr());
+        return new Expr.Unary(op, unary());
       }
 
       return assignExpr();

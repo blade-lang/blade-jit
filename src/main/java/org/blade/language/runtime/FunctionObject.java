@@ -80,7 +80,8 @@ public final class FunctionObject extends BladeObject {
   }
 
   private boolean isRemValue(Object value) {
-    return BladeTypesGen.isImplicitDouble(value) ||
+    return BladeTypesGen.isImplicitLong(value) ||
+      BladeTypesGen.isImplicitDouble(value) ||
       BladeTypesGen.isBoolean(value) ||
       value == BladeNil.SINGLETON ||
       value instanceof String ||
