@@ -35,7 +35,7 @@ public abstract class NNode extends NBaseNode {
     return execute(frame);
   }
 
-  public boolean evaluateBoolean(Object value) {
+  public static boolean evaluateBoolean(Object value) {
     if (value == BladeNil.SINGLETON) {
       return false;
     } else if (value instanceof Boolean b) {

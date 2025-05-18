@@ -14,14 +14,17 @@ import java.util.List;
 
 public abstract class NFunctionCallExprNode extends NNode {
 
-  @Children
-  protected final NNode[] arguments;
   @CompilerDirectives.CompilationFinal
   protected final int argsMinus1;
+
   @SuppressWarnings("FieldMayBeFinal")
   @Executed
   @Child
   protected NNode target;
+
+  @Children
+  protected final NNode[] arguments;
+
   @SuppressWarnings("FieldMayBeFinal")
   @Child
   private NFunctionDispatchNode dispatchNode = NFunctionDispatchNodeGen.create();

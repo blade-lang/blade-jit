@@ -1,11 +1,14 @@
 package org.blade.language.nodes.expressions.logical;
 
 import com.oracle.truffle.api.CompilerDirectives;
+import com.oracle.truffle.api.bytecode.OperationProxy;
+import com.oracle.truffle.api.dsl.Bind;
 import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.Fallback;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.interop.InteropLibrary;
 import com.oracle.truffle.api.library.CachedLibrary;
+import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.strings.TruffleString;
 import org.blade.language.BladeLanguage;
 import org.blade.language.nodes.NBinaryNode;
@@ -13,38 +16,40 @@ import org.blade.language.runtime.BigIntObject;
 import org.blade.language.runtime.BladeObject;
 import org.blade.language.runtime.BladeRuntimeError;
 
+@OperationProxy.Proxyable(allowUncached = true)
 public abstract class NNotEqualNode extends NBinaryNode {
 
   @Specialization
-  protected boolean doBoolean(boolean left, boolean right) {
+  protected static boolean doBoolean(boolean left, boolean right) {
     return left != right;
   }
 
   @Specialization
-  protected boolean doLongs(long left, long right) {
+  protected static boolean doLongs(long left, long right) {
     return left != right;
   }
 
   @Specialization
-  protected boolean doDoubles(double left, double right) {
+  protected static boolean doDoubles(double left, double right) {
     return left != right;
   }
 
   @CompilerDirectives.TruffleBoundary
   @Specialization
-  protected boolean doBigInts(BigIntObject left, BigIntObject right) {
+  protected static boolean doBigInts(BigIntObject left, BigIntObject right) {
     return !left.equals(right);
   }
 
   @Specialization
-  protected boolean doStrings(TruffleString left, TruffleString right,
+  protected static boolean doStrings(TruffleString left, TruffleString right,
                            @Cached TruffleString.EqualNode equalNode) {
     return !equalNode.execute(left, right, BladeLanguage.ENCODING);
   }
 
   @Specialization(limit = "3")
-  protected boolean doObjects(BladeObject left, BladeObject right, @CachedLibrary("left") InteropLibrary interopLibrary) {
-    Object overrideValue = methodOverride("==", left, right, interopLibrary);
+  protected static boolean doObjects(BladeObject left, BladeObject right,
+                                     @Bind Node node, @CachedLibrary("left") InteropLibrary interopLibrary) {
+    Object overrideValue = methodOverride(node, "==", left, right, interopLibrary);
     if(overrideValue != null) {
       return !evaluateBoolean(overrideValue);
     }
@@ -53,7 +58,7 @@ public abstract class NNotEqualNode extends NBinaryNode {
   }
 
   @Fallback
-  protected boolean doUnsupported(Object left, Object right) {
+  protected static boolean doUnsupported(Object left, Object right) {
     return left != right;
   }
 }
