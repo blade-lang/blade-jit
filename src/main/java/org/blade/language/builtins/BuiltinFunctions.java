@@ -184,11 +184,12 @@ public final class BuiltinFunctions implements BaseBuiltinDeclaration {
 
     @ExplodeLoop
     @Specialization
-    protected boolean doObject(BladeObject object, BladeClass testClass) {
+    protected boolean doObject(BladeObject object, BladeClass testClass,
+                               @Cached(value = "languageContext().objectsModel", neverDefault = true) @Cached.Shared("objectsModel") BuiltinClassesModel objectsModel,
+                               @Cached(value = "objectsModel.objectObject", neverDefault = true) BladeClass objectObject) {
       BladeObject klassObject = (BladeObject) object.classObject;
       if(klassObject == testClass) return true;
 
-      BObject objectObject = languageContext().objectsModel.objectObject;
       while(klassObject != null && klassObject != objectObject) {
         if(klassObject.classObject == testClass) return true;
         klassObject = (BladeObject) klassObject.classObject;
@@ -198,27 +199,31 @@ public final class BuiltinFunctions implements BaseBuiltinDeclaration {
     }
 
     @Specialization
-    protected boolean doString(TruffleString string, BladeClass testClass) {
-      BuiltinClassesModel context = languageContext().objectsModel;
-      return testClass == context.stringObject || testClass == context.objectObject;
+    protected boolean doString(TruffleString string, BladeClass testClass,
+                               @Cached(value = "languageContext().objectsModel", neverDefault = true) @Cached.Shared("objectsModel") BuiltinClassesModel objectsModel,
+                               @Cached(value = "objectsModel.objectObject", neverDefault = true) BladeClass objectObject) {
+      return testClass == objectsModel.stringObject || testClass == objectObject;
     }
 
     @Specialization
-    protected boolean doLong(long value, BladeClass testClass) {
-      BuiltinClassesModel context = languageContext().objectsModel;
-      return testClass == context.numberObject || testClass == context.objectObject;
+    protected boolean doLong(long value, BladeClass testClass,
+                             @Cached(value = "languageContext().objectsModel", neverDefault = true) @Cached.Shared("objectsModel") BuiltinClassesModel objectsModel,
+                             @Cached(value = "objectsModel.objectObject", neverDefault = true) BladeClass objectObject) {
+      return testClass == objectsModel.numberObject || testClass == objectObject;
     }
 
     @Specialization
-    protected boolean doDouble(double value, BladeClass testClass) {
-      BuiltinClassesModel context = languageContext().objectsModel;
-      return testClass == context.numberObject || testClass == context.objectObject;
+    protected boolean doDouble(double value, BladeClass testClass,
+                               @Cached(value = "languageContext().objectsModel", neverDefault = true) @Cached.Shared("objectsModel") BuiltinClassesModel objectsModel,
+                               @Cached(value = "objectsModel.objectObject", neverDefault = true) BladeClass objectObject) {
+      return testClass == objectsModel.numberObject || testClass == objectObject;
     }
 
     @Specialization
-    protected boolean doBoolean(boolean value, BladeClass testClass) {
-      BuiltinClassesModel context = languageContext().objectsModel;
-      return testClass == context.booleanObject || testClass == context.objectObject;
+    protected boolean doBoolean(boolean value, BladeClass testClass,
+                                @Cached(value = "languageContext().objectsModel", neverDefault = true) @Cached.Shared("objectsModel") BuiltinClassesModel objectsModel,
+                                @Cached(value = "objectsModel.objectObject", neverDefault = true) BladeClass objectObject) {
+      return testClass == objectsModel.booleanObject || testClass == objectObject;
     }
 
     @Fallback

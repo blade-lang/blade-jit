@@ -113,7 +113,7 @@ public class BinaryTreesBenchmark extends TruffleBenchmark {
   }
 
   @Benchmark
-  public int nim_eval() {
+  public int blade_eval() {
     context.eval("blade", "run(" + INPUT + ");");
     return 1;
   }

@@ -69,7 +69,7 @@ public class ExceptionBenchmark extends TruffleBenchmark {
   }
 
   @Benchmark
-  public int nim_eval() {
+  public int blade_eval() {
     context.eval("blade", "countdown(" + INPUT + ");");
     return 1;
   }

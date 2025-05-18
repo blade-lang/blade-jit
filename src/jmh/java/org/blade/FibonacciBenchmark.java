@@ -41,7 +41,7 @@ public class FibonacciBenchmark extends TruffleBenchmark {
 //    "-Dgraal.PrintGraph=File"
 //  })
   @Benchmark
-  public int nim_eval() {
+  public int blade_eval() {
     return context.eval("blade", "fib(20)").asInt();
   }
 

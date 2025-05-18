@@ -32,7 +32,8 @@ var iterations = 2 ** max_depth
 
 iter var depth = min_depth; depth < stretch_depth; depth += 2 {
   var check = 0
-  iter var i = 1; i < (iterations + 1); i++ {
+  var max_iteration = iterations + 1
+  iter var i = 1; i < max_iteration; i++ {
     check += check_tree(make_tree(depth))
   }
 

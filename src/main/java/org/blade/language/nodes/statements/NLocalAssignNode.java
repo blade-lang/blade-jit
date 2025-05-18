@@ -17,8 +17,7 @@ public abstract class NLocalAssignNode extends NStmtNode {
   public abstract String getSlotName();
   public abstract int getSlot();
 
-  @Specialization(guards = "frame.getFrameDescriptor().getSlotKind(getSlot()) == Illegal || " +
-    "frame.getFrameDescriptor().getSlotKind(getSlot()) == Boolean")
+  @Specialization(guards = "isBooleanOrIllegal(frame)")
   protected boolean doBoolean(VirtualFrame frame, boolean value) {
     int frameSlot = getSlot();
     frame.getFrameDescriptor().setSlotKind(frameSlot, FrameSlotKind.Boolean);
@@ -26,8 +25,7 @@ public abstract class NLocalAssignNode extends NStmtNode {
     return value;
   }
 
-  @Specialization(guards = "frame.getFrameDescriptor().getSlotKind(getSlot()) == Illegal || " +
-    "frame.getFrameDescriptor().getSlotKind(getSlot()) == Long")
+  @Specialization(guards = "isLongOrIllegal(frame)")
   protected long doLong(VirtualFrame frame, long value) {
     int frameSlot = getSlot();
     frame.getFrameDescriptor().setSlotKind(frameSlot, FrameSlotKind.Long);
@@ -35,9 +33,7 @@ public abstract class NLocalAssignNode extends NStmtNode {
     return value;
   }
 
-  @Specialization(replaces = "doLong",
-    guards = "frame.getFrameDescriptor().getSlotKind(getSlot()) == Illegal || " +
-      "frame.getFrameDescriptor().getSlotKind(getSlot()) == Double")
+  @Specialization(replaces = "doLong", guards = "isDoubleOrIllegal(frame)")
   protected double doDouble(VirtualFrame frame, double value) {
     int frameSlot = getSlot();
     frame.getFrameDescriptor().setSlotKind(frameSlot, FrameSlotKind.Double);
@@ -51,5 +47,20 @@ public abstract class NLocalAssignNode extends NStmtNode {
     frame.getFrameDescriptor().setSlotKind(frameSlot, FrameSlotKind.Object);
     frame.setObject(frameSlot, value);
     return value;
+  }
+
+  protected boolean isBooleanOrIllegal(VirtualFrame frame) {
+    final FrameSlotKind kind = frame.getFrameDescriptor().getSlotKind(getSlot());
+    return kind == FrameSlotKind.Boolean || kind == FrameSlotKind.Illegal;
+  }
+
+  protected boolean isLongOrIllegal(VirtualFrame frame) {
+    final FrameSlotKind kind = frame.getFrameDescriptor().getSlotKind(getSlot());
+    return kind == FrameSlotKind.Long || kind == FrameSlotKind.Illegal;
+  }
+
+  protected boolean isDoubleOrIllegal(VirtualFrame frame) {
+    final FrameSlotKind kind = frame.getFrameDescriptor().getSlotKind(getSlot());
+    return kind == FrameSlotKind.Double || kind == FrameSlotKind.Illegal;
   }
 }

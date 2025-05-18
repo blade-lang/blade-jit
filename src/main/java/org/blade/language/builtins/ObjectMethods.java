@@ -130,8 +130,9 @@ public class ObjectMethods implements BaseBuiltinDeclaration {
     }
 
     @Fallback
-    protected Object doOthers(Object object) {
-      return languageContext().objectsModel.objectObject;
+    protected Object doOthers(Object object,
+                              @Cached(value = "languageContext().objectsModel", neverDefault = true) @Cached.Shared("objectsModel") BuiltinClassesModel objectsModel) {
+      return objectsModel.objectObject;
     }
   }
 }

@@ -13,7 +13,6 @@ public final class NBigIntLiteralNode extends NNode {
   private final BigIntObject value;
 
   public NBigIntLiteralNode(BigInteger value) {
-    BuiltinClassesModel objectModel = languageContext().objectsModel;
     this.value = new BigIntObject(value);
   }
 

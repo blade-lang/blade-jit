@@ -1,14 +1,13 @@
 package org.blade.language.nodes.expressions;
 
-import com.oracle.truffle.api.dsl.Executed;
-import com.oracle.truffle.api.dsl.Fallback;
-import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.dsl.*;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.interop.InteropLibrary;
 import com.oracle.truffle.api.interop.UnknownIdentifierException;
 import com.oracle.truffle.api.interop.UnsupportedMessageException;
 import com.oracle.truffle.api.library.CachedLibrary;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
+import com.oracle.truffle.api.object.Shape;
 import org.blade.language.nodes.NNode;
 import org.blade.language.nodes.functions.NMethodDispatchNode;
 import org.blade.language.nodes.functions.NMethodDispatchNodeGen;
@@ -25,18 +24,19 @@ public abstract class NNewExprNode extends NNode {
 
   @Child
   @SuppressWarnings("FieldMayBeFinal")
-  private NMethodDispatchNode constructorDispatch;
+  private NMethodDispatchNode constructorDispatch = NMethodDispatchNodeGen.create();
 
   public NNewExprNode(NNode constructor, List<NNode> arguments) {
     this.constructor = constructor;
     this.arguments = arguments.toArray(new NNode[0]);
-    constructorDispatch = NMethodDispatchNodeGen.create();
   }
 
+  @SuppressWarnings("truffle-neverdefault")
   @Specialization(limit = "3")
   protected Object doObject(VirtualFrame frame, BladeClass classObject,
+                            @Cached(value = "languageContext().objectsModel.rootShape") Shape rootShape,
                             @CachedLibrary("classObject") InteropLibrary interopLibrary) {
-    BladeObject object = new BladeObject(languageContext().objectsModel.rootShape, classObject);
+    BladeObject object = new BladeObject(rootShape, classObject);
     Object constructor = null;
     try {
       constructor = interopLibrary.readMember(classObject, "@new");
@@ -69,8 +69,9 @@ public abstract class NNewExprNode extends NNode {
 
   @ExplodeLoop
   private Object[] executeArguments(VirtualFrame frame) {
-    Object[] args = new Object[arguments.length];
-    for(int i = 0; i < arguments.length; i++) {
+    int argumentLength = arguments.length;
+    Object[] args = new Object[argumentLength];
+    for(int i = 0; i < argumentLength; i++) {
       args[i] = arguments[i].execute(frame);
     }
     return args;

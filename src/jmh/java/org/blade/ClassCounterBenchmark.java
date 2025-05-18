@@ -96,7 +96,7 @@ public class ClassCounterBenchmark extends TruffleBenchmark {
   }
 
   @Benchmark
-  public int nim_eval() {
+  public int blade_eval() {
     return context.eval("blade", "countWithSelfInIterDirect(" + INPUT + ");").asInt();
   }
 

@@ -4,7 +4,6 @@ import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.TruffleStackTrace;
 import com.oracle.truffle.api.TruffleStackTraceElement;
 import com.oracle.truffle.api.dsl.Executed;
-import com.oracle.truffle.api.dsl.NodeField;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.library.CachedLibrary;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
@@ -103,10 +102,6 @@ public abstract class NRaiseStmtNode extends NStmtNode {
         }
 
         sb.appendStringUncached(BString.fromJavaString("()"));
-
-        // TODO: Really consider if you want to show source for each stack trace
-        /*String nearSection = location.getEncapsulatingSourceSection().getCharacters().toString();
-        sb.appendStringUncached(BString.fromJavaString("\n\t\t\t" + nearSection.trim()));*/
       }
     }
     return sb.toStringUncached();

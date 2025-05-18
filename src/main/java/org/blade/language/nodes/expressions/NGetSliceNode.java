@@ -3,12 +3,11 @@ package org.blade.language.nodes.expressions;
 import com.oracle.truffle.api.dsl.*;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.nodes.Node;
+import com.oracle.truffle.api.object.Shape;
 import com.oracle.truffle.api.strings.TruffleString;
 import org.blade.language.nodes.NNode;
 import org.blade.language.nodes.NNormalizeIndexNode;
-import org.blade.language.runtime.BString;
-import org.blade.language.runtime.BladeRuntimeError;
-import org.blade.language.runtime.ListObject;
+import org.blade.language.runtime.*;
 import org.blade.language.shared.BladeUtil;
 import org.blade.language.shared.BuiltinClassesModel;
 
@@ -50,38 +49,44 @@ public abstract class NGetSliceNode extends NNode {
 
   @Specialization(guards = {"items.length == 0"})
   protected Object doList(ListObject list, long lower, long upper,
-                          @Cached(value = "list.items", dimensions = 1, neverDefault = true) Object[] items,
-                          @Cached(value = "languageContext().objectsModel", neverDefault = true) @Cached.Shared("classesModel") BuiltinClassesModel classesModel) {
-    return new ListObject(classesModel.listShape, classesModel.listObject, new Object[0]);
+                          @Cached(value = "list.items", dimensions = 1) Object[] items,
+                          @Cached(value = "languageContext().objectsModel", neverDefault = true) @Cached.Shared("classesModel") BuiltinClassesModel classesModel,
+                          @Cached("classesModel.listShape") Shape listShape,
+                          @Cached("classesModel.listObject") BladeClass listObject) {
+    return new ListObject(listShape, listObject, new Object[0]);
   }
 
   @Specialization(guards = {"lower == upper"})
   protected Object doList2(ListObject list, long lower, long upper,
-                           @Cached(value = "list.items", neverDefault = true, dimensions = 1) Object[] items,
-                           @Cached(value = "languageContext().objectsModel", neverDefault = true) @Cached.Shared("classesModel") BuiltinClassesModel classesModel) {
-    return new ListObject(classesModel.listShape, classesModel.listObject, new Object[0]);
+                           @Cached(value = "list.items", dimensions = 1) Object[] items,
+                           @Cached(value = "languageContext().objectsModel", neverDefault = true) @Cached.Shared("classesModel") BuiltinClassesModel classesModel,
+                           @Cached("classesModel.listShape") Shape listShape,
+                           @Cached("classesModel.listObject") BladeClass listObject) {
+    return new ListObject(listShape, listObject, new Object[0]);
   }
 
   @ExplodeLoop
   @Specialization(guards = {"items.length > 0", "lower != upper"})
   protected Object doList3(ListObject list, long lower, long upper,
                            @Bind Node node,
-                           @Cached(value = "list.items", neverDefault = true, dimensions = 1) Object[] items,
+                           @Cached(value = "list.items", dimensions = 1) Object[] items,
                            @Cached(value = "languageContext().objectsModel", neverDefault = true) @Cached.Shared("classesModel") BuiltinClassesModel classesModel,
-                           @Cached @Cached.Shared("normalizeIndexNode") NNormalizeIndexNode normalizeIndexNode) {
+                           @Cached @Cached.Shared("normalizeIndexNode") NNormalizeIndexNode normalizeIndexNode,
+                           @Cached("classesModel.listShape") Shape listShape,
+                           @Cached("classesModel.listObject") BladeClass listObject) {
     final int length = items.length;
     final int effectiveLower = normalizeIndexNode.executeLong(node, lower, length);
     final int effectiveUpper = normalizeIndexNode.executeLong(node, upper, length);
 
     if (effectiveUpper < effectiveLower) {
-      return new ListObject(classesModel.listShape, classesModel.listObject, new Object[0]);
+      return new ListObject(listShape, listObject, new Object[0]);
     }
 
     int effectiveLength = effectiveUpper - effectiveLower;
     Object[] objects = new Object[effectiveLength];
     System.arraycopy(items, effectiveLower, objects, 0, effectiveLength);
 
-    return new ListObject(classesModel.listShape, classesModel.listObject, objects);
+    return new ListObject(listShape, listObject, objects);
   }
 
   @Fallback

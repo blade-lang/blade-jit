@@ -36,7 +36,7 @@ public class SelfCounterBenchmark extends TruffleBenchmark {
   private static final String COUNT_WITH_SELF_IN_ITER = """
     def countWithSelfInIterDirect(n) {
         const counter = new Counter()
-        iter (var i = 0; i < n; i++) {
+        iter var i = 0; i < n; i++ {
             counter.increment()
         }
         return counter.getCount()
@@ -63,8 +63,8 @@ public class SelfCounterBenchmark extends TruffleBenchmark {
   }
 
   @Benchmark
-  public int nim_eval() {
-    return context.eval("blade", "countWithSelfInIterDirect(" + INPUT + ");").asInt();
+  public int blade_eval() {
+    return context.eval("blade", "countWithSelfInIterDirect(" + INPUT + ")").asInt();
   }
 
   @Benchmark
