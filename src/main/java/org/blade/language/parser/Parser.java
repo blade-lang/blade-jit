@@ -5,7 +5,10 @@ import org.blade.language.parser.ast.AST;
 import org.blade.language.parser.ast.Expr;
 import org.blade.language.parser.ast.Stmt;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import static org.blade.language.parser.TokenType.*;
 
@@ -46,11 +49,10 @@ public class Parser {
   };
   public final Lexer lexer;
   private final List<Token> tokens;
+  private final BladeLanguage language;
   private int blockCount = 0;
   private int current = 0;
   private int anonymousCount = 0;
-
-  private final BladeLanguage language;
 
   public Parser(Lexer lexer, BladeLanguage language) {
     this.language = language;
@@ -256,7 +258,9 @@ public class Parser {
     return wrapExpr(() -> new Expr.Literal(previous()));
   }
 
-  private Expr.Identifier identifier() { return (Expr.Identifier)wrapExpr(() -> new Expr.Identifier(previous())); }
+  private Expr.Identifier identifier() {
+    return (Expr.Identifier) wrapExpr(() -> new Expr.Identifier(previous()));
+  }
 
   private Expr primary() {
     return wrapExpr(() -> {
@@ -273,7 +277,7 @@ public class Parser {
         return new Expr.Number(previous());
       }
 
-      if(match(BIG_NUMBER)) {
+      if (match(BIG_NUMBER)) {
         return new Expr.BigNumber(previous());
       }
 
@@ -311,11 +315,11 @@ public class Parser {
     return (Expr) wrap((expr) -> {
       while (true) {
         if (match(DOT)) {
-          expr = finishDot((Expr)expr);
+          expr = finishDot((Expr) expr);
         } else if (match(LPAREN)) {
-          expr = finishCall((Expr)expr);
+          expr = finishCall((Expr) expr);
         } else if (match(LBRACKET)) {
-          expr = finishIndex((Expr)expr);
+          expr = finishIndex((Expr) expr);
         } else {
           break;
         }
@@ -334,7 +338,7 @@ public class Parser {
       Expr expr = call();
 
       if (match(INCREMENT)) {
-        if(expr instanceof Expr.Get get) {
+        if (expr instanceof Expr.Get get) {
           expr = new Expr.Set(
             get.expression,
             get.name,
@@ -355,7 +359,7 @@ public class Parser {
           );
         }
       } else if (match(DECREMENT)) {
-        if(expr instanceof Expr.Get get) {
+        if (expr instanceof Expr.Get get) {
           expr = new Expr.Set(
             get.expression,
             get.name,
@@ -600,7 +604,7 @@ public class Parser {
             ignoreNewlines();
 
             if (!match(COLON)) {
-              if(key instanceof Expr.Literal literal) {
+              if (key instanceof Expr.Literal literal) {
                 values.add(new Expr.Identifier(literal.token));
               } else {
                 throw new ParserException(
@@ -620,7 +624,7 @@ public class Parser {
         } while (match(COMMA));
       }
 
-      if(keys.size() != values.size()) {
+      if (keys.size() != values.size()) {
         throw new ParserException(
           lexer.getSource(),
           previous(), false, "key/value count mismatch dictionary definition"
@@ -925,7 +929,7 @@ public class Parser {
         catchBody = matchBlock("'{' expected after catch variable name");
       }
 
-      if(exception_var == null && !check(FINALLY)) {
+      if (exception_var == null && !check(FINALLY)) {
         throw new ParserException(lexer.getSource(), peek(), false, "try must declare at least one of `catch` or `finally`");
       }
 
@@ -983,7 +987,7 @@ public class Parser {
 
       Stmt result;
 
-      if(match(CATCH) || match(FINALLY)) {
+      if (match(CATCH) || match(FINALLY)) {
         throw new ParserException(
           lexer.getSource(), previous(), true,
           "`catch` and `finally` are only valid in `try` context"
@@ -1086,7 +1090,7 @@ public class Parser {
 
       params.add(identifier());
 
-      if(match(COLON)) {
+      if (match(COLON)) {
         consume(IDENTIFIER, "function argument type name expected");
         types.add(identifier());
       } else {
@@ -1103,10 +1107,10 @@ public class Parser {
   }
 
   private void processFunctionParamTypes(Stmt.Block block, List<Expr.Identifier> params, List<Expr.Identifier> types) {
-    if(language.enforceTypes) {
-      for(int i = types.size() - 1; i >= 0; i--) {
+    if (language.enforceTypes) {
+      for (int i = types.size() - 1; i >= 0; i--) {
         Expr.Identifier current = types.get(i);
-        if(current != null) {
+        if (current != null) {
           block.body.addFirst(
             new Stmt.If(
               new Expr.Logical(params.get(i), current.token.copyToType(BANG_EQ, "!="), new Expr.Nil()),
@@ -1119,12 +1123,12 @@ public class Parser {
                     ),
                     List.of()
                   ),
-                  previous().copyToType(EQUAL_EQ, "=="),
+                  current.token.copyToType(EQUAL_EQ, "=="),
                   current
                 ),
                 new Expr.New(
                   new Expr.Identifier(current.token.copyToType(IDENTIFIER, "TypeError")),
-                  List.of(new Expr.Literal(previous().copyToType(
+                  List.of(new Expr.Literal(current.token.copyToType(
                     LITERAL,
                     "Expected type of " + current.token.literal() + " as argument " + (i + 1) + " (" + params.get(i).token.literal() + ")"
                   ))))
@@ -1355,7 +1359,7 @@ public class Parser {
 
       if (result.startColumn > result.endColumn && result.startLine == result.endLine) {
         result.startColumn = result.endColumn - (result.startColumn - result.endColumn);
-        if(result.startColumn < 0) {
+        if (result.startColumn < 0) {
           result.startColumn = 0;
         }
       }
