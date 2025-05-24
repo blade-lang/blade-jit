@@ -1,5 +1,6 @@
 package org.blade.language.parser;
 
+import org.blade.language.BladeLanguage;
 import org.blade.language.parser.ast.AST;
 import org.blade.language.parser.ast.Expr;
 import org.blade.language.parser.ast.Stmt;
@@ -49,7 +50,10 @@ public class Parser {
   private int current = 0;
   private int anonymousCount = 0;
 
-  public Parser(Lexer lexer) {
+  private final BladeLanguage language;
+
+  public Parser(Lexer lexer, BladeLanguage language) {
+    this.language = language;
     this.lexer = lexer;
     this.tokens = this.lexer.run();
   }
@@ -939,12 +943,12 @@ public class Parser {
         match(LPAREN);
       }
 
-      Stmt decl = null;
+      Stmt declaration = null;
       if (!check(SEMICOLON)) {
         if (check(VAR)) {
           consume(VAR, "variable declaration expected");
         }
-        decl = varDeclaration(false);
+        declaration = varDeclaration(false);
       }
       consume(SEMICOLON, "';' expected");
       ignoreNewlinesNoSemi();
@@ -969,7 +973,7 @@ public class Parser {
       }
 
       Stmt.Block body = matchBlock("'{' expected at beginning of iter block");
-      return new Stmt.Iter(decl, condition, iterator, body);
+      return new Stmt.Iter(declaration, condition, iterator, body);
     });
   }
 
@@ -1031,19 +1035,19 @@ public class Parser {
       consume(IDENTIFIER, "variable name expected");
       Token nameToken = previous();
 
-      Stmt decl;
+      Stmt declaration;
       if (match(EQUAL)) {
-        decl = new Stmt.Var(nameToken, expression(), isConstant);
+        declaration = new Stmt.Var(nameToken, expression(), isConstant);
       } else {
         if (isConstant) {
           throw new ParserException(lexer.getSource(), peek(), false, "constant value not declared");
         }
-        decl = new Stmt.Var(nameToken, null, false);
+        declaration = new Stmt.Var(nameToken, null, false);
       }
 
       if (check(COMMA)) {
         List<Stmt> declarations = new ArrayList<>();
-        declarations.add(decl);
+        declarations.add(declaration);
 
         while (match(COMMA)) {
           ignoreNewlines();
@@ -1063,11 +1067,11 @@ public class Parser {
         return new Stmt.VarList(declarations);
       }
 
-      return decl;
+      return declaration;
     });
   }
 
-  private boolean functionArgs(List<Expr.Identifier> params) {
+  private boolean functionArgs(List<Expr.Identifier> params, List<Expr.Identifier> types) {
     ignoreNewlines();
     boolean isVariadic = false;
 
@@ -1076,10 +1080,18 @@ public class Parser {
         consume(IDENTIFIER, "variable parameter name expected");
         isVariadic = true;
         params.add(identifier());
+        types.add(null);
         break;
       }
 
       params.add(identifier());
+
+      if(match(COLON)) {
+        consume(IDENTIFIER, "function argument type name expected");
+        types.add(identifier());
+      } else {
+        types.add(null);
+      }
 
       if (!check(RPAREN)) {
         consume(COMMA, "',' expected between function arguments");
@@ -1090,24 +1102,61 @@ public class Parser {
     return isVariadic;
   }
 
+  private void processFunctionParamTypes(Stmt.Block block, List<Expr.Identifier> params, List<Expr.Identifier> types) {
+    if(language.enforceTypes) {
+      for(int i = types.size() - 1; i >= 0; i--) {
+        Expr.Identifier current = types.get(i);
+        if(current != null) {
+          block.body.addFirst(
+            new Stmt.If(
+              new Expr.Logical(params.get(i), current.token.copyToType(BANG_EQ, "!="), new Expr.Nil()),
+              new Stmt.Assert(
+                new Expr.Logical(
+                  new Expr.Call(
+                    new Expr.Get(
+                      params.get(i),
+                      new Expr.Identifier(current.token.copyToType(IDENTIFIER, "get_class"))
+                    ),
+                    List.of()
+                  ),
+                  previous().copyToType(EQUAL_EQ, "=="),
+                  current
+                ),
+                new Expr.New(
+                  new Expr.Identifier(current.token.copyToType(IDENTIFIER, "TypeError")),
+                  List.of(new Expr.Literal(previous().copyToType(
+                    LITERAL,
+                    "Expected type of " + current.token.literal() + " as argument " + (i + 1) + " (" + params.get(i).token.literal() + ")"
+                  ))))
+              ),
+              null
+            )
+          );
+        }
+      }
+    }
+  }
+
   private Expr anonymous() {
     return wrapExpr(() -> {
       Token nameCompatToken = previous();
 
       List<Expr.Identifier> params = new ArrayList<>();
+      List<Expr.Identifier> paramTypes = new ArrayList<>();
       boolean isVariadic = false;
 
       if (check(LPAREN)) {
         consume(LPAREN, "expected '(' at start of anonymous function");
 
         if (!check(RPAREN)) {
-          isVariadic = functionArgs(params);
+          isVariadic = functionArgs(params, paramTypes);
         }
 
         consume(RPAREN, "expected ')' after anonymous function parameters");
       }
 
       var body = matchBlock("'{' expected after function declaration");
+      processFunctionParamTypes(body, params, paramTypes);
 
       return new Expr.Anonymous(
         new Stmt.Function(
@@ -1123,13 +1172,14 @@ public class Parser {
       consume(IDENTIFIER, "function name expected");
       Token name = previous();
       List<Expr.Identifier> params = new ArrayList<>();
-      boolean isVariadic = false;
+      List<Expr.Identifier> paramTypes = new ArrayList<>();
 
       consume(LPAREN, "'(' expected after function name");
-      isVariadic = functionArgs(params);
+      boolean isVariadic = functionArgs(params, paramTypes);
       consume(RPAREN, "')' expected after function arguments");
 
       var body = matchBlock("'{' expected after function declaration");
+      processFunctionParamTypes(body, params, paramTypes);
 
       return new Stmt.Function(name, params, body, isVariadic);
     });
@@ -1156,9 +1206,12 @@ public class Parser {
       var name = previous();
 
       List<Expr.Identifier> params = new ArrayList<>();
+      List<Expr.Identifier> paramTypes = new ArrayList<>();
       params.add(new Expr.Identifier(previous().copyToType(IDENTIFIER, "__arg__")));
+      paramTypes.add(null);
 
       var body = matchBlock("'{' expected after operator declaration");
+      processFunctionParamTypes(body, params, paramTypes);
 
       return new Stmt.Method(name, params, body, false, false);
     });
@@ -1170,12 +1223,14 @@ public class Parser {
       Token name = previous();
 
       List<Expr.Identifier> params = new ArrayList<>();
+      List<Expr.Identifier> paramTypes = new ArrayList<>();
 
       consume(LPAREN, "'(' expected after method name");
-      boolean isVariadic = functionArgs(params);
+      boolean isVariadic = functionArgs(params, paramTypes);
       consume(RPAREN, "')' expected after method arguments");
 
       var body = matchBlock("'{' expected after method declaration");
+      processFunctionParamTypes(body, params, paramTypes);
 
       return new Stmt.Method(name, params, body, isStatic, isVariadic);
     });

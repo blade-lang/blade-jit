@@ -49,7 +49,7 @@ public class NAddNodeTest {
     try {
       var source = Source.newBuilder(BladeLanguage.ID, "2 + 2", "<script>").build();
 
-      var parser = new Parser(new Lexer(source));
+      var parser = new Parser(new Lexer(source), new BladeLanguage());
       var parseResult = parser.parse();
       assertEquals(1, parseResult.size());
 

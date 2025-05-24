@@ -1,19 +1,19 @@
 var N = 21
 
 class Tree {
-  @new(left, right) {
+  @new(left: Tree, right: Tree) {
     self.left = left
     self.right = right
   }
 }
 
-def make_tree(depth) {
+def make_tree(depth: Number) {
   if depth <= 0 return new Tree(nil, nil)
   depth -= 1
   return new Tree(make_tree(depth), make_tree(depth))
 }
 
-def check_tree(node) {
+def check_tree(node: Tree) {
   if node.left == nil return 1
   return 1 + check_tree(node.left) + check_tree(node.right)
 }

@@ -44,3 +44,4 @@ bin/
 ### Others ###
 generated/
 *.iprof
+.profile*

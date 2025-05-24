@@ -1,9 +1,6 @@
 package org.blade.language;
 
-import com.oracle.truffle.api.Assumption;
-import com.oracle.truffle.api.CallTarget;
-import com.oracle.truffle.api.Truffle;
-import com.oracle.truffle.api.TruffleLanguage;
+import com.oracle.truffle.api.*;
 import com.oracle.truffle.api.dsl.Bind;
 import com.oracle.truffle.api.dsl.NodeFactory;
 import com.oracle.truffle.api.frame.FrameDescriptor;
@@ -35,6 +32,7 @@ import org.blade.language.runtime.*;
 import org.blade.language.shared.BuiltinClassesModel;
 import org.blade.language.shared.ErrorsModel;
 import org.blade.language.translator.BladeTranslator;
+import org.graalvm.options.*;
 
 import java.lang.invoke.MethodHandles;
 import java.util.Collections;
@@ -63,6 +61,10 @@ public class BladeLanguage extends TruffleLanguage<BladeContext> {
   private static final LanguageReference<BladeLanguage> REFERENCE = LanguageReference.create(BladeLanguage.class);
   private final Assumption assumption = Truffle.getRuntime().createAssumption("Single Blade context.");
 
+  @Option(help = "Enforce type hints in function parameters", category = OptionCategory.USER, stability = OptionStability.STABLE) //
+  public static final OptionKey<Boolean> EnforceTypes = new OptionKey<>(false);
+  public boolean enforceTypes = false;
+
   // Shapes
   public final Shape rootShape = Shape.newBuilder().build();
   public final Shape listShape = createShape(ListObject.class);
@@ -85,6 +87,8 @@ public class BladeLanguage extends TruffleLanguage<BladeContext> {
 
   @Override
   protected BladeContext createContext(Env env) {
+    enforceTypes = EnforceTypes.getValue(env.getOptions());
+
     DynamicObjectLibrary objectLibrary = DynamicObjectLibrary.getUncached();
     return new BladeContext(
       env,
@@ -256,7 +260,7 @@ public class BladeLanguage extends TruffleLanguage<BladeContext> {
   protected CallTarget parse(ParsingRequest request) {
     Source source = request.getSource();
 
-    Parser parser = new Parser(new Lexer(source));
+    Parser parser = new Parser(new Lexer(source), this);
     List<Stmt> statements = parser.parse();
 
     var visitor = new BladeTranslator(parser, builtinObjects);
@@ -292,5 +296,15 @@ public class BladeLanguage extends TruffleLanguage<BladeContext> {
   public void exitContext(BladeContext context, ExitMode exitMode, int exitCode) {
     // Shutdown hooks should always be run irrespective of the exit code.
     context.runShutdownHooks();
+  }
+
+  @Override
+  protected boolean areOptionsCompatible(OptionValues firstOptions, OptionValues newOptions) {
+    return EnforceTypes.getValue(firstOptions).equals(EnforceTypes.getValue(newOptions));
+  }
+
+  @Override
+  protected OptionDescriptors getOptionDescriptors() {
+    return new BladeLanguageOptionDescriptors();
   }
 }

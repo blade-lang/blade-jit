@@ -1,7 +1,5 @@
 package org.blade;
 
-import com.oracle.truffle.api.nodes.RootNode;
-import org.blade.language.runtime.BString;
 import org.graalvm.polyglot.*;
 import org.blade.language.BladeLanguage;
 
@@ -134,7 +132,10 @@ public class Main {
     if (index >= 0) {
       group = group.substring(0, index);
     }
-    options.put(key, value);
+
+    if(group.equals("blade") || key.equals("inspect")) {
+      options.put(key, value);
+    }
     return true;
   }
 
