@@ -22,6 +22,16 @@ public abstract class NFrameMember {
     }
   }
 
+  public static final class CloseVariable extends NFrameMember {
+    public final NFrameMember member;
+    public final boolean isLocal;
+
+    public CloseVariable(NFrameMember member, boolean isLocal) {
+      this.member = member;
+      this.isLocal = isLocal;
+    }
+  }
+
   public static final class ClassObject extends NFrameMember {
     public final BladeClass object;
 

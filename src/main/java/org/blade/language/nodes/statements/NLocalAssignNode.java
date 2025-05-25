@@ -12,7 +12,6 @@ import org.blade.language.nodes.NStmtNode;
 @NodeChild(value = "value", type = NNode.class)
 @NodeField(name = "slotName", type = String.class)
 @NodeField(name = "slot", type = int.class)
-@ImportStatic(FrameSlotKind.class)
 public abstract class NLocalAssignNode extends NStmtNode {
   public abstract String getSlotName();
   public abstract int getSlot();

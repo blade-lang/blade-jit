@@ -43,7 +43,7 @@ public class BladeTranslator extends BaseVisitor<NNode> {
 
   // Trackers
   private int localsCount = 0;
-  private Stack<Map<String, NFrameMember>> localScopes = new Stack<>();
+  private LocalScope localScope = new LocalScope();
   private BladeClass currentClass = null;
 
   public BladeTranslator(Parser parser, BuiltinClassesModel classesModel) {
@@ -56,7 +56,7 @@ public class BladeTranslator extends BaseVisitor<NNode> {
     for (Map.Entry<String, BladeClass> classEntry : classesModel.builtinClasses.entrySet()) {
       objectClasses.put(classEntry.getKey(), new NFrameMember.ClassObject(classEntry.getValue()));
     }
-    localScopes.push(objectClasses);
+    localScope.push(objectClasses);
   }
 
   public NTranslateResult translate(List<Stmt> stmtList) {
@@ -157,7 +157,19 @@ public class BladeTranslator extends BaseVisitor<NNode> {
   @Override
   public NNode visitIdentifierExpr(Expr.Identifier expr) {
     String id = expr.token.literal();
-    NFrameMember member = findFrameMember(id);
+    NFrameMember member = localScope.findFrameMember(id);
+
+    if(member == null) {
+      NFrameMember.CloseVariable closeVariable = localScope.findClosedFrameMember(id);
+      if(closeVariable != null) {
+        //noinspection StatementWithEmptyBody
+        if(closeVariable.member instanceof NFrameMember.ClassObject) {
+          member = closeVariable.member;
+        } else {
+          // TODO: handle actual up-values here...
+        }
+      }
+    }
 
     if (member == null || member instanceof NFrameMember.ClassObject) {
       return sourceSection(NGlobalVarRefExprNodeGen.create(globalScopeNode, id), expr);
@@ -241,7 +253,13 @@ public class BladeTranslator extends BaseVisitor<NNode> {
     if (expr.expression instanceof Expr.Identifier identifier) {
       String name = identifier.token.literal();
 
-      NFrameMember member = findFrameMember(name);
+      NFrameMember member = localScope.findFrameMember(name);
+
+      //noinspection StatementWithEmptyBody
+      if(member == null) {
+        // TODO: Find closed values and act appropriately if found.
+      }
+
       if (member == null) {
         return NGlobalAssignExprNodeGen.create(globalScopeNode, value, name);
       } else {
@@ -345,11 +363,6 @@ public class BladeTranslator extends BaseVisitor<NNode> {
       values.add(visitExpr(e));
     }
 
-//    for (int i = 0; i < expr.keys.size(); i++) {
-//      keys.add(visitExpr(expr.keys.get(i)));
-//      values.add(visitExpr(expr.values.get(i)));
-//    }
-
     return sourceSection(new NDictionaryLiteralNode(keys, values), expr);
   }
 
@@ -393,7 +406,7 @@ public class BladeTranslator extends BaseVisitor<NNode> {
     if (state != ParserState.TOP_LEVEL) {
       LocalRefSlot slotId = new LocalRefSlot(name, ++localsCount);
       int slot = frameDescriptor.addSlot(FrameSlotKind.Illegal, slotId, isConstant);
-      if (localScopes.peek().putIfAbsent(name, new NFrameMember.LocalVariable(slot, isConstant)) != null) {
+      if (localScope.peek().putIfAbsent(name, new NFrameMember.LocalVariable(slot, isConstant)) != null) {
         throw BladeRuntimeError.error(value, "'", name, "' is already declared in this scope");
       }
 
@@ -522,7 +535,7 @@ public class BladeTranslator extends BaseVisitor<NNode> {
       "Object";
 
     BladeClass classObject;
-    NFrameMember frameMember = localScopes.getFirst().get(superClass);
+    NFrameMember frameMember = localScope.getFirst().get(superClass);
     if (frameMember instanceof NFrameMember.ClassObject classMember) {
       BladeClass superClassObject = classMember.object;
       classObject = new BladeClass(objectShape, className, superClassObject);
@@ -530,7 +543,7 @@ public class BladeTranslator extends BaseVisitor<NNode> {
       throw BladeRuntimeError.create("Class '", className, "' extends unknown or frozen class '", superClass, "'");
     }
 
-    localScopes.getFirst().put(className, new NFrameMember.ClassObject(classObject));
+    localScope.getFirst().put(className, new NFrameMember.ClassObject(classObject));
 
     List<NNode> methods = new ArrayList<>();
     List<NNode> properties = new ArrayList<>();
@@ -632,7 +645,7 @@ public class BladeTranslator extends BaseVisitor<NNode> {
       String errorName = stmt.name.token.literal();
       LocalRefSlot slotId = new LocalRefSlot(errorName, ++localsCount);
       slot = frameDescriptor.addSlot(FrameSlotKind.Object, slotId, 1);
-      if (localScopes.peek().putIfAbsent(errorName, new NFrameMember.LocalVariable(slot, true)) != null) {
+      if (localScope.peek().putIfAbsent(errorName, new NFrameMember.LocalVariable(slot, true)) != null) {
         throw BladeRuntimeError.error(thenBody, "'", errorName, "' is already declared in this scope");
       }
 
@@ -660,24 +673,24 @@ public class BladeTranslator extends BaseVisitor<NNode> {
   private NNode translateFunction(Stmt source, String name, List<Expr.Identifier> parameters, Stmt.Block body, NNode root, boolean isVariadic) {
     FrameDescriptor.Builder previousFrameDescriptor = frameDescriptor;
     ParserState previousState = state;
-    var previousLocalScopes = localScopes;
+    var previousLocalScopes = localScope;
 
     this.frameDescriptor = FrameDescriptor.newBuilder();
     this.state = ParserState.FUNC_DEF;
-    this.localScopes = new Stack<>();
+    this.localScope = new LocalScope(previousLocalScopes);
 
     Map<String, NFrameMember> localVariables = new HashMap<>();
     for (int i = 0; i < parameters.size(); i++) {
       localVariables.put(parameters.get(i).token.literal(), new NFrameMember.FunctionArgument(i + 1));
     }
-    this.localScopes.push(localVariables);
+    this.localScope.push(localVariables);
 
     NBlockStmtNode statements = visitBlockStmt(body);
 
     FrameDescriptor frameDescriptor = this.frameDescriptor.build();
     this.frameDescriptor = previousFrameDescriptor;
     this.state = previousState;
-    this.localScopes = previousLocalScopes;
+    this.localScope = previousLocalScopes;
 
     return sourceSection(NFunctionStmtNodeGen.create(
       root,
@@ -689,15 +702,60 @@ public class BladeTranslator extends BaseVisitor<NNode> {
     ), source);
   }
 
-  private NFrameMember findFrameMember(String name) {
-    for (Map<String, NFrameMember> scope : localScopes) {
-      NFrameMember member = scope.get(name);
-      if (member != null) {
-        return member;
-      }
+  private static class LocalScope {
+    private final Stack<Map<String, NFrameMember>> stack = new Stack<>();
+    private final LocalScope parent;
+
+    public LocalScope(LocalScope parent) {
+      this.parent = parent;
     }
 
-    return null;
+    public LocalScope() {
+      this(null);
+    }
+
+    void push(Map<String, NFrameMember> item) {
+      stack.push(item);
+    }
+
+    void pop() {
+      stack.pop();
+    }
+
+    Map<String, NFrameMember> peek() {
+      return stack.peek();
+    }
+
+    Map<String, NFrameMember> getFirst() {
+      return stack.getFirst();
+    }
+
+    NFrameMember findFrameMember(String name) {
+      for (Map<String, NFrameMember> scope : stack) {
+        NFrameMember member = scope.get(name);
+        if (member != null) {
+          return member;
+        }
+      }
+
+      return null;
+    }
+
+    NFrameMember.CloseVariable findClosedFrameMember(String name) {
+      if(parent != null) {
+        NFrameMember value = parent.findFrameMember(name);
+        if(value != null) {
+          return new NFrameMember.CloseVariable(value, false);
+        }
+
+        value = parent.findClosedFrameMember(name);
+        if(value != null) {
+          return new NFrameMember.CloseVariable(value, true);
+        }
+      }
+
+      return null;
+    }
   }
 
   private NNode newLocalScope(Callback callback) {
@@ -705,17 +763,13 @@ public class BladeTranslator extends BaseVisitor<NNode> {
     if (state == ParserState.TOP_LEVEL) {
       state = ParserState.NESTED_TOP_LEVEL;
     }
-    localScopes.push(new HashMap<>());
+    localScope.push(new HashMap<>());
 
     NNode result = callback.run();
 
     state = previousState;
-    localScopes.pop();
+    localScope.pop();
     return result;
-  }
-
-  private boolean isReadingExpr(Expr expr) {
-    return expr instanceof Expr.Identifier;
   }
 
   private NNode sourceSection(NNode node, Object object) {
@@ -727,8 +781,6 @@ public class BladeTranslator extends BaseVisitor<NNode> {
       ));
     }
 
-//    System.out.println(node);
-//    System.out.println(object);
     return node.setSourceSection(parser.lexer.source.createSection(1));
   }
 
