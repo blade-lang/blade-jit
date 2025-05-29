@@ -55,7 +55,7 @@ public class NAddNodeTest {
 
       var visitor = new BladeTranslator(parser, new BladeLanguage().builtinObjects);
       var callTarget = new NBlockRootNode(null,
-        new NBlockStmtNode(List.of(parseResult.getFirst().accept(visitor))),
+        new NBlockStmtNode(List.of(parseResult.get(0).accept(visitor))),
         "@.script"
       ).getCallTarget();
 

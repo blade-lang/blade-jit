@@ -549,7 +549,7 @@ public class BladeTranslator extends BaseVisitor<NNode> {
     List<NNode> properties = new ArrayList<>();
     List<NNode> operators = new ArrayList<>();
 
-    // set current class
+    // set the current class
     currentClass = classObject;
 
     for (Stmt.Property property : stmt.properties) {
@@ -727,7 +727,7 @@ public class BladeTranslator extends BaseVisitor<NNode> {
     }
 
     Map<String, NFrameMember> getFirst() {
-      return stack.getFirst();
+      return stack.get(0);
     }
 
     NFrameMember findFrameMember(String name) {

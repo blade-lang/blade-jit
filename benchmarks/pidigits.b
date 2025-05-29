@@ -4,7 +4,7 @@
    transliterated from Alexander Fyodorov's program by Isaac Gouy
 */
 
-def pad(i, last) {
+def pad(i: Number, last: Bool) {
   var res = i.to_string()
   var count = 10 - res.length
   while count > 0 {
@@ -18,7 +18,7 @@ def pad(i, last) {
   return res
 }
 
-def calculatePi(arg) {
+def calculatePi(arg: Number) {
   var i = 0, ns = 0
 
   var k = 0n

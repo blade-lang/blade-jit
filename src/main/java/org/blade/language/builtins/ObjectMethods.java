@@ -106,8 +106,8 @@ public class ObjectMethods implements BaseBuiltinDeclaration {
     @Specialization
     protected Object doBigInt(BigIntObject object,
                               @Cached(value = "languageContext().objectsModel", neverDefault = true) @Cached.Shared("objectsModel") BuiltinClassesModel objectsModel,
-                              @Cached(value = "objectsModel.numberObject", neverDefault = true) BladeClass numberObject) {
-      return numberObject;
+                              @Cached(value = "objectsModel.bigIntObject", neverDefault = true) BladeClass bigIntObject) {
+      return bigIntObject;
     }
 
     @Specialization

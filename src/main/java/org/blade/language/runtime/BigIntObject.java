@@ -210,7 +210,7 @@ public final class BigIntObject implements TruffleObject, Comparable<BigIntObjec
 
   @ExportMessage
   Object getMetaObject() {
-    return BladeType.NUMBER;
+    return BladeType.BIGINT;
   }
 
   @ExportMessage

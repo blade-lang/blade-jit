@@ -18,6 +18,7 @@ public class BuiltinClassesModel {
   public final BladeClass dictionaryObject;
   public final BladeClass stringObject;
   public final BladeClass numberObject;
+  public final BladeClass bigIntObject;
   public final BladeClass booleanObject;
   public final BladeClass rangeObject;
 
@@ -26,21 +27,20 @@ public class BuiltinClassesModel {
 
   public BuiltinClassesModel(
     Shape rootShape, Shape listShape, Shape dictionaryShape, BObject objectObject,
-    BladeClass functionObject, BladeClass listObject, BladeClass dictionaryObject, BladeClass stringObject,
-    BladeClass numberObject, BladeClass booleanObject, BladeClass rangeObject,
-    ErrorsModel errorsModel
+    BladeClass functionObject, ErrorsModel errorsModel
   ) {
     this.rootShape = rootShape;
     this.listShape = listShape;
     this.dictionaryShape = dictionaryShape;
     this.objectObject = objectObject;
     this.functionObject = functionObject;
-    this.listObject = listObject;
-    this.dictionaryObject = dictionaryObject;
-    this.stringObject = stringObject;
-    this.numberObject = numberObject;
-    this.booleanObject = booleanObject;
-    this.rangeObject = rangeObject;
+    this.listObject = new BladeClass(rootShape, "List", objectObject, true);
+    this.dictionaryObject = new BladeClass(rootShape, "Dictionary", objectObject, true);
+    this.stringObject = new BladeClass(rootShape, "String", objectObject, true);
+    this.numberObject = new BladeClass(rootShape, "Number", objectObject, true);
+    this.booleanObject = new BladeClass(rootShape, "Bool", objectObject, true);
+    this.bigIntObject = new BladeClass(rootShape, "BigInt", objectObject, true);
+    this.rangeObject = new BladeClass(rootShape, "Range", objectObject, true);
     this.errorsModel = errorsModel;
 
     Map<String, BladeClass> allBuiltInClasses = new HashMap<>();

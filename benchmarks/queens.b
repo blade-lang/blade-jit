@@ -26,7 +26,7 @@
 
 class Queens {
   @new() {
-    self.free_maxs = nil
+    self.free_maxes = nil
     self.free_rows = nil
     self.free_mins = nil
     self.queen_rows = nil
@@ -42,7 +42,7 @@ class Queens {
 
   queens() {
     self.free_rows = [true] * 8
-    self.free_maxs = [true] * 16
+    self.free_maxes = [true] * 16
     self.free_mins = [true] * 16
     self.queen_rows = [-1] * 8
 
@@ -71,13 +71,13 @@ class Queens {
   }
 
   get_row_column(r, c) {
-    return self.free_rows[r] and self.free_maxs[c + r] and
+    return self.free_rows[r] and self.free_maxes[c + r] and
       self.free_mins[c - r + 7]
   }
 
   set_row_column(r, c, v) {
     self.free_rows[r] = v
-    self.free_maxs[c + r] = v
+    self.free_maxes[c + r] = v
     self.free_mins[c - r + 7] = v
   }
 }

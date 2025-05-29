@@ -72,9 +72,9 @@ class Packet {
 
   append_to(lst) {
     self.link = nil
-    if lst == nil
+    if lst == nil {
         return self
-    else {
+    } else {
       var p = lst
       var next = p.link
       while next != nil {
@@ -277,10 +277,11 @@ class Task < TaskState {
   release(i) {
     var t = self.findtcb(i)
     t.task_holding = false
-    if t.priority > self.priority
+    if t.priority > self.priority {
       return t
-    else
+    } else {
       return self
+    }
   }
 
 

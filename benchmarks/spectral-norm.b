@@ -12,11 +12,11 @@ const ARRAY_LENGTH = 5500
 var u = [1] * ARRAY_LENGTH
 var v = []
 
-def eval_A(i,j) {
+def eval_A(i: Number, j: Number) {
   return 1.0/((i+j)*(i+j+1)/2+i+1)
 }
 
-def vector_times_array(vector) {
+def vector_times_array(vector: List) {
   var arr = [], i = 0
   while i < ARRAY_LENGTH {
     var sum = 0, j = 0
@@ -31,7 +31,7 @@ def vector_times_array(vector) {
   return arr
 }
 
-def vector_times_array_transposed(vector) {
+def vector_times_array_transposed(vector: List) {
   var arr = [], i = 0
   while i < ARRAY_LENGTH {
     var sum = 0, j = 0
@@ -46,7 +46,7 @@ def vector_times_array_transposed(vector) {
   return arr
 }
 
-def vector_times_array_times_array_transposed(vector) {
+def vector_times_array_times_array_transposed(vector: List) {
   return vector_times_array_transposed(vector_times_array(vector))
 }
 
