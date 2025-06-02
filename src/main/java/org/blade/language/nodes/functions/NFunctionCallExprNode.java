@@ -7,6 +7,7 @@ import com.oracle.truffle.api.dsl.Fallback;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
+import com.oracle.truffle.api.object.Shape;
 import org.blade.language.nodes.NNode;
 import org.blade.language.runtime.*;
 
@@ -44,22 +45,28 @@ public abstract class NFunctionCallExprNode extends NNode {
   @Specialization(guards = {"function.variadic", "arguments.length < function.argumentsCount"})
   protected Object doVariableLessSize(VirtualFrame frame, FunctionObject function,
                                       @Cached("function") FunctionObject cachedFunction,
-                                      @Cached(value = "languageContext()", neverDefault = false) @Cached.Shared("group") BladeContext context) {
-    return dispatchNode.executeDispatch(cachedFunction, expandLessVarArguments(context, cachedFunction, consumeArguments(frame)));
+                                      @Cached(value = "languageContext()", neverDefault = false) @Cached.Shared("group") BladeContext context,
+                                      @Cached("context.objectsModel.listShape") Shape listShape,
+                                      @Cached("context.objectsModel.listObject") BladeClass listClass) {
+    return dispatchNode.executeDispatch(cachedFunction, expandLessVarArguments(cachedFunction, consumeArguments(frame), listShape, listClass));
   }
 
   @Specialization(guards = {"function.variadic", "arguments.length >= function.argumentsCount", "function.argumentsCount > 1"})
   protected Object doVariableMoreSize(VirtualFrame frame, FunctionObject function,
                                       @Cached("function") FunctionObject cachedFunction,
-                                      @Cached(value = "languageContext()", neverDefault = false) @Cached.Shared("group") BladeContext context) {
-    return dispatchNode.executeDispatch(cachedFunction, expandMoreVarArguments(context, cachedFunction, consumeArguments(frame)));
+                                      @Cached(value = "languageContext()", neverDefault = false) @Cached.Shared("group") BladeContext context,
+                                      @Cached("context.objectsModel.listShape") Shape listShape,
+                                      @Cached("context.objectsModel.listObject") BladeClass listClass) {
+    return dispatchNode.executeDispatch(cachedFunction, expandMoreVarArguments(cachedFunction, consumeArguments(frame), listShape, listClass));
   }
 
   @Specialization(guards = {"function.variadic", "arguments.length >= function.argumentsCount", "function.argumentsCount == 1"})
   protected Object doVariableNoSize(VirtualFrame frame, FunctionObject function,
                                     @Cached("function") FunctionObject cachedFunction,
-                                    @Cached(value = "languageContext()", neverDefault = false) @Cached.Shared("group") BladeContext context) {
-    return dispatchNode.executeDispatch(cachedFunction, expandNoVarArguments(context, cachedFunction, consumeArguments(frame)));
+                                    @Cached(value = "languageContext()", neverDefault = false) @Cached.Shared("group") BladeContext context,
+                                    @Cached("context.objectsModel.listShape") Shape listShape,
+                                    @Cached("context.objectsModel.listObject") BladeClass listClass) {
+    return dispatchNode.executeDispatch(cachedFunction, expandNoVarArguments(cachedFunction, consumeArguments(frame), listShape, listClass));
   }
 
   @Specialization(replaces = "doSameSize")
@@ -106,7 +113,7 @@ public abstract class NFunctionCallExprNode extends NNode {
    * Specially used for variadic functions
    */
   @ExplodeLoop
-  private Object[] expandLessVarArguments(BladeContext context, FunctionObject function, Object[] arguments) {
+  private Object[] expandLessVarArguments(FunctionObject function, Object[] arguments, Shape listShape, BladeClass listClass) {
     int functionArity = function.argumentsCount;
     int argumentLength = arguments.length;
 
@@ -122,8 +129,8 @@ public abstract class NFunctionCallExprNode extends NNode {
     }
 
     ret[functionArity] = new ListObject(
-      context.objectsModel.listShape,
-      context.objectsModel.listObject,
+      listShape,
+      listClass,
       new Object[0]
     );
 
@@ -134,7 +141,7 @@ public abstract class NFunctionCallExprNode extends NNode {
    * Specially used for variadic functions
    */
   @ExplodeLoop
-  private Object[] expandMoreVarArguments(BladeContext context, FunctionObject function, Object[] arguments) {
+  private Object[] expandMoreVarArguments(FunctionObject function, Object[] arguments, Shape listShape, BladeClass listClass) {
     int functionArity = function.argumentsCount;
     int finalLength = functionArity + 1;
     Object[] ret = new Object[finalLength];
@@ -146,8 +153,8 @@ public abstract class NFunctionCallExprNode extends NNode {
     System.arraycopy(arguments, functionArity, variadic, 0, varLength);
 
     ret[functionArity] = new ListObject(
-      context.objectsModel.listShape,
-      context.objectsModel.listObject,
+      listShape,
+      listClass,
       variadic
     );
 
@@ -158,7 +165,7 @@ public abstract class NFunctionCallExprNode extends NNode {
    * Specially used for variadic functions
    */
   @ExplodeLoop
-  private Object[] expandNoVarArguments(BladeContext context, FunctionObject function, Object[] arguments) {
+  private Object[] expandNoVarArguments(FunctionObject function, Object[] arguments, Shape listShape, BladeClass listClass) {
     Object[] ret = new Object[2];
     int argumentLength = arguments.length;
 
@@ -166,8 +173,8 @@ public abstract class NFunctionCallExprNode extends NNode {
     System.arraycopy(arguments, 1, variadic, 0, argumentLength - 1);
 
     ret[1] = new ListObject(
-      context.objectsModel.listShape,
-      context.objectsModel.listObject,
+      listShape,
+      listClass,
       variadic
     );
 

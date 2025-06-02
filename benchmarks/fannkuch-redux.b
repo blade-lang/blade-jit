@@ -62,4 +62,5 @@ def fannkuchredux(n)
 
 const start = microtime()
 echo 'Pfannkuchen(' +12+ ') = ' + fannkuchredux(12)
-echo '\nTime taken = ${(microtime() - start) / 1.0e+6}s'
+
+echo '\nTotal time taken: ${(microtime() - start)/1_000_000}s'

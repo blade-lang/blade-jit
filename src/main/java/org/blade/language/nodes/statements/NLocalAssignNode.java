@@ -1,11 +1,12 @@
 package org.blade.language.nodes.statements;
 
-import com.oracle.truffle.api.dsl.ImportStatic;
 import com.oracle.truffle.api.dsl.NodeChild;
 import com.oracle.truffle.api.dsl.NodeField;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.FrameSlotKind;
 import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.instrumentation.StandardTags;
+import com.oracle.truffle.api.instrumentation.Tag;
 import org.blade.language.nodes.NNode;
 import org.blade.language.nodes.NStmtNode;
 
@@ -18,7 +19,7 @@ public abstract class NLocalAssignNode extends NStmtNode {
 
   @Specialization(guards = "isBooleanOrIllegal(frame)")
   protected boolean doBoolean(VirtualFrame frame, boolean value) {
-    int frameSlot = getSlot();
+    final int frameSlot = getSlot();
     frame.getFrameDescriptor().setSlotKind(frameSlot, FrameSlotKind.Boolean);
     frame.setBoolean(frameSlot, value);
     return value;
@@ -26,7 +27,7 @@ public abstract class NLocalAssignNode extends NStmtNode {
 
   @Specialization(guards = "isLongOrIllegal(frame)")
   protected long doLong(VirtualFrame frame, long value) {
-    int frameSlot = getSlot();
+    final int frameSlot = getSlot();
     frame.getFrameDescriptor().setSlotKind(frameSlot, FrameSlotKind.Long);
     frame.setLong(frameSlot, value);
     return value;
@@ -34,7 +35,7 @@ public abstract class NLocalAssignNode extends NStmtNode {
 
   @Specialization(replaces = "doLong", guards = "isDoubleOrIllegal(frame)")
   protected double doDouble(VirtualFrame frame, double value) {
-    int frameSlot = getSlot();
+    final int frameSlot = getSlot();
     frame.getFrameDescriptor().setSlotKind(frameSlot, FrameSlotKind.Double);
     frame.setDouble(frameSlot, value);
     return value;
@@ -42,7 +43,7 @@ public abstract class NLocalAssignNode extends NStmtNode {
 
   @Specialization(replaces = {"doLong", "doDouble", "doBoolean"})
   protected Object doObject(VirtualFrame frame, Object value) {
-    int frameSlot = getSlot();
+    final int frameSlot = getSlot();
     frame.getFrameDescriptor().setSlotKind(frameSlot, FrameSlotKind.Object);
     frame.setObject(frameSlot, value);
     return value;
@@ -61,5 +62,10 @@ public abstract class NLocalAssignNode extends NStmtNode {
   protected boolean isDoubleOrIllegal(VirtualFrame frame) {
     final FrameSlotKind kind = frame.getFrameDescriptor().getSlotKind(getSlot());
     return kind == FrameSlotKind.Double || kind == FrameSlotKind.Illegal;
+  }
+
+  @Override
+  public boolean hasTag(Class<? extends Tag> tag) {
+    return tag == StandardTags.WriteVariableTag.class || super.hasTag(tag);
   }
 }

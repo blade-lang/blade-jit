@@ -70,6 +70,5 @@ class IList {
 
 var start = microtime()
 echo new IList().benchmark() == 10
-var end = microtime()
 
-echo 'Time taken = ${(end - start) / 1000000} seconds'
+echo '\nTotal time taken: ${(microtime() - start)/1_000_000}s'

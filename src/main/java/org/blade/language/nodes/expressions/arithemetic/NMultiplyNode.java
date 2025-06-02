@@ -4,21 +4,18 @@ import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.bytecode.OperationProxy;
 import com.oracle.truffle.api.dsl.*;
 import com.oracle.truffle.api.interop.InteropLibrary;
-import com.oracle.truffle.api.interop.UnsupportedMessageException;
 import com.oracle.truffle.api.library.CachedLibrary;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.nodes.Node;
+import com.oracle.truffle.api.object.Shape;
 import com.oracle.truffle.api.strings.TruffleString;
 import org.blade.language.BladeLanguage;
 import org.blade.language.nodes.NBinaryNode;
 import org.blade.language.runtime.*;
-import org.blade.language.shared.BuiltinClassesModel;
 
 import java.math.BigInteger;
 
-import static com.oracle.truffle.api.CompilerDirectives.shouldNotReachHere;
-
-@ImportStatic(Integer.class)
+@ImportStatic({Integer.class, BladeContext.class})
 @OperationProxy.Proxyable(allowUncached = true)
 public abstract class NMultiplyNode extends NBinaryNode {
 
@@ -77,11 +74,13 @@ public abstract class NMultiplyNode extends NBinaryNode {
   }
 
   @Specialization(guards = "count <= MAX_VALUE")
-  protected static ListObject doListMultiplication(ListObject list, long count, @Bind Node node) {
-    BuiltinClassesModel objectModel = BladeContext.get(node).objectsModel;
+  protected static ListObject doListMultiplication(ListObject list, long count, @Bind Node node,
+                                                   @Cached("get(node)") BladeContext context,
+                                                   @Cached("context.objectsModel.listShape") Shape listShape,
+                                                   @Cached("context.objectsModel.listObject") BladeClass listClass) {
     return new ListObject(
-      objectModel.listShape,
-      objectModel.listObject,
+      listShape,
+      listClass,
       repeatList(list, count)
     );
   }

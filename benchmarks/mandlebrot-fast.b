@@ -6,7 +6,7 @@
  * contributed by Stefan Krause
  * slightly modified by Chad Whipkey
  */
-const BUFFER_SIZE = 8192
+const BUFFER_SIZE = 8_192
 
 class Mandelbrot {
   var size
@@ -74,5 +74,6 @@ class Mandelbrot {
 }
 
 var start = microtime()
-new Mandelbrot(16000).compute()
-echo '\nTotal time taken = ${(microtime() - start) / 1000000}'
+new Mandelbrot(16_000).compute()
+
+echo '\nTotal time taken = ${(microtime() - start) / 1_000_000}s'

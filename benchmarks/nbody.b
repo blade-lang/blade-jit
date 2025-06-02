@@ -156,7 +156,7 @@ class NBodySystem {
   }
 }
 
-var n = 50000000
+var n = 50_000_000
 
 var start = microtime()
 
@@ -167,4 +167,4 @@ iter var i = 0; i < n; i++ {
 }
 echo system.energy()
 
-echo 'Time taken: ${(microtime() - start) / 1000000}'
+echo '\nTotal time taken: ${(microtime() - start)/1_000_000}s'

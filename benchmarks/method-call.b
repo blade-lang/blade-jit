@@ -70,5 +70,5 @@ for i in 0..n {
 
 echo val
 
-echo "elapsed: ${(microtime() - start) / 1_000_000}"
+echo '\nTotal time taken: ${(microtime() - start)/1_000_000}s'
 

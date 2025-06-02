@@ -84,6 +84,5 @@ class Queens {
 
 var start = microtime()
 echo new Queens().benchmark() == true
-var end = microtime()
 
-echo 'Time taken = ${(end - start) / 1000000} seconds'
+echo '\nTotal time taken: ${(microtime() - start)/1_000_000}s'

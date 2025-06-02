@@ -66,5 +66,6 @@ def calculatePi(arg: Number) {
 
 
 var start = microtime()
-calculatePi(10000)
-echo '\nTotal time taken = ${(microtime() - start) / 1000000}'
+calculatePi(10_000)
+
+echo '\nTotal time taken: ${(microtime() - start)/1_000_000}s'

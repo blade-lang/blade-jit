@@ -464,6 +464,7 @@ def run() {
 
 
 ####### TESTING .......
-var start = time()
+var start = microtime()
 run()
-echo 'Time taken ${time() - start}s'
+
+echo '\nTotal time taken: ${(microtime() - start)/1_000_000}s'

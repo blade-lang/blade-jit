@@ -42,4 +42,5 @@ iter var depth = min_depth; depth < stretch_depth; depth += 2 {
 }
 
 echo 'long lived tree of depth ${max_depth}\t check: ${check_tree(long_lived_tree)}'
-echo 'Total time taken: ${(microtime() - start)/1.0e+6}'
+
+echo '\nTotal time taken: ${(microtime() - start)/1_000_000}s'

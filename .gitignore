@@ -45,3 +45,4 @@ bin/
 generated/
 *.iprof
 .profile*
+*.jfr

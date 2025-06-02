@@ -26,6 +26,7 @@ def run(number) {
   return count
 }
 
-var start = time()
-echo run(600000)
-echo 'Time taken = ${time() - start}'
+var start = microtime()
+echo run(600_000)
+
+echo '\nTotal time taken: ${(microtime() - start)/1_000_000}s'

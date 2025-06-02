@@ -59,8 +59,7 @@ class Permute {
 }
 
 var start = microtime()
-echo new Permute().benchmark() == 8660
-var end = microtime()
+echo new Permute().benchmark() == 8_660
 
-echo 'Time taken = ${(end - start) / 1000000} seconds'
+echo '\nTotal time taken: ${(microtime() - start)/1_000_000}s'
 

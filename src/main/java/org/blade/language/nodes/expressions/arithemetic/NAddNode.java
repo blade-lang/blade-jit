@@ -4,19 +4,17 @@ import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.bytecode.OperationProxy;
 import com.oracle.truffle.api.dsl.*;
 import com.oracle.truffle.api.interop.InteropLibrary;
-import com.oracle.truffle.api.interop.UnsupportedMessageException;
 import com.oracle.truffle.api.library.CachedLibrary;
 import com.oracle.truffle.api.nodes.Node;
+import com.oracle.truffle.api.object.Shape;
 import com.oracle.truffle.api.strings.TruffleString;
 import org.blade.language.nodes.NBinaryNode;
 import org.blade.language.runtime.*;
-import org.blade.language.shared.BuiltinClassesModel;
 
 import java.math.BigInteger;
 
-import static com.oracle.truffle.api.CompilerDirectives.shouldNotReachHere;
-
 @OperationProxy.Proxyable(allowUncached = true)
+@ImportStatic(BladeContext.class)
 public abstract class NAddNode extends NBinaryNode {
 
   @Specialization(rewriteOn = ArithmeticException.class)
@@ -101,7 +99,10 @@ public abstract class NAddNode extends NBinaryNode {
   }
 
   @Specialization
-  protected static Object doLists(ListObject left, ListObject right, @Bind Node node) {
+  protected static Object doLists(ListObject left, ListObject right, @Bind Node node,
+                                  @Cached("get(node)") BladeContext context,
+                                  @Cached("context.objectsModel.listShape") Shape listShape,
+                                  @Cached("context.objectsModel.listObject") BladeClass listClass) {
     Object[] leftItems = left.items;
     Object[] rightItems = right.items;
     int leftLength = leftItems.length;
@@ -111,8 +112,7 @@ public abstract class NAddNode extends NBinaryNode {
     System.arraycopy(leftItems, 0, items, 0, leftLength);
     System.arraycopy(rightItems, 0, items, leftLength, rightLength);
 
-    BuiltinClassesModel model = BladeContext.get(node).objectsModel;
-    return new ListObject(model.listShape, model.listObject, items);
+    return new ListObject(listShape, listClass, items);
   }
 
   @Specialization(limit = "3")
