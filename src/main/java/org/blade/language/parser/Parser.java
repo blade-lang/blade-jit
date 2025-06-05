@@ -1302,8 +1302,10 @@ public class Parser {
 
       if (match(VAR)) {
         result = varDeclaration(false);
+        endStatement();
       } else if (match(CONST)) {
         result = varDeclaration(true);
+        endStatement();
       } else if (match(DEF)) {
         result = defDeclaration();
       } else if (match(CLASS)) {
