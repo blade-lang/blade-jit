@@ -131,7 +131,7 @@ public class Parser {
   }
 
   private Expr.Grouping grouping() {
-    return (Expr.Grouping) wrapExpr(() -> {
+    return wrap(() -> {
       ignoreNewlines();
       var expr = expression();
       ignoreNewlines();
@@ -141,7 +141,7 @@ public class Parser {
   }
 
   private Expr.Call finishCall(Expr callee) {
-    return (Expr.Call) wrapExpr(() -> {
+    return wrap(() -> {
       ignoreNewlines();
       List<Expr> args = new ArrayList<>();
 
@@ -161,7 +161,7 @@ public class Parser {
   }
 
   private Expr finishIndex(Expr callee) {
-    return wrapExpr(() -> {
+    return wrap(() -> {
       ignoreNewlines();
       Expr expr = expression();
 
@@ -179,40 +179,42 @@ public class Parser {
   }
 
   private Expr finishDot(Expr e) {
-    return (Expr) wrap((expr) -> {
-      ignoreNewlines();
-      var prop = new Expr.Identifier(
-        consume(IDENTIFIER, "property name expected")
-      );
+    return wrap(
+      (expr) -> {
+        ignoreNewlines();
+        var prop = new Expr.Identifier(
+          consume(IDENTIFIER, "property name expected")
+        );
 
-      if (match(ASSIGNERS)) {
-        Token token = previous();
-        if (token.type() == EQUAL) {
-          expr = new Expr.Set((Expr) expr, prop, expression());
+        if (match(ASSIGNERS)) {
+          Token token = previous();
+          if (token.type() == EQUAL) {
+            expr = new Expr.Set(expr, prop, expression());
+          } else {
+            expr = new Expr.Set(
+              expr,
+              prop,
+              new Expr.Binary(
+                new Expr.Get(expr, prop),
+                previous().copyToType(ASSIGNER_ALTS.get(token.type()), previous().literal()),
+                assignment()
+              )
+            );
+          }
         } else {
-          expr = new Expr.Set(
-            (Expr) expr,
-            prop,
-            new Expr.Binary(
-              new Expr.Get((Expr) expr, prop),
-              previous().copyToType(ASSIGNER_ALTS.get(token.type()), previous().literal()),
-              assignment()
-            )
-          );
+          expr = new Expr.Get(expr, prop);
         }
-      } else {
-        expr = new Expr.Get((Expr) expr, prop);
-      }
 
-      return expr;
-    }, e);
+        return expr;
+      }, e
+    );
   }
 
   private Expr interpolation() {
-    return wrapExpr(() -> {
+    return wrap(() -> {
       match(INTERPOLATION);
 
-      Expr expr = wrapExpr(() -> new Expr.Literal(
+      Expr expr = wrap(() -> new Expr.Literal(
         previous().copyToType(LITERAL, previous().literal())
       ));
 
@@ -231,7 +233,7 @@ public class Parser {
   }
 
   private Expr newStatement() {
-    return wrapExpr(() -> {
+    return wrap(() -> {
       Expr expr = primary();
       List<Expr> arguments = new ArrayList<>();
 
@@ -255,15 +257,15 @@ public class Parser {
   }
 
   private Expr literal() {
-    return wrapExpr(() -> new Expr.Literal(previous()));
+    return wrap(() -> new Expr.Literal(previous()));
   }
 
   private Expr.Identifier identifier() {
-    return (Expr.Identifier) wrapExpr(() -> new Expr.Identifier(previous()));
+    return wrap(() -> new Expr.Identifier(previous()));
   }
 
   private Expr primary() {
-    return wrapExpr(() -> {
+    return wrap(() -> {
       if (match(FALSE)) return new Expr.Boolean(false);
       if (match(TRUE)) return new Expr.Boolean(true);
       if (match(NIL)) return new Expr.Nil();
@@ -299,7 +301,7 @@ public class Parser {
   }
 
   private Expr range() {
-    return wrapExpr(() -> {
+    return wrap(() -> {
       Expr expr = primary();
 
       while (match(RANGE)) {
@@ -312,29 +314,31 @@ public class Parser {
   }
 
   private Expr doCall(Expr e) {
-    return (Expr) wrap((expr) -> {
-      while (true) {
-        if (match(DOT)) {
-          expr = finishDot((Expr) expr);
-        } else if (match(LPAREN)) {
-          expr = finishCall((Expr) expr);
-        } else if (match(LBRACKET)) {
-          expr = finishIndex((Expr) expr);
-        } else {
-          break;
+    return wrap(
+      (expr) -> {
+        while (true) {
+          if (match(DOT)) {
+            expr = finishDot(expr);
+          } else if (match(LPAREN)) {
+            expr = finishCall(expr);
+          } else if (match(LBRACKET)) {
+            expr = finishIndex(expr);
+          } else {
+            break;
+          }
         }
-      }
 
-      return expr;
-    }, e);
+        return expr;
+      }, e
+    );
   }
 
   private Expr call() {
-    return wrapExpr(() -> doCall(range()));
+    return wrap(() -> doCall(range()));
   }
 
   private Expr assignExpr() {
-    return wrapExpr(() -> {
+    return wrap(() -> {
       Expr expr = call();
 
       if (match(INCREMENT)) {
@@ -386,7 +390,7 @@ public class Parser {
   }
 
   private Expr unary() {
-    return wrapExpr(() -> {
+    return wrap(() -> {
       if (match(BANG, MINUS, TILDE)) {
         Token op = previous();
         ignoreNewlines();
@@ -398,7 +402,7 @@ public class Parser {
   }
 
   private Expr factor() {
-    return wrapExpr(() -> {
+    return wrap(() -> {
       Expr expr = unary();
 
       while (match(MULTIPLY, DIVIDE, PERCENT, POW, FLOOR)) {
@@ -412,7 +416,7 @@ public class Parser {
   }
 
   private Expr term() {
-    return wrapExpr(() -> {
+    return wrap(() -> {
       Expr expr = factor();
 
       while (match(PLUS, MINUS)) {
@@ -426,7 +430,7 @@ public class Parser {
   }
 
   private Expr shift() {
-    return wrapExpr(() -> {
+    return wrap(() -> {
       Expr expr = term();
 
       while (match(LSHIFT, RSHIFT, URSHIFT)) {
@@ -440,7 +444,7 @@ public class Parser {
   }
 
   private Expr bitAnd() {
-    return wrapExpr(() -> {
+    return wrap(() -> {
       Expr expr = shift();
 
       while (match(AMP)) {
@@ -454,7 +458,7 @@ public class Parser {
   }
 
   private Expr bitXor() {
-    return wrapExpr(() -> {
+    return wrap(() -> {
       Expr expr = bitAnd();
 
       while (match(XOR)) {
@@ -468,7 +472,7 @@ public class Parser {
   }
 
   private Expr bitOr() {
-    return wrapExpr(() -> {
+    return wrap(() -> {
       Expr expr = bitXor();
 
       while (match(BAR)) {
@@ -482,7 +486,7 @@ public class Parser {
   }
 
   private Expr comparison() {
-    return wrapExpr(() -> {
+    return wrap(() -> {
       Expr expr = bitOr();
 
       while (match(GREATER, GREATER_EQ, LESS, LESS_EQ)) {
@@ -496,7 +500,7 @@ public class Parser {
   }
 
   private Expr equality() {
-    return wrapExpr(() -> {
+    return wrap(() -> {
       Expr expr = comparison();
 
       while (match(BANG_EQ, EQUAL_EQ)) {
@@ -510,7 +514,7 @@ public class Parser {
   }
 
   private Expr and() {
-    return wrapExpr(() -> {
+    return wrap(() -> {
       Expr expr = equality();
 
       while (match(AND)) {
@@ -524,7 +528,7 @@ public class Parser {
   }
 
   private Expr or() {
-    return wrapExpr(() -> {
+    return wrap(() -> {
       Expr expr = and();
 
       while (match(OR)) {
@@ -538,7 +542,7 @@ public class Parser {
   }
 
   private Expr conditional() {
-    return wrapExpr(() -> {
+    return wrap(() -> {
       Expr expr = or();
 
       if (match(QUESTION)) {
@@ -554,7 +558,7 @@ public class Parser {
   }
 
   private Expr assignment() {
-    return wrapExpr(() -> {
+    return wrap(() -> {
       Expr expr = conditional();
 
       if (match(ASSIGNERS)) {
@@ -580,11 +584,11 @@ public class Parser {
   }
 
   private Expr expression() {
-    return wrapExpr(this::assignment);
+    return wrap(this::assignment);
   }
 
   private Expr dict() {
-    return wrapExpr(() -> {
+    return wrap(() -> {
       ignoreNewlines();
       List<Expr> keys = new ArrayList<>();
       List<Expr> values = new ArrayList<>();
@@ -638,7 +642,7 @@ public class Parser {
   }
 
   private Expr list() {
-    return wrapExpr(() -> {
+    return wrap(() -> {
       ignoreNewlines();
       List<Expr> items = new ArrayList<>();
 
@@ -662,7 +666,7 @@ public class Parser {
   }
 
   private Stmt echoStatement() {
-    return wrapStmt(() -> {
+    return wrap(() -> {
       Expr val = expression();
       endStatement();
       return new Stmt.Echo(val);
@@ -670,7 +674,7 @@ public class Parser {
   }
 
   private Stmt.Expression expressionStatement(boolean is_iter) {
-    return (Stmt.Expression) wrapStmt(() -> {
+    return wrap(() -> {
       Expr val = expression();
       if (!is_iter) endStatement();
       return new Stmt.Expression(val);
@@ -678,7 +682,7 @@ public class Parser {
   }
 
   private Stmt.Block block() {
-    return (Stmt.Block) wrapStmt(() -> {
+    return wrap(() -> {
       blockCount++;
 
       List<Stmt> val = new ArrayList<>();
@@ -702,7 +706,7 @@ public class Parser {
   }
 
   private Stmt ifStatement() {
-    return wrapStmt(() -> {
+    return wrap(() -> {
       Expr expr = expression();
       Stmt body = statement();
 
@@ -715,11 +719,11 @@ public class Parser {
   }
 
   private Stmt whileStatement() {
-    return wrapStmt(() -> new Stmt.While(expression(), statement()));
+    return wrap(() -> new Stmt.While(expression(), statement()));
   }
 
   private Stmt doWhileStatement() {
-    return wrapStmt(() -> {
+    return wrap(() -> {
       Stmt body = statement();
       consume(WHILE, "'while' expected after do body");
       return new Stmt.DoWhile(body, expression());
@@ -727,7 +731,7 @@ public class Parser {
   }
 
   private Stmt forStatement() {
-    return wrapStmt(() -> {
+    return wrap(() -> {
       consume(IDENTIFIER, "variable name expected");
 
       // var key = nil
@@ -803,7 +807,7 @@ public class Parser {
   }
 
   private Stmt assertStatement() {
-    return wrapStmt(() -> {
+    return wrap(() -> {
       Expr message = null;
       Expr expr = expression();
 
@@ -813,7 +817,7 @@ public class Parser {
   }
 
   private Stmt usingStatement() {
-    return wrapStmt(() -> {
+    return wrap(() -> {
       Expr expr = expression();
       List<Expr> caseLabels = new ArrayList<>();
       List<Stmt> caseBodies = new ArrayList<>();
@@ -864,7 +868,7 @@ public class Parser {
   }
 
   private Stmt importStatement() {
-    return wrapStmt(() -> {
+    return wrap(() -> {
       List<String> path = new ArrayList<>();
       List<Token> elements = new ArrayList<>();
 
@@ -916,7 +920,7 @@ public class Parser {
   }
 
   private Stmt catchStatement() {
-    return wrapStmt(() -> {
+    return wrap(() -> {
       Stmt.Block body = matchBlock("'{' expected after try");
       Stmt.Block catchBody = null;
       Stmt.Block finallyBody = null;
@@ -930,7 +934,12 @@ public class Parser {
       }
 
       if (exception_var == null && !check(FINALLY)) {
-        throw new ParserException(lexer.getSource(), peek(), false, "try must declare at least one of `catch` or `finally`");
+        throw new ParserException(
+          lexer.getSource(),
+          peek(),
+          false,
+          "try must declare at least one of `catch` or `finally`"
+        );
       }
 
       if (match(FINALLY)) {
@@ -942,7 +951,7 @@ public class Parser {
   }
 
   private Stmt iterStatement() {
-    return wrapStmt(() -> {
+    return wrap(() -> {
       if (check(LPAREN)) {
         match(LPAREN);
       }
@@ -982,7 +991,7 @@ public class Parser {
   }
 
   private Stmt statement() {
-    return wrapStmt(() -> {
+    return wrap(() -> {
       ignoreNewlines();
 
       Stmt result;
@@ -1035,7 +1044,7 @@ public class Parser {
   }
 
   private Stmt varDeclaration(boolean isConstant) {
-    return wrapStmt(() -> {
+    return wrap(() -> {
       consume(IDENTIFIER, "variable name expected");
       Token nameToken = previous();
 
@@ -1131,7 +1140,8 @@ public class Parser {
                   List.of(new Expr.Literal(current.token.copyToType(
                     LITERAL,
                     "Expected type of " + current.token.literal() + " as argument " + (i + 1) + " (" + params.get(i).token.literal() + ")"
-                  ))))
+                  )))
+                )
               ),
               null
             )
@@ -1142,7 +1152,7 @@ public class Parser {
   }
 
   private Expr anonymous() {
-    return wrapExpr(() -> {
+    return wrap(() -> {
       Token nameCompatToken = previous();
 
       List<Expr.Identifier> params = new ArrayList<>();
@@ -1172,7 +1182,7 @@ public class Parser {
   }
 
   private Stmt defDeclaration() {
-    return wrapStmt(() -> {
+    return wrap(() -> {
       consume(IDENTIFIER, "function name expected");
       Token name = previous();
       List<Expr.Identifier> params = new ArrayList<>();
@@ -1190,7 +1200,7 @@ public class Parser {
   }
 
   private Stmt.Property classField(boolean isStatic, boolean isConst) {
-    return (Stmt.Property) wrapStmt(() -> {
+    return wrap(() -> {
       consume(IDENTIFIER, "class property name expected");
       Token name = previous();
 
@@ -1205,7 +1215,7 @@ public class Parser {
   }
 
   private Stmt.Method classOperator() {
-    return (Stmt.Method) wrapStmt(() -> {
+    return wrap(() -> {
       consumeAny("non-assignment operator expected", OPERATORS);
       var name = previous();
 
@@ -1222,7 +1232,7 @@ public class Parser {
   }
 
   private Stmt.Method method(boolean isStatic) {
-    return (Stmt.Method) wrapStmt(() -> {
+    return wrap(() -> {
       consumeAny("method name expected", IDENTIFIER, DECORATOR);
       Token name = previous();
 
@@ -1241,7 +1251,7 @@ public class Parser {
   }
 
   private Stmt classDeclaration() {
-    return wrapStmt(() -> {
+    return wrap(() -> {
       List<Stmt.Property> properties = new ArrayList<>();
       List<Stmt.Method> methods = new ArrayList<>();
       List<Stmt.Method> operators = new ArrayList<>();
@@ -1285,7 +1295,7 @@ public class Parser {
   }
 
   private Stmt declaration() {
-    return wrapStmt(() -> {
+    return wrap(() -> {
       ignoreNewlines();
 
       Stmt result;
@@ -1332,11 +1342,11 @@ public class Parser {
     );
   }
 
-  private AST wrap(Callback callback, AST ast) {
+  private <T extends AST> T wrap(Callback<T> callback, T ast) {
     int startLine = peek().line();
     int startOffset = peek().offset();
 
-    AST result = callback.run(ast);
+    T result = callback.run(ast);
 
     if (result != null && !result.wrapped) {
       int endLine = previous().line();
@@ -1371,19 +1381,15 @@ public class Parser {
     return result;
   }
 
-  private Expr wrapExpr(FlatCallback callback) {
-    return (Expr) wrap((ignore) -> callback.run(), null);
+  private <T extends AST> T wrap(FlatCallback<T> callback) {
+    return wrap((ignore) -> callback.run(), null);
   }
 
-  private Stmt wrapStmt(FlatCallback callback) {
-    return (Stmt) wrap((ignore) -> callback.run(), null);
+  interface FlatCallback<T> {
+    T run();
   }
 
-  interface FlatCallback {
-    AST run();
-  }
-
-  interface Callback {
-    AST run(AST ast);
+  interface Callback<T> {
+    T run(T ast);
   }
 }
