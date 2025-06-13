@@ -2,7 +2,6 @@ package org.blade.language.nodes.using;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
 import org.blade.language.nodes.NNode;
-import org.blade.language.nodes.NStmtNode;
 
 public final class NWhenNode extends NNode {
   @Child
