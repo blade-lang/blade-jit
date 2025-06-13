@@ -9,10 +9,12 @@ import org.blade.language.runtime.BladeNil;
 
 public final class NIterStmtNode extends NStmtNode {
   @SuppressWarnings("FieldMayBeFinal")
-  @Child private NNode initializer;
+  @Child
+  private NNode initializer;
 
   @SuppressWarnings("FieldMayBeFinal")
-  @Child private LoopNode loop;
+  @Child
+  private LoopNode loop;
 
   public NIterStmtNode(NNode initializer, NNode condition, NNode iterator, NNode body) {
     this.initializer = initializer;
@@ -25,7 +27,7 @@ public final class NIterStmtNode extends NStmtNode {
 
   @Override
   public Object execute(VirtualFrame frame) {
-    if(initializer != null)
+    if (initializer != null)
       initializer.execute(frame);
     loop.execute(frame);
     return BladeNil.SINGLETON;

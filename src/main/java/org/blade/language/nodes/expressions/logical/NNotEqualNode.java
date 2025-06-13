@@ -14,7 +14,6 @@ import org.blade.language.BladeLanguage;
 import org.blade.language.nodes.NBinaryNode;
 import org.blade.language.runtime.BigIntObject;
 import org.blade.language.runtime.BladeObject;
-import org.blade.language.runtime.BladeRuntimeError;
 
 @OperationProxy.Proxyable(allowUncached = true)
 public abstract class NNotEqualNode extends NBinaryNode {
@@ -42,7 +41,7 @@ public abstract class NNotEqualNode extends NBinaryNode {
 
   @Specialization
   protected static boolean doStrings(TruffleString left, TruffleString right,
-                           @Cached TruffleString.EqualNode equalNode) {
+                                     @Cached TruffleString.EqualNode equalNode) {
     return !equalNode.execute(left, right, BladeLanguage.ENCODING);
   }
 
@@ -50,7 +49,7 @@ public abstract class NNotEqualNode extends NBinaryNode {
   protected static boolean doObjects(BladeObject left, BladeObject right,
                                      @Bind Node node, @CachedLibrary("left") InteropLibrary interopLibrary) {
     Object overrideValue = methodOverride(node, "==", left, right, interopLibrary);
-    if(overrideValue != null) {
+    if (overrideValue != null) {
       return !evaluateBoolean(overrideValue);
     }
 

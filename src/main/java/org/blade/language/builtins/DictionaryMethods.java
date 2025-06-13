@@ -1,6 +1,5 @@
 package org.blade.language.builtins;
 
-import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.Fallback;
 import com.oracle.truffle.api.dsl.NodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
@@ -30,9 +29,9 @@ public final class DictionaryMethods implements BaseBuiltinDeclaration {
                            @CachedLibrary(limit = "3") DynamicObjectLibrary objectLibrary) {
       Object[] keys = objectLibrary.getKeyArray(dictionary);
       int length = keys.length;
-      if(length == 0) {
+      if (length == 0) {
         return BladeNil.SINGLETON;
-      } else if(key == BladeNil.SINGLETON) {
+      } else if (key == BladeNil.SINGLETON) {
         return keys[0];
       }
 
@@ -47,14 +46,14 @@ public final class DictionaryMethods implements BaseBuiltinDeclaration {
     @ExplodeLoop
     private Object getNextKey(Object[] keys, Object key, int keysLength) {
       int index = 0;
-      for(int i = 0; i < keysLength; i++) {
-        if(objectEquals(key, keys[i])) {
+      for (int i = 0; i < keysLength; i++) {
+        if (objectEquals(key, keys[i])) {
           index = i;
           break;
         }
       }
 
-      if(index < keysLength - 1) {
+      if (index < keysLength - 1) {
         return keys[index + 1];
       }
 

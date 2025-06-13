@@ -6,8 +6,8 @@ import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.nodes.DirectCallNode;
 import com.oracle.truffle.api.nodes.IndirectCallNode;
 import com.oracle.truffle.api.nodes.Node;
-import org.blade.language.runtime.FunctionObject;
 import org.blade.language.runtime.BladeRuntimeError;
+import org.blade.language.runtime.FunctionObject;
 
 @SuppressWarnings("truffle-inlining")
 public abstract class NFunctionDispatchNode extends Node {

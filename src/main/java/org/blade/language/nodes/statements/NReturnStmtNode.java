@@ -6,7 +6,8 @@ import org.blade.language.nodes.NStmtNode;
 
 public final class NReturnStmtNode extends NStmtNode {
   @SuppressWarnings("FieldMayBeFinal")
-  @Child private NNode value;
+  @Child
+  private NNode value;
 
   public NReturnStmtNode(NNode value) {
     this.value = value;

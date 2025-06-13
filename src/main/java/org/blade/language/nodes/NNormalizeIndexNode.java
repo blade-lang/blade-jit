@@ -1,6 +1,9 @@
 package org.blade.language.nodes;
 
-import com.oracle.truffle.api.dsl.*;
+import com.oracle.truffle.api.dsl.Cached;
+import com.oracle.truffle.api.dsl.GenerateCached;
+import com.oracle.truffle.api.dsl.GenerateInline;
+import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.profiles.InlinedConditionProfile;
 
@@ -8,6 +11,7 @@ import com.oracle.truffle.api.profiles.InlinedConditionProfile;
 @GenerateCached(false)
 public abstract class NNormalizeIndexNode extends Node {
   public abstract int execute(Node node, int index, int length);
+
   public abstract int executeLong(Node node, long index, int length);
 
   @Specialization
@@ -16,7 +20,7 @@ public abstract class NNormalizeIndexNode extends Node {
                             @Cached @Cached.Shared("overflowProfile") InlinedConditionProfile overflowProfile) {
     if (negativeIndexProfile.profile(node, index < 0)) {
       return index + length;
-    } else if(overflowProfile.profile(node, index > length)) {
+    } else if (overflowProfile.profile(node, index > length)) {
       return length;
     }
 
@@ -28,11 +32,11 @@ public abstract class NNormalizeIndexNode extends Node {
                             @Cached @Cached.Shared("negativeIndexProfile") InlinedConditionProfile negativeIndexProfile,
                             @Cached @Cached.Shared("overflowProfile") InlinedConditionProfile overflowProfile) {
     if (negativeIndexProfile.profile(node, index < 0)) {
-      return (int)index + length;
-    } else if(overflowProfile.profile(node, index > length)) {
+      return (int) index + length;
+    } else if (overflowProfile.profile(node, index > length)) {
       return length;
     }
 
-    return (int)index;
+    return (int) index;
   }
 }

@@ -10,8 +10,10 @@ import com.oracle.truffle.api.library.CachedLibrary;
 import com.oracle.truffle.api.object.DynamicObjectLibrary;
 import com.oracle.truffle.api.strings.TruffleString;
 import org.blade.language.nodes.string.NReadStringPropertyNode;
-import org.blade.language.runtime.*;
-import org.blade.language.shared.BuiltinClassesModel;
+import org.blade.language.runtime.BObject;
+import org.blade.language.runtime.BString;
+import org.blade.language.runtime.BladeNil;
+import org.blade.language.runtime.BladeRuntimeError;
 
 @SuppressWarnings({"truffle-inlining", "truffle-unused"})
 public abstract class NSharedPropertyReaderNode extends NBaseNode {
@@ -40,7 +42,10 @@ public abstract class NSharedPropertyReaderNode extends NBaseNode {
     Object target, Object property,
     @CachedLibrary("target") InteropLibrary interopLibrary
   ) {
-    throw BladeRuntimeError.typeError(this, BString.concatString("Cannot read properties of nil (reading '", property, "')"));
+    throw BladeRuntimeError.typeError(
+      this,
+      BString.concatString("Cannot read properties of nil (reading '", property, "')")
+    );
   }
 
   @Fallback

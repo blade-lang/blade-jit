@@ -14,7 +14,6 @@ import org.blade.language.BladeLanguage;
 import org.blade.language.nodes.NBinaryNode;
 import org.blade.language.runtime.BigIntObject;
 import org.blade.language.runtime.BladeObject;
-import org.blade.language.runtime.BladeRuntimeError;
 
 import java.math.BigInteger;
 
@@ -38,7 +37,7 @@ public abstract class NLessThanOrEqualNode extends NBinaryNode {
 
   @Specialization
   protected static boolean doStrings(TruffleString left, TruffleString right,
-                              @Cached TruffleString.CompareBytesNode compareNode) {
+                                     @Cached TruffleString.CompareBytesNode compareNode) {
     return compareNode.execute(left, right, BladeLanguage.ENCODING) <= 0;
   }
 
@@ -46,12 +45,12 @@ public abstract class NLessThanOrEqualNode extends NBinaryNode {
   protected static Object doObjects(BladeObject left, BladeObject right,
                                     @Bind Node node, @CachedLibrary("left") InteropLibrary interopLibrary) {
     Object overrideValue = methodOverride(node, "<", left, right, interopLibrary);
-    if(overrideValue != null) {
+    if (overrideValue != null) {
       boolean isLess = evaluateBoolean(overrideValue);
-      if(isLess) return true;
+      if (isLess) return true;
 
       overrideValue = methodOverride(node, "==", left, right, interopLibrary);
-      if(overrideValue != null) {
+      if (overrideValue != null) {
         return evaluateBoolean(overrideValue);
       }
     }

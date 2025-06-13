@@ -45,7 +45,7 @@ public final class NBlockStmtNode extends NStmtNode {
     return result;*/
 
     int preLength = nodes.length - 1;
-    for(int i = 0; i < preLength; i++) {
+    for (int i = 0; i < preLength; i++) {
       nodes[i].execute(frame);
     }
 
@@ -74,9 +74,9 @@ public final class NBlockStmtNode extends NStmtNode {
     RefObject[] parentVars = parentBlock instanceof NBlockStmtNode block
       ? block.getLocalVarRefs()
       : (
-        parentBlock instanceof NFunctionBodyNode function
-          ? function.getArgAndLocalVarRefs()
-          : null
+      parentBlock instanceof NFunctionBodyNode function
+        ? function.getArgAndLocalVarRefs()
+        : null
     );
 
     if (parentVars == null || parentVars.length == 0) {

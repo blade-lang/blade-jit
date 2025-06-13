@@ -39,14 +39,14 @@ public class StringMethods implements BaseBuiltinDeclaration {
     protected Object doAny(TruffleString string, Object item,
                            @Cached TruffleString.CodePointLengthNode lengthNode,
                            @Cached(value = "length(string, lengthNode)", neverDefault = false) long stringLength) {
-      if(stringLength == 0) {
+      if (stringLength == 0) {
         return BladeNil.SINGLETON;
-      } else if(item == BladeNil.SINGLETON) {
+      } else if (item == BladeNil.SINGLETON) {
         return 0L;
       }
 
-      if(item instanceof Long index) {
-        if(index < stringLength - 1) {
+      if (item instanceof Long index) {
+        if (index < stringLength - 1) {
           return index + 1;
         }
 
@@ -70,8 +70,8 @@ public class StringMethods implements BaseBuiltinDeclaration {
                            @Cached(value = "length(string, lengthNode)", neverDefault = false) long stringLength,
                            @Cached TruffleString.SubstringNode substringNode) {
 
-      if(index > -1 && index < stringLength) {
-        return BString.substring(string, (int)index, 1, substringNode);
+      if (index > -1 && index < stringLength) {
+        return BString.substring(string, (int) index, 1, substringNode);
       }
 
       return doFallback(string, index);
@@ -91,7 +91,7 @@ public class StringMethods implements BaseBuiltinDeclaration {
       @Cached @Cached.Shared("indexOfStringNode") TruffleString.IndexOfStringNode indexOfStringNode,
       @Cached @Cached.Shared("lengthNode") TruffleString.CodePointLengthNode lengthNode
     ) {
-      if(self == BString.EMPTY) {
+      if (self == BString.EMPTY) {
         return -1;
       }
 
@@ -104,11 +104,11 @@ public class StringMethods implements BaseBuiltinDeclaration {
       @Cached @Cached.Shared("indexOfStringNode") TruffleString.IndexOfStringNode indexOfStringNode,
       @Cached @Cached.Shared("lengthNode") TruffleString.CodePointLengthNode lengthNode
     ) {
-      if(self == BString.EMPTY) {
+      if (self == BString.EMPTY) {
         return -1;
       }
 
-      return BString.indexOf(indexOfStringNode, lengthNode, self, other, (int)startIndex);
+      return BString.indexOf(indexOfStringNode, lengthNode, self, other, (int) startIndex);
     }
 
     protected boolean isNil(Object o) {
@@ -125,8 +125,8 @@ public class StringMethods implements BaseBuiltinDeclaration {
     @ExplodeLoop
     @Specialization
     protected TruffleString doValid(TruffleString self,
-                                  @Cached TruffleString.FromJavaStringNode fromJavaStringNode) {
-      if(self == BString.EMPTY) {
+                                    @Cached TruffleString.FromJavaStringNode fromJavaStringNode) {
+      if (self == BString.EMPTY) {
         return self;
       }
 
@@ -146,8 +146,8 @@ public class StringMethods implements BaseBuiltinDeclaration {
     @ExplodeLoop
     @Specialization
     protected TruffleString doValid(TruffleString self,
-                                  @Cached TruffleString.FromJavaStringNode fromJavaStringNode) {
-      if(self == BString.EMPTY) {
+                                    @Cached TruffleString.FromJavaStringNode fromJavaStringNode) {
+      if (self == BString.EMPTY) {
         return self;
       }
 
@@ -164,10 +164,10 @@ public class StringMethods implements BaseBuiltinDeclaration {
     @ExplodeLoop
     @Specialization
     protected boolean doValid(TruffleString self,
-                                  @Cached TruffleString.ToJavaStringNode toJavaStringNode,
-                                  @Cached TruffleString.CodePointLengthNode lengthNode,
+                              @Cached TruffleString.ToJavaStringNode toJavaStringNode,
+                              @Cached TruffleString.CodePointLengthNode lengthNode,
                               @Cached TruffleString.CodePointAtIndexNode codePointNode) {
-      if(self == BString.EMPTY) {
+      if (self == BString.EMPTY) {
         return false;
       }
 
@@ -198,9 +198,9 @@ public class StringMethods implements BaseBuiltinDeclaration {
     @ExplodeLoop
     @Specialization
     protected boolean doValid(TruffleString self,
-                                  @Cached TruffleString.CodePointLengthNode lengthNode,
+                              @Cached TruffleString.CodePointLengthNode lengthNode,
                               @Cached TruffleString.CodePointAtIndexNode codePointNode) {
-      if(self == BString.EMPTY) {
+      if (self == BString.EMPTY) {
         return false;
       }
 
@@ -231,9 +231,9 @@ public class StringMethods implements BaseBuiltinDeclaration {
     @ExplodeLoop
     @Specialization
     protected boolean doValid(TruffleString self,
-                                  @Cached TruffleString.CodePointLengthNode lengthNode,
+                              @Cached TruffleString.CodePointLengthNode lengthNode,
                               @Cached TruffleString.CodePointAtIndexNode codePointNode) {
-      if(self == BString.EMPTY) {
+      if (self == BString.EMPTY) {
         return false;
       }
 
@@ -264,9 +264,9 @@ public class StringMethods implements BaseBuiltinDeclaration {
     @ExplodeLoop
     @Specialization
     protected boolean doValid(TruffleString self,
-                                  @Cached TruffleString.CodePointLengthNode lengthNode,
+                              @Cached TruffleString.CodePointLengthNode lengthNode,
                               @Cached TruffleString.CodePointAtIndexNode codePointNode) {
-      if(self == BString.EMPTY) {
+      if (self == BString.EMPTY) {
         return false;
       }
 
@@ -297,9 +297,9 @@ public class StringMethods implements BaseBuiltinDeclaration {
     @ExplodeLoop
     @Specialization
     protected boolean doValid(TruffleString self,
-                                  @Cached TruffleString.CodePointLengthNode lengthNode,
+                              @Cached TruffleString.CodePointLengthNode lengthNode,
                               @Cached TruffleString.CodePointAtIndexNode codePointNode) {
-      if(self == BString.EMPTY) {
+      if (self == BString.EMPTY) {
         return false;
       }
 
@@ -331,9 +331,9 @@ public class StringMethods implements BaseBuiltinDeclaration {
     @ExplodeLoop
     @Specialization
     protected boolean doValid(TruffleString self,
-                                  @Cached TruffleString.CodePointLengthNode lengthNode,
-                                @Cached TruffleString.CodePointAtIndexNode codePointNode) {
-      if(self == BString.EMPTY) {
+                              @Cached TruffleString.CodePointLengthNode lengthNode,
+                              @Cached TruffleString.CodePointAtIndexNode codePointNode) {
+      if (self == BString.EMPTY) {
         return false;
       }
 
@@ -364,9 +364,9 @@ public class StringMethods implements BaseBuiltinDeclaration {
     @ExplodeLoop
     @Specialization
     protected boolean doValid(TruffleString self, TruffleString other,
-                                  @Cached TruffleString.CodePointLengthNode lengthNode,
-                                @Cached TruffleString.IndexOfStringNode indexOfNode) {
-      if(self == BString.EMPTY) {
+                              @Cached TruffleString.CodePointLengthNode lengthNode,
+                              @Cached TruffleString.IndexOfStringNode indexOfNode) {
+      if (self == BString.EMPTY) {
         return false;
       }
 
@@ -384,9 +384,9 @@ public class StringMethods implements BaseBuiltinDeclaration {
     @ExplodeLoop
     @Specialization
     protected boolean doValid(TruffleString self, TruffleString other,
-                                  @Cached TruffleString.CodePointLengthNode lengthNode,
-                                @Cached TruffleString.IndexOfStringNode indexOfNode) {
-      if(self == BString.EMPTY) {
+                              @Cached TruffleString.CodePointLengthNode lengthNode,
+                              @Cached TruffleString.IndexOfStringNode indexOfNode) {
+      if (self == BString.EMPTY) {
         return false;
       }
 

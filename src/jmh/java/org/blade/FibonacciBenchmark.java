@@ -36,7 +36,7 @@ public class FibonacciBenchmark extends TruffleBenchmark {
     context.eval("js", SL_FIBONACCI);
   }
 
-//  @Fork(jvmArgsPrepend = {
+  //  @Fork(jvmArgsPrepend = {
 //    "-Dgraal.Dump=Truffle:1",
 //    "-Dgraal.PrintGraph=File"
 //  })
@@ -56,9 +56,11 @@ public class FibonacciBenchmark extends TruffleBenchmark {
   })
   @Benchmark
   public int sl_eval() {
-    return context.eval("sl", "function main() { " +
-      "    return fib(20); " +
-      "}").asInt();
+    return context.eval(
+      "sl", "function main() { " +
+        "    return fib(20); " +
+        "}"
+    ).asInt();
   }
 
   @Fork(value = 1, jvmArgsAppend = {

@@ -1,9 +1,12 @@
 package org.blade;
 
-import org.graalvm.polyglot.*;
 import org.blade.language.BladeLanguage;
+import org.graalvm.polyglot.*;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.nio.file.NoSuchFileException;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -24,12 +27,12 @@ public class Main {
       }
     }
 
-    if(options.containsKey(SHOW_PID)) {
+    if (options.containsKey(SHOW_PID)) {
       System.out.println(ProcessHandle.current().pid());
       options.remove(SHOW_PID);
     }
 
-    try(
+    try (
       Context defaultContext = Context.newBuilder(BladeLanguage.ID)
         .in(System.in)
         .out(System.out)
@@ -49,10 +52,12 @@ public class Main {
         try {
           System.exit(runSource(defaultContext, getSource(file), false));
         } catch (NoSuchFileException ex) {
-          System.err.printf("""
+          System.err.printf(
+            """
               (Blade):
                 Launch aborted for %s
-                Reason: No such file or directory%n""", file);
+                Reason: No such file or directory%n""", file
+          );
         }
       } else {
         while (true) {
@@ -62,7 +67,7 @@ public class Main {
           System.out.print("%> ");
 
           String line = reader.readLine();
-          if(line.equals(".exit")) {
+          if (line.equals(".exit")) {
             break;
           }
 
@@ -85,7 +90,7 @@ public class Main {
       try {
         Value value = context.eval(source);
         if (isRepl) {
-          if(value.isString()) {
+          if (value.isString()) {
             System.out.println("'" + value.asString() + "'");
           } else {
             System.out.println(value);
@@ -133,7 +138,7 @@ public class Main {
       group = group.substring(0, index);
     }
 
-    if(group.equals("blade") || key.equals("inspect")) {
+    if (group.equals("blade") || key.equals("inspect")) {
       options.put(key, value);
     }
     return true;
@@ -141,11 +146,11 @@ public class Main {
 
   private static void printStackTrace(String message, Iterator<PolyglotException.StackFrame> elements) {
     System.err.println(message);
-    while(elements.hasNext()) {
+    while (elements.hasNext()) {
       PolyglotException.StackFrame frame = elements.next();
-      if(frame.isGuestFrame()) {
+      if (frame.isGuestFrame()) {
         SourceSection sourceSection = frame.getSourceLocation();
-        if(sourceSection != null) {
+        if (sourceSection != null) {
           String funcName = frame.getRootName();
 
           String fileName = sourceSection.getSource().getName();
@@ -153,8 +158,8 @@ public class Main {
 
           int lineNo = sourceSection.getStartLine();
 
-          if(lineNo > -1) {
-            System.err.println("    at "+(filePath == null ? fileName : filePath)+":"+lineNo+" -> "+funcName+"()");
+          if (lineNo > -1) {
+            System.err.println("    at " + (filePath == null ? fileName : filePath) + ":" + lineNo + " -> " + funcName + "()");
           }
         }
       }

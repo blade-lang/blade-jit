@@ -64,7 +64,7 @@ public class ClassCounterBenchmark extends TruffleBenchmark {
     }
     class Counter extends UpperMiddle {
     }
-    """;;
+    """;
 
   private static final String COUNT_WITH_SELF_IN_ITER = """
     def countWithSelfInIterDirect(n) {

@@ -28,7 +28,7 @@ public abstract class NBitUnsignedRightShiftNode extends NBinaryNode {
   protected static Object doObjects(BladeObject left, BladeObject right,
                                     @Bind Node node, @CachedLibrary("left") InteropLibrary interopLibrary) {
     Object overrideValue = methodOverride(node, ">>>", left, right, interopLibrary);
-    if(overrideValue != null) {
+    if (overrideValue != null) {
       return overrideValue;
     }
 
@@ -37,7 +37,7 @@ public abstract class NBitUnsignedRightShiftNode extends NBinaryNode {
 
   @Fallback
   protected static double doUnsupported(Object left, Object right, @Bind Node node) {
-    throw BladeRuntimeError.argumentError(node,">>>", left, right);
+    throw BladeRuntimeError.argumentError(node, ">>>", left, right);
   }
 
   private static int toUInt32(long value) {

@@ -1,13 +1,15 @@
 package org.blade.language.nodes.functions;
 
-import com.oracle.truffle.api.dsl.*;
+import com.oracle.truffle.api.dsl.Cached;
+import com.oracle.truffle.api.dsl.Fallback;
+import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.nodes.DirectCallNode;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.nodes.IndirectCallNode;
 import com.oracle.truffle.api.nodes.Node;
-import org.blade.language.runtime.FunctionObject;
 import org.blade.language.runtime.BladeNil;
 import org.blade.language.runtime.BladeRuntimeError;
+import org.blade.language.runtime.FunctionObject;
 
 @SuppressWarnings("truffle-inlining")
 public abstract class NMethodDispatchNode extends Node {
@@ -44,7 +46,7 @@ public abstract class NMethodDispatchNode extends Node {
     Object[] ret = new Object[finalLength];
     ret[0] = receiver;
 
-    for(int i = 1; i < finalLength; i++) {
+    for (int i = 1; i < finalLength; i++) {
       int j = i - 1;
       ret[i] = j < argumentLength ? arguments[j] : BladeNil.SINGLETON;
     }

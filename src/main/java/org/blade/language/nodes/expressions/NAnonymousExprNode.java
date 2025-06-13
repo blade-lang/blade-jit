@@ -10,7 +10,8 @@ import org.blade.language.runtime.BladeRuntimeError;
 public final class NAnonymousExprNode extends NNode {
   @SuppressWarnings("FieldMayBeFinal")
   @Executed
-  @Child private NNode function;
+  @Child
+  private NNode function;
 
   static final DynamicObjectLibrary objectLibrary = DynamicObjectLibrary.getUncached();
 

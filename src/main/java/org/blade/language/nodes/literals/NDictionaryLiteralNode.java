@@ -11,8 +11,10 @@ import java.util.List;
 
 public final class NDictionaryLiteralNode extends NNode {
 
-  @Children private final NNode[] keys;
-  @Children private final NNode[] values;
+  @Children
+  private final NNode[] keys;
+  @Children
+  private final NNode[] values;
 
   public NDictionaryLiteralNode(List<NNode> keys, List<NNode> values) {
     this.keys = keys.toArray(new NNode[0]);
@@ -26,7 +28,7 @@ public final class NDictionaryLiteralNode extends NNode {
     Object[] keysObject = new Object[keysLength];
     Object[] valuesObject = new Object[keysLength];
 
-    for(int i = 0; i < keysLength; i++) {
+    for (int i = 0; i < keysLength; i++) {
       keysObject[i] = keys[i].execute(frame);
       valuesObject[i] = values[i].execute(frame);
     }

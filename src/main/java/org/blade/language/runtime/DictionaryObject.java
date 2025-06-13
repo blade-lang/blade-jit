@@ -52,7 +52,7 @@ public final class DictionaryObject extends BladeObject {
     int keysLength = keys.length;
     assert keysLength == values.length;
 
-    for(int i = 0; i < keysLength; i++) {
+    for (int i = 0; i < keysLength; i++) {
       UNCACHED_OBJ.put(this, BString.toString(keys[i]), values[i]);
     }
   }

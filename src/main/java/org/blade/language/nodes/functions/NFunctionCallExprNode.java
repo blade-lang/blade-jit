@@ -48,7 +48,10 @@ public abstract class NFunctionCallExprNode extends NNode {
                                       @Cached(value = "languageContext()", neverDefault = false) @Cached.Shared("group") BladeContext context,
                                       @Cached("context.objectsModel.listShape") Shape listShape,
                                       @Cached("context.objectsModel.listObject") BladeClass listClass) {
-    return dispatchNode.executeDispatch(cachedFunction, expandLessVarArguments(cachedFunction, consumeArguments(frame), listShape, listClass));
+    return dispatchNode.executeDispatch(
+      cachedFunction,
+      expandLessVarArguments(cachedFunction, consumeArguments(frame), listShape, listClass)
+    );
   }
 
   @Specialization(guards = {"function.variadic", "arguments.length >= function.argumentsCount", "function.argumentsCount > 1"})
@@ -57,7 +60,10 @@ public abstract class NFunctionCallExprNode extends NNode {
                                       @Cached(value = "languageContext()", neverDefault = false) @Cached.Shared("group") BladeContext context,
                                       @Cached("context.objectsModel.listShape") Shape listShape,
                                       @Cached("context.objectsModel.listObject") BladeClass listClass) {
-    return dispatchNode.executeDispatch(cachedFunction, expandMoreVarArguments(cachedFunction, consumeArguments(frame), listShape, listClass));
+    return dispatchNode.executeDispatch(
+      cachedFunction,
+      expandMoreVarArguments(cachedFunction, consumeArguments(frame), listShape, listClass)
+    );
   }
 
   @Specialization(guards = {"function.variadic", "arguments.length >= function.argumentsCount", "function.argumentsCount == 1"})
@@ -66,7 +72,10 @@ public abstract class NFunctionCallExprNode extends NNode {
                                     @Cached(value = "languageContext()", neverDefault = false) @Cached.Shared("group") BladeContext context,
                                     @Cached("context.objectsModel.listShape") Shape listShape,
                                     @Cached("context.objectsModel.listObject") BladeClass listClass) {
-    return dispatchNode.executeDispatch(cachedFunction, expandNoVarArguments(cachedFunction, consumeArguments(frame), listShape, listClass));
+    return dispatchNode.executeDispatch(
+      cachedFunction,
+      expandNoVarArguments(cachedFunction, consumeArguments(frame), listShape, listClass)
+    );
   }
 
   @Specialization(replaces = "doSameSize")

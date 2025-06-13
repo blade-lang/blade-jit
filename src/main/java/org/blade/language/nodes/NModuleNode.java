@@ -19,7 +19,7 @@ public class NModuleNode extends NNode {
   @Override
   public Object execute(VirtualFrame frame) {
     int preLength = nodes.length - 1;
-    for(int i = 0; i < preLength; i++) {
+    for (int i = 0; i < preLength; i++) {
       nodes[i].execute(frame);
     }
 

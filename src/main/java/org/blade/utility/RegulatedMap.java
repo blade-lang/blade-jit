@@ -6,7 +6,8 @@ import java.util.function.Consumer;
 
 public class RegulatedMap<Key, Regulator, Value> {
 
-  public record RegulatedMapEntry<A, B, C>(A key, B regulator, C value) {}
+  public record RegulatedMapEntry<A, B, C>(A key, B regulator, C value) {
+  }
 
   private final List<RegulatedMapEntry<Key, Regulator, Value>> data = new ArrayList<>();
 
@@ -19,7 +20,7 @@ public class RegulatedMap<Key, Regulator, Value> {
   }
 
   public void forEach(Consumer<? super RegulatedMapEntry<Key, Regulator, Value>> callback) {
-    if(callback != null) {
+    if (callback != null) {
       data.forEach(callback);
     }
   }

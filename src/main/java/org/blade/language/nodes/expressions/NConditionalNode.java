@@ -8,15 +8,18 @@ import org.blade.language.nodes.NNode;
 public final class NConditionalNode extends NNode {
   @CompilerDirectives.CompilationFinal
   @SuppressWarnings("FieldMayBeFinal")
-  @Child private NNode condition;
+  @Child
+  private NNode condition;
 
   @CompilerDirectives.CompilationFinal
   @SuppressWarnings("FieldMayBeFinal")
-  @Child private NNode leftNode;
+  @Child
+  private NNode leftNode;
 
   @CompilerDirectives.CompilationFinal
   @SuppressWarnings("FieldMayBeFinal")
-  @Child private NNode rightNode;
+  @Child
+  private NNode rightNode;
 
   private final CountingConditionProfile profile = CountingConditionProfile.create();
 
@@ -28,7 +31,7 @@ public final class NConditionalNode extends NNode {
 
   @Override
   public Object execute(VirtualFrame frame) {
-    if(profile.profile(condition.executeBoolean(frame))) {
+    if (profile.profile(condition.executeBoolean(frame))) {
       return leftNode.execute(frame);
     }
     return rightNode.execute(frame);

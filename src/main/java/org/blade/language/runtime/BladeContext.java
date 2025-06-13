@@ -11,20 +11,19 @@ import com.oracle.truffle.api.object.DynamicObjectLibrary;
 import com.oracle.truffle.api.source.Source;
 import org.blade.language.BladeLanguage;
 import org.blade.language.shared.BuiltinClassesModel;
-import org.graalvm.polyglot.Context;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
 import static com.oracle.truffle.api.CompilerDirectives.shouldNotReachHere;
 
 @Bind.DefaultExpression("get($node)")
 public class BladeContext {
-  private static final TruffleLanguage.ContextReference<BladeContext> REFERENCE = TruffleLanguage.ContextReference.create(BladeLanguage.class);
+  private static final TruffleLanguage.ContextReference<BladeContext> REFERENCE = TruffleLanguage.ContextReference.create(
+    BladeLanguage.class);
 
   private final List<FunctionObject> shutdownHooks = new ArrayList<>();
 
@@ -104,7 +103,7 @@ public class BladeContext {
   public BladeContext duplicate() {
     return new BladeContext(
       env,
-      ((GlobalScopeObject)globalScope).duplicate(DynamicObjectLibrary.getUncached()),
+      ((GlobalScopeObject) globalScope).duplicate(DynamicObjectLibrary.getUncached()),
       objectsModel,
       emptyFunction
     );

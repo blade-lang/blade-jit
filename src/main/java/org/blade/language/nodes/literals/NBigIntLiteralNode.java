@@ -4,7 +4,6 @@ import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import org.blade.language.nodes.NNode;
 import org.blade.language.runtime.BigIntObject;
-import org.blade.language.shared.BuiltinClassesModel;
 
 import java.math.BigInteger;
 

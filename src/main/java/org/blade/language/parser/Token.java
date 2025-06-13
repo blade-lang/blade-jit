@@ -4,7 +4,14 @@ public record Token(TokenType type, String literal, int line, int offset, int le
 
   @Override
   public String toString() {
-    return String.format("<ast::Token type=%s literal='%s' line=%d offset=%d length=%d>", type, literal, line, offset, length);
+    return String.format(
+      "<ast::Token type=%s literal='%s' line=%d offset=%d length=%d>",
+      type,
+      literal,
+      line,
+      offset,
+      length
+    );
   }
 
   public Token copyToType(TokenType type, String literal) {

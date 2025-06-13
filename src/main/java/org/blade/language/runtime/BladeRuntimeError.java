@@ -4,7 +4,6 @@ import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.exception.AbstractTruffleException;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.nodes.Node;
-import org.blade.annotations.NAnnotationHelper;
 import org.blade.language.nodes.NNode;
 import org.blade.language.shared.BladeUtil;
 
@@ -62,15 +61,15 @@ public class BladeRuntimeError extends AbstractTruffleException {
   }
 
   @CompilerDirectives.TruffleBoundary
-  public static AbstractTruffleException create(String message, Object ...others) {
+  public static AbstractTruffleException create(String message, Object... others) {
     return new BladeRuntimeError(BString.concatString(message, others));
   }
 
-  public static AbstractTruffleException error(Node node, String message, Object ...values) {
+  public static AbstractTruffleException error(Node node, String message, Object... values) {
     return create(ErrorObject.create(node, "Error", BString.concatString(message, values)), node);
   }
 
-  public static AbstractTruffleException typeError(Node node, String message, Object ...values) {
+  public static AbstractTruffleException typeError(Node node, String message, Object... values) {
     return create(ErrorObject.create(node, "TypeError", BString.concatString(message, values)), node);
   }
 
@@ -78,7 +77,7 @@ public class BladeRuntimeError extends AbstractTruffleException {
     return create(ErrorObject.create(node, "ValueError", message), node);
   }
 
-  public static AbstractTruffleException valueError(Node node, String message, Object ...values) {
+  public static AbstractTruffleException valueError(Node node, String message, Object... values) {
     return create(ErrorObject.create(node, "ValueError", BString.concatString(message, values)), node);
   }
 
@@ -86,13 +85,13 @@ public class BladeRuntimeError extends AbstractTruffleException {
     return create(ErrorObject.create(node, "AssertError", message), node);
   }
 
-  public static AbstractTruffleException assertError(Node node, String message, Object ...values) {
+  public static AbstractTruffleException assertError(Node node, String message, Object... values) {
     return create(ErrorObject.create(node, "AssertError", BString.concatString(message, values)), node);
   }
 
   @ExplodeLoop
   @CompilerDirectives.TruffleBoundary
-  public static AbstractTruffleException argumentError(Node node, String operation, Object ...values) {
+  public static AbstractTruffleException argumentError(Node node, String operation, Object... values) {
     StringBuilder result = new StringBuilder();
 
     if (operation != null) {
@@ -108,7 +107,7 @@ public class BladeRuntimeError extends AbstractTruffleException {
       result.append(sep);
       sep = ", ";
 
-      if(o instanceof BladeObject classInstance) {
+      if (o instanceof BladeObject classInstance) {
         result.append(classInstance.getClassName());
       } else {
         result.append(BladeUtil.getObjectType(o));

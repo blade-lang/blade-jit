@@ -7,7 +7,10 @@ import com.oracle.truffle.api.object.Shape;
 import com.oracle.truffle.api.strings.TruffleString;
 import org.blade.language.nodes.NNode;
 import org.blade.language.nodes.NNormalizeIndexNode;
-import org.blade.language.runtime.*;
+import org.blade.language.runtime.BString;
+import org.blade.language.runtime.BladeClass;
+import org.blade.language.runtime.BladeRuntimeError;
+import org.blade.language.runtime.ListObject;
 import org.blade.language.shared.BladeUtil;
 import org.blade.language.shared.BuiltinClassesModel;
 
@@ -91,6 +94,11 @@ public abstract class NGetSliceNode extends NNode {
 
   @Fallback
   protected Object doFallback(Object object, Object lower, Object upper) {
-    throw BladeRuntimeError.error(this, "Object of type ", BladeUtil.getObjectType(object), " does not support slice operations");
+    throw BladeRuntimeError.error(
+      this,
+      "Object of type ",
+      BladeUtil.getObjectType(object),
+      " does not support slice operations"
+    );
   }
 }

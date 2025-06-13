@@ -29,7 +29,8 @@ public class NFunctionsTest {
   @Test
   public void call_created_function_works() {
     var context = Context.create();
-    var result = context.eval("blade",
+    var result = context.eval(
+      "blade",
       "def test() { return 5 }\n" +
         "test()"
     );
@@ -40,7 +41,8 @@ public class NFunctionsTest {
   @Test
   public void can_call_created_function_with_arguments() {
     var context = Context.create();
-    var result = context.eval("blade",
+    var result = context.eval(
+      "blade",
       "def test(a, b) { return a * b }\n" +
         "test(3, 5)"
     );

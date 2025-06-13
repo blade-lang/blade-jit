@@ -35,17 +35,17 @@ public final class NClassDeclNode extends NStmtNode {
   @Override
   public Object execute(VirtualFrame frame) {
     // Expand properties first as methods may need them.
-    for(NNode property : propreties) {
+    for (NNode property : propreties) {
       property.execute(frame);
     }
 
     // followed by operators since methods can need them too.
-    for(NNode operator : operators) {
+    for (NNode operator : operators) {
       operator.execute(frame);
     }
 
     // lastly, the methods
-    for(NNode method : methods) {
+    for (NNode method : methods) {
       method.execute(frame);
     }
 

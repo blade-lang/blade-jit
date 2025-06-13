@@ -7,7 +7,8 @@ import org.blade.language.nodes.NNode;
 
 public class NRootFunctionNode extends RootNode {
   @SuppressWarnings("FieldMayBeFinal")
-  @Child private NNode body;
+  @Child
+  private NNode body;
 
   public NRootFunctionNode(BladeLanguage language, NNode functionBody) {
     super(language);

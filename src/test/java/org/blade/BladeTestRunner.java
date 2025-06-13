@@ -1,6 +1,8 @@
 package org.blade;
 
 import com.oracle.truffle.api.dsl.NodeFactory;
+import org.blade.language.BladeLanguage;
+import org.blade.language.nodes.functions.NBuiltinFunctionNode;
 import org.graalvm.polyglot.Context;
 import org.graalvm.polyglot.HostAccess;
 import org.graalvm.polyglot.PolyglotException;
@@ -8,6 +10,8 @@ import org.graalvm.polyglot.Source;
 import org.hamcrest.MatcherAssert;
 import org.junit.Assert;
 import org.junit.Assume;
+import org.junit.internal.TextListener;
+import org.junit.runner.Description;
 import org.junit.runner.JUnitCore;
 import org.junit.runner.Result;
 import org.junit.runner.manipulation.Filter;
@@ -15,12 +19,8 @@ import org.junit.runner.manipulation.NoTestsRemainException;
 import org.junit.runner.notification.Failure;
 import org.junit.runner.notification.RunNotifier;
 import org.junit.runners.ParentRunner;
-import org.junit.runner.Description;
 import org.junit.runners.model.InitializationError;
-import org.blade.language.BladeLanguage;
-import org.blade.language.nodes.functions.NBuiltinFunctionNode;
 
-import org.junit.internal.TextListener;
 import java.io.*;
 import java.net.URL;
 import java.nio.charset.Charset;
@@ -90,7 +90,12 @@ public class BladeTestRunner extends ParentRunner<BladeTestRunner.TestCase> {
   protected static List<TestCase> createTests(final Class<?> c) throws IOException, InitializationError {
     BladeTestSuite suite = c.getAnnotation(BladeTestSuite.class);
     if (suite == null) {
-      throw new InitializationError(String.format("@%s annotation required on class '%s' to run with '%s'.", BladeTestSuite.class.getSimpleName(), c.getName(), BladeTestRunner.class.getSimpleName()));
+      throw new InitializationError(String.format(
+        "@%s annotation required on class '%s' to run with '%s'.",
+        BladeTestSuite.class.getSimpleName(),
+        c.getName(),
+        BladeTestRunner.class.getSimpleName()
+      ));
     }
 
     String[] paths = suite.value();
@@ -122,45 +127,57 @@ public class BladeTestRunner extends ParentRunner<BladeTestRunner.TestCase> {
     final Path rootPath = root;
 
     final List<TestCase> foundCases = new ArrayList<>();
-    Files.walkFileTree(rootPath, new SimpleFileVisitor<Path>() {
-      @Override
-      public FileVisitResult visitFile(Path sourceFile, BasicFileAttributes attrs) throws IOException {
-        String sourceName = sourceFile.getFileName().toString();
-        if (sourceName.endsWith(SOURCE_SUFFIX)) {
-          String baseName = sourceName.substring(0, sourceName.length() - SOURCE_SUFFIX.length());
+    Files.walkFileTree(
+      rootPath, new SimpleFileVisitor<Path>() {
+        @Override
+        public FileVisitResult visitFile(Path sourceFile, BasicFileAttributes attrs) throws IOException {
+          String sourceName = sourceFile.getFileName().toString();
+          if (sourceName.endsWith(SOURCE_SUFFIX)) {
+            String baseName = sourceName.substring(0, sourceName.length() - SOURCE_SUFFIX.length());
 
-          Path inputFile = sourceFile.resolveSibling(baseName + INPUT_SUFFIX);
-          String testInput = "";
-          if (Files.exists(inputFile)) {
-            testInput = readAllLines(inputFile);
-          }
-
-          Path outputFile = sourceFile.resolveSibling(baseName + OUTPUT_SUFFIX);
-          if (Files.exists(outputFile)) {
-            String expectedOutput = readAllLines(outputFile);
-
-            boolean expectStackTrace = false;
-            if(expectedOutput.lines().findFirst().isPresent()) {
-              if(expectedOutput.lines().findFirst().get().startsWith("^^^")) {
-                expectedOutput = expectedOutput.lines().skip(1).collect(Collectors.joining("\n"));
-                expectStackTrace = true;
-              }
+            Path inputFile = sourceFile.resolveSibling(baseName + INPUT_SUFFIX);
+            String testInput = "";
+            if (Files.exists(inputFile)) {
+              testInput = readAllLines(inputFile);
             }
 
-            boolean expectRegex = false;
-            if(expectedOutput.lines().findFirst().isPresent()) {
-              if(expectedOutput.lines().findFirst().get().startsWith(">>>")) {
-                expectedOutput = expectedOutput.lines().skip(1).collect(Collectors.joining("\n"));
-                expectRegex = true;
-              }
-            }
+            Path outputFile = sourceFile.resolveSibling(baseName + OUTPUT_SUFFIX);
+            if (Files.exists(outputFile)) {
+              String expectedOutput = readAllLines(outputFile);
 
-            foundCases.add(new TestCase(c, baseName, sourceName, sourceFile, testInput, expectedOutput, expectStackTrace, expectRegex, options));
+              boolean expectStackTrace = false;
+              if (expectedOutput.lines().findFirst().isPresent()) {
+                if (expectedOutput.lines().findFirst().get().startsWith("^^^")) {
+                  expectedOutput = expectedOutput.lines().skip(1).collect(Collectors.joining("\n"));
+                  expectStackTrace = true;
+                }
+              }
+
+              boolean expectRegex = false;
+              if (expectedOutput.lines().findFirst().isPresent()) {
+                if (expectedOutput.lines().findFirst().get().startsWith(">>>")) {
+                  expectedOutput = expectedOutput.lines().skip(1).collect(Collectors.joining("\n"));
+                  expectRegex = true;
+                }
+              }
+
+              foundCases.add(new TestCase(
+                c,
+                baseName,
+                sourceName,
+                sourceFile,
+                testInput,
+                expectedOutput,
+                expectStackTrace,
+                expectRegex,
+                options
+              ));
+            }
           }
+          return FileVisitResult.CONTINUE;
         }
-        return FileVisitResult.CONTINUE;
       }
-    });
+    );
     return foundCases;
   }
 
@@ -270,15 +287,21 @@ public class BladeTestRunner extends ParentRunner<BladeTestRunner.TestCase> {
 //        NimbusLanguage.installBuiltin(builtin);
       }
 
-      Context.Builder builder = Context.newBuilder().allowExperimentalOptions(true).allowHostClassLookup((s) -> true).allowHostAccess(HostAccess.ALL).in(
-        new ByteArrayInputStream(testCase.testInput.getBytes(StandardCharsets.UTF_8))).out(out).err(out);
+      Context.Builder builder = Context.newBuilder()
+        .allowExperimentalOptions(true)
+        .allowHostClassLookup((s) -> true)
+        .allowHostAccess(HostAccess.ALL)
+        .in(
+          new ByteArrayInputStream(testCase.testInput.getBytes(StandardCharsets.UTF_8)))
+        .out(out)
+        .err(out);
 
       for (Map.Entry<String, String> e : testCase.options.entrySet()) {
         builder.option(e.getKey(), e.getValue());
       }
 
       boolean assertsOn = false;
-      assert !!(assertsOn = true);
+      assert assertsOn = true;
       if (!assertsOn) {
         // Assertions are off, we need to turn off probe assertions.
         builder.option("engine.AssertProbes", "false");
@@ -289,10 +312,10 @@ public class BladeTestRunner extends ParentRunner<BladeTestRunner.TestCase> {
       run(context, testCase.path, printer);
       printer.flush();
 
-      String actualOutput = new String(out.toByteArray());
-      if(testCase.expectRegex) {
+      String actualOutput = out.toString();
+      if (testCase.expectRegex) {
         MatcherAssert.assertThat(testCase.name.toString(), actualOutput, matchesAs(testCase.expectedOutput));
-      } else if(testCase.expectStackTrace) {
+      } else if (testCase.expectStackTrace) {
         MatcherAssert.assertThat(testCase.name.toString(), actualOutput, startsWith(testCase.expectedOutput));
       } else {
         Assert.assertEquals(testCase.name.toString(), testCase.expectedOutput, actualOutput);

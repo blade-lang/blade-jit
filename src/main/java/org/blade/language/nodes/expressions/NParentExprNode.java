@@ -32,7 +32,7 @@ public final class NParentExprNode extends NNode {
 
   @Override
   public Object evaluateFunction(VirtualFrame frame, Object receiver) {
-    if(interopLibrary == null) {
+    if (interopLibrary == null) {
       CompilerDirectives.transferToInterpreterAndInvalidate();
       interopLibrary = insert(InteropLibrary.getFactory().createDispatched(1));
     }

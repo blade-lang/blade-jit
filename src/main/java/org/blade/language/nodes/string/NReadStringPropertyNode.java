@@ -1,18 +1,25 @@
 package org.blade.language.nodes.string;
 
-import com.oracle.truffle.api.dsl.*;
+import com.oracle.truffle.api.dsl.Cached;
+import com.oracle.truffle.api.dsl.Fallback;
+import com.oracle.truffle.api.dsl.ImportStatic;
+import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.interop.InteropLibrary;
 import com.oracle.truffle.api.interop.UnknownIdentifierException;
 import com.oracle.truffle.api.interop.UnsupportedMessageException;
 import com.oracle.truffle.api.library.CachedLibrary;
 import com.oracle.truffle.api.strings.TruffleString;
 import org.blade.language.nodes.NBaseNode;
-import org.blade.language.runtime.*;
+import org.blade.language.runtime.BString;
+import org.blade.language.runtime.BladeClass;
+import org.blade.language.runtime.BladeNil;
+import org.blade.language.runtime.BladeRuntimeError;
 
 @ImportStatic(BString.class)
 @SuppressWarnings("truffle-inlining")
 public abstract class NReadStringPropertyNode extends NBaseNode {
   public static final String LENGTH_PROP = "length";
+
   public abstract Object executeProperty(TruffleString self, Object property);
 
   @Specialization
@@ -22,11 +29,11 @@ public abstract class NReadStringPropertyNode extends NBaseNode {
     @Cached TruffleString.SubstringNode substringNode
   ) {
     long stringLength = BString.length(string, lengthNode);
-    if(index < 0) index = index + stringLength;
+    if (index < 0) index = index + stringLength;
 
     return index < 0 || index >= stringLength
       ? BString.EMPTY
-      : BString.substring(string, (int)index, 1, substringNode);
+      : BString.substring(string, (int) index, 1, substringNode);
   }
 
   @Specialization(guards = "LENGTH_PROP.equals(name)")

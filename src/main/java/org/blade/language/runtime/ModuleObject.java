@@ -1,7 +1,5 @@
 package org.blade.language.runtime;
 
-import com.oracle.truffle.api.interop.InteropLibrary;
-import com.oracle.truffle.api.library.ExportLibrary;
 import com.oracle.truffle.api.object.Shape;
 
 //@ExportLibrary(InteropLibrary.class)

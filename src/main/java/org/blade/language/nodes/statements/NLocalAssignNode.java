@@ -15,6 +15,7 @@ import org.blade.language.nodes.NStmtNode;
 @NodeField(name = "slot", type = int.class)
 public abstract class NLocalAssignNode extends NStmtNode {
   public abstract String getSlotName();
+
   public abstract int getSlot();
 
   @Specialization(guards = "isBooleanOrIllegal(frame)")

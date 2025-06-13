@@ -33,8 +33,7 @@ public class BStringMatches extends SubstringMatcher {
    * For example:
    * <pre>assertThat("myStringOfNote", matchesAs("\\d+"))</pre>
    *
-   * @param regex
-   *      the regex that the returned matcher will expect to match the examined string
+   * @param regex the regex that the returned matcher will expect to match the examined string
    */
   @Factory
   public static Matcher<String> matchesAs(String regex) {

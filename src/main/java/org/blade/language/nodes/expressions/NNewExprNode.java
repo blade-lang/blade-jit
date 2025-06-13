@@ -1,6 +1,9 @@
 package org.blade.language.nodes.expressions;
 
-import com.oracle.truffle.api.dsl.*;
+import com.oracle.truffle.api.dsl.Cached;
+import com.oracle.truffle.api.dsl.Executed;
+import com.oracle.truffle.api.dsl.Fallback;
+import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.interop.InteropLibrary;
 import com.oracle.truffle.api.interop.UnknownIdentifierException;
@@ -11,7 +14,10 @@ import com.oracle.truffle.api.object.Shape;
 import org.blade.language.nodes.NNode;
 import org.blade.language.nodes.functions.NMethodDispatchNode;
 import org.blade.language.nodes.functions.NMethodDispatchNodeGen;
-import org.blade.language.runtime.*;
+import org.blade.language.runtime.BladeClass;
+import org.blade.language.runtime.BladeObject;
+import org.blade.language.runtime.BladeRuntimeError;
+import org.blade.language.runtime.FunctionObject;
 
 import java.util.List;
 
@@ -20,7 +26,8 @@ public abstract class NNewExprNode extends NNode {
   @Executed
   protected NNode constructor;
 
-  @Children private final NNode[] arguments;
+  @Children
+  private final NNode[] arguments;
 
   @Child
   @SuppressWarnings("FieldMayBeFinal")
@@ -46,7 +53,7 @@ public abstract class NNewExprNode extends NNode {
       // fallthrough
     }
 
-    if(constructor instanceof FunctionObject constructorFunction) {
+    if (constructor instanceof FunctionObject constructorFunction) {
       constructorDispatch.executeDispatch(constructorFunction, object, executeArguments(frame));
     } else {
       consumeArguments(frame);
@@ -71,7 +78,7 @@ public abstract class NNewExprNode extends NNode {
   private Object[] executeArguments(VirtualFrame frame) {
     int argumentLength = arguments.length;
     Object[] args = new Object[argumentLength];
-    for(int i = 0; i < argumentLength; i++) {
+    for (int i = 0; i < argumentLength; i++) {
       args[i] = arguments[i].execute(frame);
     }
     return args;

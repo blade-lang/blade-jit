@@ -9,7 +9,8 @@ public class NStmtTest {
   @Test
   public void evaluate_statements() {
     var context = Context.create();
-    var result = context.eval("blade",
+    var result = context.eval(
+      "blade",
       """
         var a = 0
         var b

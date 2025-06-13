@@ -3,7 +3,6 @@ package org.blade.language.nodes.functions;
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
-import com.oracle.truffle.api.profiles.BranchProfile;
 import com.oracle.truffle.api.profiles.CountingConditionProfile;
 import org.blade.language.nodes.NNode;
 import org.blade.language.runtime.BladeClass;
@@ -20,10 +19,12 @@ public final class NMethodCallExprNode extends NNode {
   private final NNode[] arguments;
 
   @SuppressWarnings("FieldMayBeFinal")
-  @Child private NMethodDispatchNode dispatchNode;
+  @Child
+  private NMethodDispatchNode dispatchNode;
 
   @SuppressWarnings("FieldMayBeFinal")
-  @Child private NFunctionDispatchNode functionDispatchNode;
+  @Child
+  private NFunctionDispatchNode functionDispatchNode;
 
   private final CountingConditionProfile branchProfile = CountingConditionProfile.create();
 
@@ -43,11 +44,11 @@ public final class NMethodCallExprNode extends NNode {
     CompilerAsserts.compilationConstant(arguments.length);
 
     Object[] values = new Object[arguments.length];
-    for(int i = 0; i < arguments.length; i++) {
+    for (int i = 0; i < arguments.length; i++) {
       values[i] = arguments[i].execute(frame);
     }
 
-    if(branchProfile.profile(receiver instanceof BladeClass bladeClass && bladeClass.isBuiltin)) {
+    if (branchProfile.profile(receiver instanceof BladeClass bladeClass && bladeClass.isBuiltin)) {
       return functionDispatchNode.executeDispatch(function, values);
     }
 

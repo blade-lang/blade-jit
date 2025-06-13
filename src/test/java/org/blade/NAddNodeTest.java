@@ -2,7 +2,6 @@ package org.blade;
 
 import com.oracle.truffle.api.CallTarget;
 import com.oracle.truffle.api.source.Source;
-import org.junit.Test;
 import org.blade.language.BladeLanguage;
 import org.blade.language.nodes.NBlockRootNode;
 import org.blade.language.nodes.NNode;
@@ -12,6 +11,7 @@ import org.blade.language.nodes.statements.NBlockStmtNode;
 import org.blade.language.parser.Lexer;
 import org.blade.language.parser.Parser;
 import org.blade.language.translator.BladeTranslator;
+import org.junit.Test;
 
 import java.util.List;
 
@@ -21,8 +21,9 @@ public class NAddNodeTest {
   @Test
   public void adds_two_numbers_correctly() {
     NNode exprNode = NAddNodeGen.create(
-        new NLongLiteralNode(12),
-        new NLongLiteralNode(34));
+      new NLongLiteralNode(12),
+      new NLongLiteralNode(34)
+    );
     var rootNode = new NBlockRootNode(null, new NBlockStmtNode(List.of(exprNode)), "@.script");
     CallTarget callTarget = rootNode.getCallTarget();
 
@@ -34,8 +35,9 @@ public class NAddNodeTest {
   @Test
   public void adding_1_to_long_max_does_not_overflow() {
     NNode exprNode = NAddNodeGen.create(
-        new NLongLiteralNode(Long.MAX_VALUE),
-        new NLongLiteralNode(1));
+      new NLongLiteralNode(Long.MAX_VALUE),
+      new NLongLiteralNode(1)
+    );
     var rootNode = new NBlockRootNode(null, new NBlockStmtNode(List.of(exprNode)), "@.script");
     CallTarget callTarget = rootNode.getCallTarget();
 
@@ -54,7 +56,8 @@ public class NAddNodeTest {
       assertEquals(1, parseResult.size());
 
       var visitor = new BladeTranslator(parser, new BladeLanguage().builtinObjects);
-      var callTarget = new NBlockRootNode(null,
+      var callTarget = new NBlockRootNode(
+        null,
         new NBlockStmtNode(List.of(parseResult.get(0).accept(visitor))),
         "@.script"
       ).getCallTarget();

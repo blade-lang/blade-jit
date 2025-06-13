@@ -1,6 +1,5 @@
 package org.blade.language.builtins;
 
-import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.Fallback;
 import com.oracle.truffle.api.dsl.NodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
@@ -14,8 +13,8 @@ import com.oracle.truffle.api.object.DynamicObjectLibrary;
 import org.blade.language.BaseBuiltinDeclaration;
 import org.blade.language.nodes.functions.NBuiltinFunctionNode;
 import org.blade.language.runtime.BladeNil;
-import org.blade.language.runtime.ListObject;
 import org.blade.language.runtime.BladeRuntimeError;
+import org.blade.language.runtime.ListObject;
 import org.blade.utility.RegulatedMap;
 
 public final class ListMethods implements BaseBuiltinDeclaration {
@@ -33,14 +32,14 @@ public final class ListMethods implements BaseBuiltinDeclaration {
     protected Object doAny(ListObject list, Object item) {
       Object[] items = list.items;
       int length = items.length;
-      if(length == 0) {
+      if (length == 0) {
         return BladeNil.SINGLETON;
-      } else if(item == BladeNil.SINGLETON) {
+      } else if (item == BladeNil.SINGLETON) {
         return 0L;
       }
 
-      if(item instanceof Long index) {
-        if(index < length - 1) {
+      if (item instanceof Long index) {
+        if (index < length - 1) {
           return index + 1;
         }
 
@@ -60,8 +59,8 @@ public final class ListMethods implements BaseBuiltinDeclaration {
     @Specialization
     protected Object doAny(ListObject list, long index) {
       Object[] items = list.items;
-      if(index > -1 && index < items.length) {
-        return items[(int)index];
+      if (index > -1 && index < items.length) {
+        return items[(int) index];
       }
 
       return doFallback(list, index);

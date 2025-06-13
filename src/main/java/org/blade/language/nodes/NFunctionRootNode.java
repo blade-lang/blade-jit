@@ -9,7 +9,8 @@ import org.blade.language.nodes.functions.NFunctionBodyNode;
 
 public final class NFunctionRootNode extends RootNode {
   @SuppressWarnings("FieldMayBeFinal")
-  @Child private NStmtNode block;
+  @Child
+  private NStmtNode block;
 
   private final String name;
   private final MaterializedFrame parentFrame;
@@ -23,7 +24,7 @@ public final class NFunctionRootNode extends RootNode {
 
   @Override
   public Object execute(VirtualFrame frame) {
-    if(parentFrame != null) {
+    if (parentFrame != null) {
       frame.setObject(0, parentFrame);
     }
 

@@ -69,8 +69,8 @@ public abstract class NMultiplyNode extends NBinaryNode {
 
   @Specialization
   protected static TruffleString doStringMultiplication(TruffleString string, long count,
-                                                 @Cached TruffleString.RepeatNode repeatNode) {
-    return repeatNode.execute(string, (int)count, BladeLanguage.ENCODING);
+                                                        @Cached TruffleString.RepeatNode repeatNode) {
+    return repeatNode.execute(string, (int) count, BladeLanguage.ENCODING);
   }
 
   @Specialization(guards = "count <= MAX_VALUE")
@@ -87,17 +87,24 @@ public abstract class NMultiplyNode extends NBinaryNode {
 
   @Specialization(guards = "count > MAX_VALUE")
   protected static ListObject doListMultiplicationOutOfBound(ListObject list, long count, @Bind Node node) {
-    throw BladeRuntimeError.error(node, "List multiplication count out of bounds (", count, " > ", Integer.MAX_VALUE, ")");
+    throw BladeRuntimeError.error(
+      node,
+      "List multiplication count out of bounds (",
+      count,
+      " > ",
+      Integer.MAX_VALUE,
+      ")"
+    );
   }
 
   @ExplodeLoop
   private static Object[] repeatList(ListObject list, long count) {
     int size = (int) list.getArraySize();
-    int finalSize = (int)(size * count);
+    int finalSize = (int) (size * count);
 
     Object[] objects = new Object[finalSize];
 
-    for(int i = 0; i < count; i++) {
+    for (int i = 0; i < count; i++) {
       System.arraycopy(list.items, 0, objects, i * size, size);
     }
 
@@ -108,7 +115,7 @@ public abstract class NMultiplyNode extends NBinaryNode {
   protected static Object doObjects(BladeObject left, BladeObject right,
                                     @Bind Node node, @CachedLibrary("left") InteropLibrary interopLibrary) {
     Object overrideValue = methodOverride(node, "*", left, right, interopLibrary);
-    if(overrideValue != null) {
+    if (overrideValue != null) {
       return overrideValue;
     }
 
@@ -117,6 +124,6 @@ public abstract class NMultiplyNode extends NBinaryNode {
 
   @Fallback
   protected static double doUnsupported(Object left, Object right, @Bind Node node) {
-    throw BladeRuntimeError.argumentError(node,"*", left, right);
+    throw BladeRuntimeError.argumentError(node, "*", left, right);
   }
 }

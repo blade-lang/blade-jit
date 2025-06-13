@@ -9,7 +9,10 @@ import com.oracle.truffle.api.interop.UnsupportedMessageException;
 import com.oracle.truffle.api.nodes.Node;
 import org.blade.language.nodes.functions.NMethodDispatchNode;
 import org.blade.language.nodes.functions.NMethodDispatchNodeGen;
-import org.blade.language.runtime.*;
+import org.blade.language.runtime.BladeObject;
+import org.blade.language.runtime.BladeRuntimeError;
+import org.blade.language.runtime.FunctionObject;
+import org.blade.language.runtime.ListObject;
 
 import java.math.BigInteger;
 
@@ -48,7 +51,7 @@ public abstract class NBinaryNode extends NNode {
       // fallthrough
     }
 
-    if(overrideFunction instanceof FunctionObject function) {
+    if (overrideFunction instanceof FunctionObject function) {
       return getDispatchNode().executeDispatch(function, left, new Object[]{right});
     }
 

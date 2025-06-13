@@ -66,7 +66,7 @@ public final class BString {
     return indexOfStringNode.execute(
       self, other,
       startIndex,
-      (int)length(self, lengthNode),
+      (int) length(self, lengthNode),
       BladeLanguage.ENCODING
     );
   }
@@ -93,7 +93,7 @@ public final class BString {
 
   @CompilerDirectives.TruffleBoundary
   public static String toString(Object object) {
-    if(object == null) return "nil";
+    if (object == null) return "nil";
     return object.toString();
   }
 
@@ -119,17 +119,17 @@ public final class BString {
   }
 
   @CompilerDirectives.TruffleBoundary
-  public static String format(String format, Object ...args) {
+  public static String format(String format, Object... args) {
     return String.format(format, args);
   }
 
   @CompilerDirectives.TruffleBoundary
   @ExplodeLoop
-  public static String concatString(String original, Object ...others) {
+  public static String concatString(String original, Object... others) {
     StringBuilder builder = new StringBuilder();
     builder.append(original);
 
-    for(Object o : others) {
+    for (Object o : others) {
       builder.append(o.toString());
     }
 

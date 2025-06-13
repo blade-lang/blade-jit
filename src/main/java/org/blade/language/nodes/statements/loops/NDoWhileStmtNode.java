@@ -9,7 +9,8 @@ import org.blade.language.runtime.BladeNil;
 
 public final class NDoWhileStmtNode extends NStmtNode {
   @SuppressWarnings("FieldMayBeFinal")
-  @Child private LoopNode loop;
+  @Child
+  private LoopNode loop;
 
   public NDoWhileStmtNode(NNode condition, NNode body) {
     loop = Truffle.getRuntime().createLoopNode(new NDoWhileRepeatingNode(condition, body));

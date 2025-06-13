@@ -31,7 +31,8 @@ public class LocalVarNodeVisitor implements NodeVisitor {
       refs.add(new LocalVarRefObject(
         assignNode.getSlotName(),
         assignNode.getSourceSection(),
-        assignNode.getSlot()));
+        assignNode.getSlot()
+      ));
       return true;
     }
 

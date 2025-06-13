@@ -14,13 +14,11 @@ import com.oracle.truffle.api.object.Shape;
 import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.strings.TruffleString;
 import org.blade.language.builtins.*;
-import org.blade.language.builtins.ListMethods;
-import org.blade.language.builtins.ObjectMethods;
 import org.blade.language.nodes.NBlockRootNode;
 import org.blade.language.nodes.expressions.NSetPropertyNodeGen;
 import org.blade.language.nodes.functions.NBuiltinFunctionNode;
-import org.blade.language.nodes.functions.NRootFunctionNode;
 import org.blade.language.nodes.functions.NReadFunctionArgsExprNode;
+import org.blade.language.nodes.functions.NRootFunctionNode;
 import org.blade.language.nodes.literals.NSelfLiteralNode;
 import org.blade.language.nodes.statements.NBlockStmtNode;
 import org.blade.language.nodes.statements.NExprStmtNode;
@@ -61,7 +59,8 @@ public class BladeLanguage extends TruffleLanguage<BladeContext> {
   private static final LanguageReference<BladeLanguage> REFERENCE = LanguageReference.create(BladeLanguage.class);
   private final Assumption assumption = Truffle.getRuntime().createAssumption("Single Blade context.");
 
-  @Option(help = "Enforce type hints in function parameters", category = OptionCategory.USER, stability = OptionStability.STABLE) //
+  @Option(help = "Enforce type hints in function parameters", category = OptionCategory.USER, stability = OptionStability.STABLE)
+  //
   public static final OptionKey<Boolean> EnforceTypes = new OptionKey<>(false);
   public boolean enforceTypes = false;
 
@@ -104,7 +103,8 @@ public class BladeLanguage extends TruffleLanguage<BladeContext> {
           new NBlockStmtNode(Collections.emptyList()),
           "@new"
         ).getCallTarget(),
-        0)
+        0
+      )
     );
   }
 
@@ -164,7 +164,8 @@ public class BladeLanguage extends TruffleLanguage<BladeContext> {
 
     // add a constructor to all Error types
     for (Map.Entry<String, BladeClass> entry : builtinObjects.errorsModel.ALL.entrySet()) {
-      objectLibrary.putConstant(entry.getValue(), "@new",
+      objectLibrary.putConstant(
+        entry.getValue(), "@new",
         // error subtype constructor
         new FunctionObject(
           rootShape,
@@ -189,8 +190,10 @@ public class BladeLanguage extends TruffleLanguage<BladeContext> {
             )),
             "@new"
           ).getCallTarget(),
-          1),
-        0);
+          1
+        ),
+        0
+      );
     }
 
     return globalScope;
@@ -215,7 +218,14 @@ public class BladeLanguage extends TruffleLanguage<BladeContext> {
     objectLibrary.putConstant(
       scope,
       name,
-      new FunctionObject(rootShape, functionClass, name, createCallTarget(factory, true), factory.getExecutionSignature().size(), variadic),
+      new FunctionObject(
+        rootShape,
+        functionClass,
+        name,
+        createCallTarget(factory, true),
+        factory.getExecutionSignature().size(),
+        variadic
+      ),
       0
     );
   }
@@ -234,7 +244,13 @@ public class BladeLanguage extends TruffleLanguage<BladeContext> {
     objectLibrary.putConstant(
       classObject,
       name,
-      new FunctionObject(rootShape, functionClass, name, createCallTarget(factory, false), factory.getExecutionSignature().size() - 1),
+      new FunctionObject(
+        rootShape,
+        functionClass,
+        name,
+        createCallTarget(factory, false),
+        factory.getExecutionSignature().size() - 1
+      ),
       0
     );
   }
@@ -243,7 +259,7 @@ public class BladeLanguage extends TruffleLanguage<BladeContext> {
     int argumentCount = factory.getExecutionSignature().size();
 
     NReadFunctionArgsExprNode[] arguments = IntStream.range(0, argumentCount)
-      .mapToObj(i -> new NReadFunctionArgsExprNode(offset ? i + 1 : i, "arg"+i))
+      .mapToObj(i -> new NReadFunctionArgsExprNode(offset ? i + 1 : i, "arg" + i))
       .toArray(NReadFunctionArgsExprNode[]::new);
 
     NRootFunctionNode rootNode = new NRootFunctionNode(this, factory.createNode((Object) arguments));

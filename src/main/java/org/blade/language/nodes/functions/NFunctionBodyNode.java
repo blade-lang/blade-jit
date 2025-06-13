@@ -68,19 +68,22 @@ public final class NFunctionBodyNode extends NStmtNode {
     // while 'this' has its own Node (ThisExprNode)
     funcArgs.add(new FunctionArgRefObject("self", null, 0));
 
-    NodeUtil.forEachChild(this, new NodeVisitor() {
-      @Override
-      public boolean visit(Node visitedNode) {
-        if (visitedNode instanceof NReadFunctionArgsExprNode readNode) {
-          funcArgs.add(new FunctionArgRefObject(
-            readNode.name,
-            readNode.getSourceSection(),
-            readNode.index));
-          return true;
+    NodeUtil.forEachChild(
+      this, new NodeVisitor() {
+        @Override
+        public boolean visit(Node visitedNode) {
+          if (visitedNode instanceof NReadFunctionArgsExprNode readNode) {
+            funcArgs.add(new FunctionArgRefObject(
+              readNode.name,
+              readNode.getSourceSection(),
+              readNode.index
+            ));
+            return true;
+          }
+          return NodeUtil.forEachChild(visitedNode, this);
         }
-        return NodeUtil.forEachChild(visitedNode, this);
       }
-    });
+    );
 
     var localVarNodeVisitor = new LocalVarNodeVisitor();
     NodeUtil.forEachChild(this, localVarNodeVisitor);

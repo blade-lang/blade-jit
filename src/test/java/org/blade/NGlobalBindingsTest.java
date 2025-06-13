@@ -12,7 +12,8 @@ public class NGlobalBindingsTest {
   @Test
   public void surfaces_global_bindings() {
     var context = Context.create();
-    context.eval("blade",
+    context.eval(
+      "blade",
       """
         var a = 1
         var b = 2 + 3

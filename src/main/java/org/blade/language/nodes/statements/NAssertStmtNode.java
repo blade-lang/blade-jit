@@ -24,7 +24,7 @@ public final class NAssertStmtNode extends NStmtNode {
 
   @Override
   public Object execute(VirtualFrame frame) {
-    if(!profile.profile(assertion.executeBoolean(frame))) {
+    if (!profile.profile(assertion.executeBoolean(frame))) {
       return message.execute(frame);
     }
 

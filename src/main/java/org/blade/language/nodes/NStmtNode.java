@@ -18,13 +18,13 @@ public abstract class NStmtNode extends NNode implements InstrumentableNode {
 
   public final Node getParentBlock() {
     Node parent = getParent();
-    while(parent != null) {
-      if(parent instanceof NBlockStmtNode || parent instanceof NFunctionBodyNode) {
+    while (parent != null) {
+      if (parent instanceof NBlockStmtNode || parent instanceof NFunctionBodyNode) {
         break;
       }
 
       Node grandParent = parent.getParent();
-      if(grandParent == null) {
+      if (grandParent == null) {
         break;
       }
 
@@ -44,7 +44,7 @@ public abstract class NStmtNode extends NNode implements InstrumentableNode {
   Object getScope(Frame frame, boolean nodeEnter,
                   @Cached(value = "this.getParentBlock()", adopt = false, allowUncached = true, neverDefault = true)
                   @Cached.Shared("parentBlock") Node parentBlock) {
-    return  parentBlock instanceof NBlockStmtNode
+    return parentBlock instanceof NBlockStmtNode
       ? new BlockScopeDebugObject(frame, (NBlockStmtNode) parentBlock)
       : new FunctionScopeDebugObject(frame, (NFunctionBodyNode) parentBlock);
   }

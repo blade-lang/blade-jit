@@ -3,33 +3,55 @@
 package org.blade.language.parser.ast;
 
 import org.blade.language.parser.Token;
+
 import java.util.List;
 
 public abstract class Stmt extends AST {
-  public abstract<T> T accept(Visitor<T> visitor);
+  public abstract <T> T accept(Visitor<T> visitor);
 
   public interface Visitor<T> {
     T visitEchoStmt(Echo stmt);
+
     T visitExpressionStmt(Expression stmt);
+
     T visitIfStmt(If stmt);
+
     T visitIterStmt(Iter stmt);
+
     T visitWhileStmt(While stmt);
+
     T visitDoWhileStmt(DoWhile stmt);
+
     T visitContinueStmt(Continue stmt);
+
     T visitBreakStmt(Break stmt);
+
     T visitRaiseStmt(Raise stmt);
+
     T visitReturnStmt(Return stmt);
+
     T visitAssertStmt(Assert stmt);
+
     T visitUsingStmt(Using stmt);
+
     T visitImportStmt(Import stmt);
+
     T visitCatchStmt(Catch stmt);
+
     T visitBlockStmt(Block stmt);
+
     T visitVarStmt(Var stmt);
+
     T visitFunctionStmt(Function stmt);
+
     T visitMethodStmt(Method stmt);
+
     T visitPropertyStmt(Property stmt);
+
     T visitClassStmt(Class stmt);
+
     T visitVarListStmt(VarList stmt);
+
     T visitStmt(Stmt stmt);
   }
 

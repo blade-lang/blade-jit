@@ -6,7 +6,6 @@ import com.oracle.truffle.api.dsl.Bind;
 import com.oracle.truffle.api.dsl.Fallback;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.interop.InteropLibrary;
-import com.oracle.truffle.api.interop.UnsupportedMessageException;
 import com.oracle.truffle.api.library.CachedLibrary;
 import com.oracle.truffle.api.nodes.Node;
 import org.blade.language.nodes.NBinaryNode;
@@ -15,8 +14,6 @@ import org.blade.language.runtime.BladeObject;
 import org.blade.language.runtime.BladeRuntimeError;
 
 import java.math.BigInteger;
-
-import static com.oracle.truffle.api.CompilerDirectives.shouldNotReachHere;
 
 @OperationProxy.Proxyable(allowUncached = true)
 public abstract class NSubtractNode extends NBinaryNode {
@@ -33,7 +30,7 @@ public abstract class NSubtractNode extends NBinaryNode {
 
   @Specialization(guards = {"isLong(left)", "isDouble(right)"})
   protected static double doLongDouble(long left, double right) {
-    return (double)left - right;
+    return (double) left - right;
   }
 
   @Specialization
@@ -73,7 +70,7 @@ public abstract class NSubtractNode extends NBinaryNode {
   protected static Object doObjects(BladeObject left, BladeObject right,
                                     @Bind Node node, @CachedLibrary("left") InteropLibrary interopLibrary) {
     Object overrideValue = methodOverride(node, "-", left, right, interopLibrary);
-    if(overrideValue != null) {
+    if (overrideValue != null) {
       return overrideValue;
     }
 
@@ -82,6 +79,6 @@ public abstract class NSubtractNode extends NBinaryNode {
 
   @Fallback
   protected static double doUnsupported(Object left, Object right, @Bind Node node) {
-    throw BladeRuntimeError.argumentError(node,"-", left, right);
+    throw BladeRuntimeError.argumentError(node, "-", left, right);
   }
 }

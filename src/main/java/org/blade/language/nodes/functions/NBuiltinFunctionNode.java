@@ -5,9 +5,6 @@ import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.NodeChild;
 import com.oracle.truffle.api.strings.TruffleString;
 import org.blade.language.nodes.NNode;
-import org.blade.language.runtime.BigIntObject;
-
-import java.math.BigInteger;
 
 @NodeChild(value = "arguments", type = NReadFunctionArgsExprNode[].class)
 @GenerateNodeFactory

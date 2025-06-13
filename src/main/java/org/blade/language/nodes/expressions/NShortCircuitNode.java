@@ -6,12 +6,15 @@ import org.blade.language.nodes.NNode;
 
 public abstract class NShortCircuitNode extends NNode {
   @SuppressWarnings("FieldMayBeFinal")
-  @Child private NNode left;
+  @Child
+  private NNode left;
 
   @SuppressWarnings("FieldMayBeFinal")
-  @Child private NNode right;
+  @Child
+  private NNode right;
 
   protected abstract boolean isEvaluateRight(boolean leftValue);
+
   protected abstract boolean execute(boolean leftValue, boolean rightValue);
 
   /**

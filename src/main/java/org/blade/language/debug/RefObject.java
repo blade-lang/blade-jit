@@ -10,6 +10,7 @@ import com.oracle.truffle.api.source.SourceSection;
 @ExportLibrary(InteropLibrary.class)
 public abstract class RefObject implements TruffleObject {
   public abstract Object read(Frame frame);
+
   public abstract void write(Frame frame, Object value);
 
   protected final String name;

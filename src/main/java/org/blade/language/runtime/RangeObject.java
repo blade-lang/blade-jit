@@ -35,7 +35,7 @@ public final class RangeObject extends BladeObject {
   Object readMember(String member,
                     @CachedLibrary("this") DynamicObjectLibrary objectLibrary,
                     @CachedLibrary("this.classObject") InteropLibrary classInteropLibrary) throws UnsupportedMessageException, UnknownIdentifierException {
-    return switch(member) {
+    return switch (member) {
       case "upper" -> upper;
       case "lower" -> lower;
       case "range" -> range;

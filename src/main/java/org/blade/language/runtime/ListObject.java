@@ -28,7 +28,8 @@ public final class ListObject extends BladeObject {
   public Object[] items;
 
   // List properties...
-  @DynamicField private long length;
+  @DynamicField
+  private long length;
 
   public ListObject(Shape shape, BladeClass classObject, Object[] objects) {
     super(shape, classObject);
@@ -85,7 +86,7 @@ public final class ListObject extends BladeObject {
 
   @ExportMessage.Ignore
   void writeArrayElement(long index, Object value) {
-    items[(int)index] = value;
+    items[(int) index] = value;
   }
 
   @ExportMessage
@@ -135,7 +136,7 @@ public final class ListObject extends BladeObject {
   @Override
   public String toString() {
     List<String> builder = new ArrayList<>();
-    for(Object item : items) {
+    for (Object item : items) {
       builder.add(BString.toString(item));
     }
 
@@ -162,7 +163,7 @@ public final class ListObject extends BladeObject {
   }
 
   private long effectiveIndex(Node node, InlinedConditionProfile profile, long index, long length) {
-    if(profile.profile(node, index < 0)) {
+    if (profile.profile(node, index < 0)) {
       return index + length;
     }
     return index;

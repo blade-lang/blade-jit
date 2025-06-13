@@ -19,6 +19,7 @@ import org.blade.language.runtime.BladeRuntimeError;
 @NodeField(name = "isConst", type = Boolean.class)
 public abstract class NGlobalDeclNode extends NStmtNode {
   protected abstract String getName();
+
   protected abstract boolean getIsConst();
 
   @CompilerDirectives.CompilationFinal

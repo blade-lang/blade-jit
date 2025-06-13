@@ -311,7 +311,7 @@ public class Lexer {
 
     while (isDigit(peek()) || peek() == '_') advance();
 
-    if(peek() == 'n') {
+    if (peek() == 'n') {
       // we've encountered a big integer
       advance();
       addToken(BIG_NUMBER, sourceCharacters.subSequence(start, current - 1).toString().replace("_", "").trim());

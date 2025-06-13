@@ -1,12 +1,9 @@
 package org.blade.language.nodes.expressions;
 
 import com.oracle.truffle.api.CompilerDirectives;
-import com.oracle.truffle.api.dsl.NodeField;
-import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.FrameSlotKind;
 import com.oracle.truffle.api.frame.MaterializedFrame;
 import com.oracle.truffle.api.frame.VirtualFrame;
-import com.oracle.truffle.api.nodes.ExplodeLoop;
 import org.blade.language.nodes.NNode;
 
 public final class NClosedRefNode extends NNode {
@@ -21,7 +18,7 @@ public final class NClosedRefNode extends NNode {
 
   @Override
   public Object execute(VirtualFrame frame) {
-    if(parentFrame == null) {
+    if (parentFrame == null) {
       CompilerDirectives.transferToInterpreterAndInvalidate();
       parentFrame = getParentFrame(frame, depth);
     }

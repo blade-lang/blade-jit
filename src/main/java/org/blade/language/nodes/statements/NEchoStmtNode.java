@@ -8,7 +8,8 @@ import org.blade.language.runtime.BladeNil;
 
 public final class NEchoStmtNode extends NStmtNode {
   @SuppressWarnings("FieldMayBeFinal")
-  @Child private NNode object;
+  @Child
+  private NNode object;
 
   public NEchoStmtNode(NNode object) {
     this.object = object;

@@ -2,6 +2,7 @@ package tools.blade;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
 
@@ -15,7 +16,7 @@ public class GenerateAst {
 
     String outputDir = args[0].trim();
     String type = "all";
-    if(args.length == 2) {
+    if (args.length == 2) {
       type = args[1].trim();
     }
 
@@ -30,60 +31,60 @@ public class GenerateAst {
   }
 
   private static final List<String> EXPR_DEFINITION = Arrays.asList(
-      "Nil                :",
-      "Boolean            : boolean value",
-      "Number             : Token token",
-      "BigNumber             : Token token",
-      "Literal            : Token token",
-      "Unary              : Token op, Expr right",
-      "Binary             : Expr left, Token op, Expr right",
-      "Logical            : Expr left, Token op, Expr right",
-      "Range              : Expr lower, Expr upper",
-      "Grouping           : Expr expression",
-      "Identifier         : Token token",
-      "Condition          : Expr expression, Expr truth, Expr falsy",
-      "Call               : Expr callee, List<Expr> args",
-      "Get                : Expr expression, Identifier name",
-      "Set                : Expr expression, Identifier name, Expr value",
-      "Index              : Expr callee, Expr argument",
-      "Slice              : Expr callee, Expr lower, Expr upper",
-      "Array              : List<Expr> items",
-      "Dict               : List<Expr> keys, List<Expr> values",
-      "New                : Expr expression, List<Expr> arguments",
-      "Parent             :",
-      "Self               :",
-      "Assign             : Expr expression, Expr value",
-      "Anonymous          : Stmt.Function function"
+    "Nil                :",
+    "Boolean            : boolean value",
+    "Number             : Token token",
+    "BigNumber             : Token token",
+    "Literal            : Token token",
+    "Unary              : Token op, Expr right",
+    "Binary             : Expr left, Token op, Expr right",
+    "Logical            : Expr left, Token op, Expr right",
+    "Range              : Expr lower, Expr upper",
+    "Grouping           : Expr expression",
+    "Identifier         : Token token",
+    "Condition          : Expr expression, Expr truth, Expr falsy",
+    "Call               : Expr callee, List<Expr> args",
+    "Get                : Expr expression, Identifier name",
+    "Set                : Expr expression, Identifier name, Expr value",
+    "Index              : Expr callee, Expr argument",
+    "Slice              : Expr callee, Expr lower, Expr upper",
+    "Array              : List<Expr> items",
+    "Dict               : List<Expr> keys, List<Expr> values",
+    "New                : Expr expression, List<Expr> arguments",
+    "Parent             :",
+    "Self               :",
+    "Assign             : Expr expression, Expr value",
+    "Anonymous          : Stmt.Function function"
   );
 
   private static final List<String> STMT_DEFINITION = Arrays.asList(
-      "Echo       : Expr value",
-      "Expression : Expr expression",
-      "If         : Expr condition, Stmt thenBranch, Stmt elseBranch",
-      "Iter       : Stmt declaration, Expr condition, Expression interation, Block body",
-      "While      : Expr condition, Stmt body",
-      "DoWhile    : Stmt body, Expr condition",
-      "Continue   :",
-      "Break      :",
-      "Raise      : Expr exception",
-      "Return     : Expr value",
-      "Assert     : Expr expression, Expr message",
-      "Using      : Expr expression, List<Expr> caseLabels, List<Stmt> caseBodies, Stmt defaultCase",
-      "Import     : String path, List<Token> elements, boolean all",
-      "Catch      : Block body, Block catchBody, Block finallyBody, Expr.Identifier name",
-      "Block      : List<Stmt> body",
-      "Var        : Token name, Expr value, boolean isConstant",
-      "Function   : Token name, List<Expr.Identifier> parameters, Stmt.Block body, boolean isVariadic",
-      "Method     : Token name, List<Expr.Identifier> parameters, Stmt.Block body, boolean isVariadic, boolean isStatic",
-      "Property   : Token name, Expr value, boolean isStatic, boolean isConstant",
-      "Class      : Token name, Expr.Identifier superclass, List<Property> properties, List<Method> methods, List<Method> operators",
-      "VarList    : List<Stmt> declarations"
+    "Echo       : Expr value",
+    "Expression : Expr expression",
+    "If         : Expr condition, Stmt thenBranch, Stmt elseBranch",
+    "Iter       : Stmt declaration, Expr condition, Expression interation, Block body",
+    "While      : Expr condition, Stmt body",
+    "DoWhile    : Stmt body, Expr condition",
+    "Continue   :",
+    "Break      :",
+    "Raise      : Expr exception",
+    "Return     : Expr value",
+    "Assert     : Expr expression, Expr message",
+    "Using      : Expr expression, List<Expr> caseLabels, List<Stmt> caseBodies, Stmt defaultCase",
+    "Import     : String path, List<Token> elements, boolean all",
+    "Catch      : Block body, Block catchBody, Block finallyBody, Expr.Identifier name",
+    "Block      : List<Stmt> body",
+    "Var        : Token name, Expr value, boolean isConstant",
+    "Function   : Token name, List<Expr.Identifier> parameters, Stmt.Block body, boolean isVariadic",
+    "Method     : Token name, List<Expr.Identifier> parameters, Stmt.Block body, boolean isVariadic, boolean isStatic",
+    "Property   : Token name, Expr value, boolean isStatic, boolean isConstant",
+    "Class      : Token name, Expr.Identifier superclass, List<Property> properties, List<Method> methods, List<Method> operators",
+    "VarList    : List<Stmt> declarations"
   );
 
   private static void defineAst(String outputDir, String baseName, List<String> types) throws IOException {
 
     String path = outputDir + "/" + baseName + ".java";
-    PrintWriter writer = new PrintWriter(path, "UTF-8");
+    PrintWriter writer = new PrintWriter(path, StandardCharsets.UTF_8);
 
     writer.println("// DO NOT MODIFY DIRECTLY");
     writer.println("// This file was generated by the tools.blade.GenerateAst");
@@ -122,7 +123,7 @@ public class GenerateAst {
     for (String type : types) {
       String typeName = type.split(":")[0].trim();
       writer.println("    T visit" + typeName + baseName + "(" + typeName
-          + " " + baseName.toLowerCase() + ");");
+        + " " + baseName.toLowerCase() + ");");
     }
     writer.println("    T visit" + baseName + "(" + baseName + " " + baseName.toLowerCase() + ");");
     writer.println("  }");

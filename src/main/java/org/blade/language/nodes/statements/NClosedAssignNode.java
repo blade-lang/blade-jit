@@ -6,7 +6,6 @@ import com.oracle.truffle.api.frame.MaterializedFrame;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.instrumentation.StandardTags;
 import com.oracle.truffle.api.instrumentation.Tag;
-import com.oracle.truffle.api.nodes.ExplodeLoop;
 import org.blade.language.nodes.NNode;
 import org.blade.language.nodes.NStmtNode;
 
@@ -16,7 +15,9 @@ import org.blade.language.nodes.NStmtNode;
 @NodeField(name = "depth", type = int.class)
 public abstract class NClosedAssignNode extends NStmtNode {
   public abstract String getSlotName();
+
   public abstract int getSlot();
+
   public abstract int getDepth();
 
   @Specialization(guards = "isBooleanOrIllegal(parentFrame)")

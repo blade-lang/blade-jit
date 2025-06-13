@@ -8,19 +8,20 @@ import com.oracle.truffle.api.interop.UnsupportedMessageException;
 import com.oracle.truffle.api.library.CachedLibrary;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.strings.TruffleString;
+import org.blade.language.nodes.BladeTypesGen;
 import org.blade.language.nodes.NNode;
 import org.blade.language.nodes.NSharedPropertyReaderNode;
-import org.blade.language.nodes.BladeTypesGen;
 import org.blade.language.nodes.expressions.NParentExprNode;
 import org.blade.language.runtime.BString;
-import org.blade.language.runtime.ListObject;
 import org.blade.language.runtime.BladeRuntimeError;
+import org.blade.language.runtime.ListObject;
 
 @SuppressWarnings("truffle-inlining")
 @NodeChild("listExpr")
 @NodeChild("indexExpr")
 public abstract class NListIndexReadNode extends NNode {
   protected abstract NNode getListExpr();
+
   protected abstract NNode getIndexExpr();
 
   @SuppressWarnings("FieldMayBeFinal")
@@ -105,7 +106,7 @@ public abstract class NListIndexReadNode extends NNode {
       Object list, Object index,
       @Cached @Cached.Shared("propertyReaderNode") NSharedPropertyReaderNode propertyReaderNode
     ) {
-      if(list instanceof ListObject && BladeTypesGen.isImplicitDouble(index)) {
+      if (list instanceof ListObject && BladeTypesGen.isImplicitDouble(index)) {
         throw BladeRuntimeError.error(this, "List index ", index, " out of range");
       }
       return propertyReaderNode.executeRead(list, index);

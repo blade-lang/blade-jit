@@ -24,7 +24,8 @@ public class ControlFlowTest {
 
   @Test
   public void var_declarations_are_local_in_nested_blocks() {
-    var result = context.eval("blade",
+    var result = context.eval(
+      "blade",
       """
         var v = 3
         {
@@ -37,7 +38,8 @@ public class ControlFlowTest {
 
   @Test
   public void var_declarations_are_local_in_nested_blocks_of_functions() {
-    var result = context.eval("blade",
+    var result = context.eval(
+      "blade",
       """
         def f() {
           var v = 3
@@ -54,15 +56,16 @@ public class ControlFlowTest {
 
   @Test
   public void a_function_is_equal_to_itself_but_not_lte() {
-    context.eval("blade",
+    context.eval(
+      "blade",
       """
-        def f() {
-          return false
-        }
-        var t1 = f == f
-        var f1 = f < f
-        var f2 = f <= f
-       """
+         def f() {
+           return false
+         }
+         var t1 = f == f
+         var f1 = f < f
+         var f2 = f <= f
+        """
     );
 
     var bindings = context.getBindings("blade");
@@ -73,7 +76,8 @@ public class ControlFlowTest {
 
   @Test
   public void if_in_a_function_works() {
-    this.context.eval("blade",
+    this.context.eval(
+      "blade",
       """
         def sig(n) {
             if n < 0 return -1
@@ -94,7 +98,8 @@ public class ControlFlowTest {
 
   @Test
   public void iterative_fibonacci_works() {
-    var result = context.eval("blade",
+    var result = context.eval(
+      "blade",
       """
         def fib(n) {
             if n < 2 {
@@ -117,7 +122,8 @@ public class ControlFlowTest {
 
   @Test
   public void do_while_always_executes_at_least_once() {
-    var result = context.eval("blade",
+    var result = context.eval(
+      "blade",
       """
         def f(n) {
             var ret = n + 2
@@ -128,13 +134,14 @@ public class ControlFlowTest {
         }
         f(8)"""
     );
-    
+
     assertEquals(12, result.asInt());
   }
 
   @Test
   public void iter_parts_are_all_optional() {
-    var result = context.eval("blade",
+    var result = context.eval(
+      "blade",
       """
         def fib(n) {
             if n < 2 {
@@ -161,7 +168,8 @@ public class ControlFlowTest {
 
   @Test
   public void for_loop_executes_as_expected() {
-    var result = context.eval("blade",
+    var result = context.eval(
+      "blade",
       """
         def fib(n) {
             if n < 2 {
@@ -183,7 +191,8 @@ public class ControlFlowTest {
 
   @Test
   public void recursive_fibonacci_works() {
-    var result = context.eval("blade",
+    var result = context.eval(
+      "blade",
       """
         def fib(n) {
             if n > -2 {
@@ -199,7 +208,8 @@ public class ControlFlowTest {
 
   @Test
   public void if_statement_returns_value() {
-    var result = context.eval("blade",
+    var result = context.eval(
+      "blade",
       """
         if true {
             42
@@ -213,7 +223,8 @@ public class ControlFlowTest {
   @Test
   public void return_statement_is_not_allowed_on_top_level() {
     try {
-      context.eval("blade",
+      context.eval(
+        "blade",
         "return"
       );
 
@@ -227,15 +238,17 @@ public class ControlFlowTest {
 
   @Test
   public void negative_recursive_fibonacci_is_correct() {
-    var fibProgram = Source.create("blade", """
-      def fib(n) {
-          if n > -2 {
-              return abs(n)
-          }
-          return fib(n + 1) + fib(n + 2)
-      }
-      fib(-20)
-      """);
+    var fibProgram = Source.create(
+      "blade", """
+        def fib(n) {
+            if n > -2 {
+                return abs(n)
+            }
+            return fib(n + 1) + fib(n + 2)
+        }
+        fib(-20)
+        """
+    );
     var fibProgramValue = context.parse(fibProgram);
     assertEquals(6765, fibProgramValue.execute().asInt());
   }

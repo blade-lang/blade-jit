@@ -13,7 +13,8 @@ import java.util.List;
 
 public final class NListLiteralNode extends NNode {
 
-  @Children private final NNode[] items;
+  @Children
+  private final NNode[] items;
 
   private final int length;
 
@@ -30,7 +31,7 @@ public final class NListLiteralNode extends NNode {
   @Override
   public Object execute(VirtualFrame frame) {
     Object[] objects = new Object[length];
-    for(int i = 0; i < length; i++) {
+    for (int i = 0; i < length; i++) {
       objects[i] = items[i].execute(frame);
     }
 

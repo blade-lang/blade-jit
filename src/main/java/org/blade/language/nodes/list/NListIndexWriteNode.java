@@ -56,7 +56,7 @@ public abstract class NListIndexWriteNode extends NNode {
     Object list, long index, Object value,
     @CachedLibrary("list") InteropLibrary listLibrary
   ) {
-    throw BladeRuntimeError.error(this, "Cannot set properties of nil (reading '" , index, "')", this);
+    throw BladeRuntimeError.error(this, "Cannot set properties of nil (reading '", index, "')", this);
   }
 
   @Specialization(guards = {"listLibrary.isNull(list)"}, limit = "3")
@@ -64,7 +64,7 @@ public abstract class NListIndexWriteNode extends NNode {
     Object list, long index, Object value,
     @CachedLibrary("list") InteropLibrary listLibrary
   ) {
-    throw BladeRuntimeError.error(this, "Cannot set properties of boolean value (reading '" , index, "')", this);
+    throw BladeRuntimeError.error(this, "Cannot set properties of boolean value (reading '", index, "')", this);
   }
 
   @Fallback
@@ -72,8 +72,8 @@ public abstract class NListIndexWriteNode extends NNode {
     Object target, Object index, Object value,
     @Cached @Cached.Shared("sharedPropertyWriterNode") NSharedPropertyWriterNode sharedPropertyWriterNode
   ) {
-    if(target instanceof ListObject && (index instanceof Long || index instanceof Double)) {
-      throw BladeRuntimeError.error(this, "List index ", index," out of range");
+    if (target instanceof ListObject && (index instanceof Long || index instanceof Double)) {
+      throw BladeRuntimeError.error(this, "List index ", index, " out of range");
     }
 
     return sharedPropertyWriterNode.executeWrite(target, BString.toString(index), value);

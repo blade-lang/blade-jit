@@ -12,7 +12,10 @@ import com.oracle.truffle.api.object.Shape;
 @ExportLibrary(InteropLibrary.class)
 public class BObject extends BladeClass {
   public BObject(Shape shape) {
-    super(shape, "Object", new DynamicObject(shape) {});
+    super(
+      shape, "Object", new DynamicObject(shape) {
+      }
+    );
   }
 
   @ExportMessage

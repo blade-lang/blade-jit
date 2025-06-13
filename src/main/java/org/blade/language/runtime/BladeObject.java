@@ -96,13 +96,13 @@ public class BladeObject extends DynamicObject {
 
   @ExportMessage
   MemberNamesObject getMembers(@SuppressWarnings("unused") boolean includeInternal,
-                    @CachedLibrary("this") DynamicObjectLibrary objectLibrary) {
+                               @CachedLibrary("this") DynamicObjectLibrary objectLibrary) {
     return new MemberNamesObject(objectLibrary.getKeyArray(this));
   }
 
   @ExportMessage
   public void writeMember(String member, Object value,
-                   @CachedLibrary("this") DynamicObjectLibrary objectLibrary) {
+                          @CachedLibrary("this") DynamicObjectLibrary objectLibrary) {
     objectLibrary.put(this, member, value);
   }
 

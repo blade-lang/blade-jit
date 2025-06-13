@@ -8,10 +8,12 @@ import org.blade.language.nodes.NNode;
 
 public final class NDoWhileRepeatingNode extends Node implements RepeatingNode {
   @SuppressWarnings("FieldMayBeFinal")
-  @Child private NNode condition;
+  @Child
+  private NNode condition;
 
   @SuppressWarnings("FieldMayBeFinal")
-  @Child private NNode body;
+  @Child
+  private NNode body;
 
   private final BranchProfile continueTaken = BranchProfile.create();
   private final BranchProfile breakTaken = BranchProfile.create();

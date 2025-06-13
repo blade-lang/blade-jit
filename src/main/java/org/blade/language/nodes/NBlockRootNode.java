@@ -9,7 +9,8 @@ import org.blade.language.nodes.statements.NBlockStmtNode;
 
 public final class NBlockRootNode extends RootNode {
   @SuppressWarnings("FieldMayBeFinal")
-  @Child private NBlockStmtNode block;
+  @Child
+  private NBlockStmtNode block;
 
   private final String name;
 

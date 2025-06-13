@@ -22,7 +22,8 @@ import java.util.List;
 public abstract class NRaiseStmtNode extends NStmtNode {
   @SuppressWarnings("FieldMayBeFinal")
   @Executed
-  @Child protected NNode error;
+  @Child
+  protected NNode error;
 
   private final boolean isAssert;
 
@@ -35,7 +36,7 @@ public abstract class NRaiseStmtNode extends NStmtNode {
   protected Object doValidError(BladeObject value,
                                 @CachedLibrary("value") DynamicObjectLibrary messageLibrary,
                                 @CachedLibrary("value") DynamicObjectLibrary traceLibrary) {
-    Object type = ((BladeClass)value.classObject).name;
+    Object type = ((BladeClass) value.classObject).name;
     Object message = messageLibrary.getOrDefault(value, "message", "");
     BladeRuntimeError error = BladeRuntimeError.create(type, message, value, this);
     traceLibrary.putConstant(value, "stacktrace", formStackTrace(type, message, error), 1);
@@ -44,7 +45,7 @@ public abstract class NRaiseStmtNode extends NStmtNode {
 
   @Specialization
   protected Object doStringError(TruffleString value) {
-    if(isAssert) {
+    if (isAssert) {
       throw BladeRuntimeError.assertError(this, value.toJavaStringUncached());
     }
     throw BladeRuntimeError.create(value, this);
@@ -52,7 +53,7 @@ public abstract class NRaiseStmtNode extends NStmtNode {
 
   @Specialization
   protected Object doOtherError(Object value) {
-    if(isAssert) {
+    if (isAssert) {
       throw BladeRuntimeError.assertError(this, BString.toString(value));
     }
     throw BladeRuntimeError.create(value, this);
@@ -76,7 +77,7 @@ public abstract class NRaiseStmtNode extends NStmtNode {
       SourceSection sourceSection = location.getEncapsulatingSourceSection();
       int startLine = sourceSection.getStartLine();
 
-      if(startLine > -1) {
+      if (startLine > -1) {
         RootNode rootNode = location.getRootNode();
         String funcName = rootNode.getName();
 

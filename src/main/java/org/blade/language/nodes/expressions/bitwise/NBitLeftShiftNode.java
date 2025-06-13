@@ -6,7 +6,6 @@ import com.oracle.truffle.api.dsl.Bind;
 import com.oracle.truffle.api.dsl.Fallback;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.interop.InteropLibrary;
-import com.oracle.truffle.api.interop.UnsupportedMessageException;
 import com.oracle.truffle.api.library.CachedLibrary;
 import com.oracle.truffle.api.nodes.Node;
 import org.blade.language.nodes.NBinaryNode;
@@ -16,20 +15,18 @@ import org.blade.language.runtime.BladeRuntimeError;
 
 import java.math.BigInteger;
 
-import static com.oracle.truffle.api.CompilerDirectives.shouldNotReachHere;
-
 @OperationProxy.Proxyable(allowUncached = true)
 public abstract class NBitLeftShiftNode extends NBinaryNode {
 
   @Specialization
   protected static long doLongs(long left, long right) {
-    return (int)(toUInt32(left) << (toUInt32(right) & 31));
+    return toUInt32(left) << (toUInt32(right) & 31);
   }
 
   @Specialization
   @CompilerDirectives.TruffleBoundary
   protected static BigIntObject doBigIntLong(BigIntObject left, long right) {
-    return new BigIntObject(left.get().shiftLeft((int)right));
+    return new BigIntObject(left.get().shiftLeft((int) right));
   }
 
   @Specialization
@@ -56,14 +53,14 @@ public abstract class NBitLeftShiftNode extends NBinaryNode {
 
   @Specialization
   protected static long doDoubleBigInt(BigIntObject left, double right) {
-    return bigToLong(left.get()) & (long)right;
+    return bigToLong(left.get()) & (long) right;
   }
 
   @Specialization(limit = "3")
   protected static Object doObjects(BladeObject left, BladeObject right,
                                     @Bind Node node, @CachedLibrary("left") InteropLibrary interopLibrary) {
     Object overrideValue = methodOverride(node, "<<", left, right, interopLibrary);
-    if(overrideValue != null) {
+    if (overrideValue != null) {
       return overrideValue;
     }
 
@@ -72,7 +69,7 @@ public abstract class NBitLeftShiftNode extends NBinaryNode {
 
   @Fallback
   protected static double doUnsupported(Object left, Object right, @Bind Node node) {
-    throw BladeRuntimeError.argumentError(node,"<<", left, right);
+    throw BladeRuntimeError.argumentError(node, "<<", left, right);
   }
 
   private static int toUInt32(long value) {

@@ -3,36 +3,61 @@
 package org.blade.language.parser.ast;
 
 import org.blade.language.parser.Token;
+
 import java.util.List;
 
 public abstract class Expr extends AST {
-  public abstract<T> T accept(Visitor<T> visitor);
+  public abstract <T> T accept(Visitor<T> visitor);
 
   public interface Visitor<T> {
     T visitNilExpr(Nil expr);
+
     T visitBooleanExpr(Boolean expr);
+
     T visitNumberExpr(Number expr);
+
     T visitBigNumberExpr(BigNumber expr);
+
     T visitLiteralExpr(Literal expr);
+
     T visitUnaryExpr(Unary expr);
+
     T visitBinaryExpr(Binary expr);
+
     T visitLogicalExpr(Logical expr);
+
     T visitRangeExpr(Range expr);
+
     T visitGroupingExpr(Grouping expr);
+
     T visitIdentifierExpr(Identifier expr);
+
     T visitConditionExpr(Condition expr);
+
     T visitCallExpr(Call expr);
+
     T visitGetExpr(Get expr);
+
     T visitSetExpr(Set expr);
+
     T visitIndexExpr(Index expr);
+
     T visitSliceExpr(Slice expr);
+
     T visitArrayExpr(Array expr);
+
     T visitDictExpr(Dict expr);
+
     T visitNewExpr(New expr);
+
     T visitParentExpr(Parent expr);
+
     T visitSelfExpr(Self expr);
+
     T visitAssignExpr(Assign expr);
+
     T visitAnonymousExpr(Anonymous expr);
+
     T visitExpr(Expr expr);
   }
 

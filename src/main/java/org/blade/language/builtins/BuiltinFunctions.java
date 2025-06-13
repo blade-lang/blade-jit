@@ -74,7 +74,7 @@ public final class BuiltinFunctions implements BaseBuiltinDeclaration {
     private void print(BladeContext context, InteropLibrary interopLibrary, Object[] arguments) {
       int length = arguments.length;
 
-      if(length > 0) {
+      if (length > 0) {
         for (int i = 0; i < length - 1; i++) {
           if (arguments[i] != BladeNil.SINGLETON) {
             context.print(BString.fromObject(interopLibrary, arguments[i]));
@@ -138,10 +138,10 @@ public final class BuiltinFunctions implements BaseBuiltinDeclaration {
     protected TruffleString doLong(long arg,
                                    @Cached TruffleString.FromCodePointNode fromCodePointNode,
                                    @Cached TruffleString.FromJavaStringNode fromJavaStringNode) {
-      if(arg >= 0x110000) {
+      if (arg >= 0x110000) {
         throw BladeRuntimeError.valueError(this, "chr() argument out of maximum UTF-16 character range 0x10FFFE");
       }
-      return BString.fromObject(fromJavaStringNode, BString.fromCodePoint(fromCodePointNode, (int)arg));
+      return BString.fromObject(fromJavaStringNode, BString.fromCodePoint(fromCodePointNode, (int) arg));
     }
 
     @Fallback
@@ -188,10 +188,10 @@ public final class BuiltinFunctions implements BaseBuiltinDeclaration {
                                @Cached(value = "languageContext().objectsModel", neverDefault = true) @Cached.Shared("objectsModel") BuiltinClassesModel objectsModel,
                                @Cached(value = "objectsModel.objectObject", neverDefault = true) BladeClass objectObject) {
       BladeObject klassObject = (BladeObject) object.classObject;
-      if(klassObject == testClass) return true;
+      if (klassObject == testClass) return true;
 
-      while(klassObject != null && klassObject != objectObject) {
-        if(klassObject.classObject == testClass) return true;
+      while (klassObject != null && klassObject != objectObject) {
+        if (klassObject.classObject == testClass) return true;
         klassObject = (BladeObject) klassObject.classObject;
       }
 
@@ -314,11 +314,16 @@ public final class BuiltinFunctions implements BaseBuiltinDeclaration {
   public abstract static class OrdFunctionNode extends NBuiltinFunctionNode {
     @Specialization
     protected long doLong(TruffleString string,
-                                   @Cached TruffleString.CodePointAtIndexNode codePointNode,
-                                   @Cached TruffleString.CodePointLengthNode lengthNode) {
+                          @Cached TruffleString.CodePointAtIndexNode codePointNode,
+                          @Cached TruffleString.CodePointLengthNode lengthNode) {
       long stringLength = BString.length(string, lengthNode);
-      if(stringLength != 1) {
-        throw BladeRuntimeError.valueError(this, "ord() expected a character, but string of length ", stringLength, " given");
+      if (stringLength != 1) {
+        throw BladeRuntimeError.valueError(
+          this,
+          "ord() expected a character, but string of length ",
+          stringLength,
+          " given"
+        );
       }
       return BString.toCodePoint(string, codePointNode, 0);
     }
@@ -439,7 +444,7 @@ public final class BuiltinFunctions implements BaseBuiltinDeclaration {
 
     @CompilerDirectives.TruffleBoundary
     private SecureRandom getSecureRandom() {
-      if(secureRandom == null) {
+      if (secureRandom == null) {
         try {
           secureRandom = SecureRandom.getInstanceStrong(); // Get the strongest available algorithm
         } catch (NoSuchAlgorithmException e) {

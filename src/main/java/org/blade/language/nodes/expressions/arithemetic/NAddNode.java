@@ -67,30 +67,30 @@ public abstract class NAddNode extends NBinaryNode {
 
   @Specialization
   protected static TruffleString doStrings(TruffleString left, TruffleString right,
-                                    @Cached @Cached.Shared("concatNode") TruffleString.ConcatNode concatNode) {
+                                           @Cached @Cached.Shared("concatNode") TruffleString.ConcatNode concatNode) {
     return BString.concat(concatNode, left, right);
   }
 
   @Specialization
   protected static TruffleString doStringLong(TruffleString left, long right,
-                                    @Cached @Cached.Shared("fromLongNode") TruffleString.FromLongNode fromLongNode,
-                                    @Cached @Cached.Shared("concatNode") TruffleString.ConcatNode concatNode) {
+                                              @Cached @Cached.Shared("fromLongNode") TruffleString.FromLongNode fromLongNode,
+                                              @Cached @Cached.Shared("concatNode") TruffleString.ConcatNode concatNode) {
     return BString.concat(concatNode, left, BString.fromLong(fromLongNode, right));
   }
 
   @Specialization
   protected static TruffleString doLongString(long left, TruffleString right,
-                                    @Cached @Cached.Shared("fromLongNode") TruffleString.FromLongNode fromLongNode,
-                                    @Cached @Cached.Shared("concatNode") TruffleString.ConcatNode concatNode) {
+                                              @Cached @Cached.Shared("fromLongNode") TruffleString.FromLongNode fromLongNode,
+                                              @Cached @Cached.Shared("concatNode") TruffleString.ConcatNode concatNode) {
     return BString.concat(concatNode, BString.fromLong(fromLongNode, left), right);
   }
 
   @CompilerDirectives.TruffleBoundary
   @Specialization(guards = "isString(left, right)")
   protected static TruffleString doStringConverted(Object left, Object right,
-                                            @Cached TruffleString.FromJavaStringNode leftFromJavaNode,
-                                            @Cached TruffleString.FromJavaStringNode rightFromJavaNode,
-                                            @Cached @Cached.Shared("concatNode") TruffleString.ConcatNode concatNode) {
+                                                   @Cached TruffleString.FromJavaStringNode leftFromJavaNode,
+                                                   @Cached TruffleString.FromJavaStringNode rightFromJavaNode,
+                                                   @Cached @Cached.Shared("concatNode") TruffleString.ConcatNode concatNode) {
     return BString.concat(
       concatNode,
       BString.fromObject(leftFromJavaNode, left),
@@ -108,7 +108,7 @@ public abstract class NAddNode extends NBinaryNode {
     int leftLength = leftItems.length;
     int rightLength = rightItems.length;
 
-    Object[] items =  new Object[leftLength + rightLength];
+    Object[] items = new Object[leftLength + rightLength];
     System.arraycopy(leftItems, 0, items, 0, leftLength);
     System.arraycopy(rightItems, 0, items, leftLength, rightLength);
 
@@ -119,7 +119,7 @@ public abstract class NAddNode extends NBinaryNode {
   protected static Object doObjects(BladeObject left, BladeObject right,
                                     @Bind Node node, @CachedLibrary("left") InteropLibrary interopLibrary) {
     Object overrideValue = methodOverride(node, "+", left, right, interopLibrary);
-    if(overrideValue != null) {
+    if (overrideValue != null) {
       return overrideValue;
     }
 
@@ -128,7 +128,7 @@ public abstract class NAddNode extends NBinaryNode {
 
   @Fallback
   protected static double doUnsupported(Object left, Object right, @Bind Node node) {
-    throw BladeRuntimeError.argumentError(node,"+", left, right);
+    throw BladeRuntimeError.argumentError(node, "+", left, right);
   }
 
   protected static boolean isString(Object left, Object right) {

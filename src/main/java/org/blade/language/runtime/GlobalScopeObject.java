@@ -90,7 +90,9 @@ public class GlobalScopeObject extends DynamicObject {
   }
 
   @ExportMessage
-  Object toDisplayString(@SuppressWarnings("unused") boolean allowSideEffects) { return toString(); }
+  Object toDisplayString(@SuppressWarnings("unused") boolean allowSideEffects) {
+    return toString();
+  }
 
   @Override
   public String toString() {

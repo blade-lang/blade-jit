@@ -50,7 +50,7 @@ public class DebuggerTest {
     this.debuggerTester.close();
   }
 
-//  @Test
+  //  @Test
   public void step_over_global_var_decl_and_into_func_call() {
     Source source = Source.create("blade", FIB_ITER);
 
@@ -70,17 +70,22 @@ public class DebuggerTest {
         event.prepareStepInto(1);
       });
       this.debuggerTester.expectSuspended(event -> {
-        assertState(event, "fib", 3, SuspendAnchor.BEFORE, "var n1 = 0, n2 = 1",
-          List.of(Map.of("num", "2", "self", "[object Object]", "n1", "nil", "n2", "nil")));
+        assertState(
+          event, "fib", 3, SuspendAnchor.BEFORE, "var n1 = 0, n2 = 1",
+          List.of(Map.of("num", "2", "self", "[object Object]", "n1", "nil", "n2", "nil"))
+        );
         event.prepareStepOver(1);
       });
       this.debuggerTester.expectSuspended(event -> {
-        assertState(event, "fib", 3, SuspendAnchor.BEFORE, "var n1 = 0, n2 = 1",
-          List.of(Map.of("num", "2", "this", "[object Object]", "n1", "0", "n2", "nil")));
+        assertState(
+          event, "fib", 3, SuspendAnchor.BEFORE, "var n1 = 0, n2 = 1",
+          List.of(Map.of("num", "2", "this", "[object Object]", "n1", "0", "n2", "nil"))
+        );
         event.prepareStepOver(1);
       });
       this.debuggerTester.expectSuspended(event -> {
-        assertState(event, "fib", 4, SuspendAnchor.BEFORE, """
+        assertState(
+          event, "fib", 4, SuspendAnchor.BEFORE, """
             if (num > 1) {
                 var i = 1
                 while i < num {
@@ -93,18 +98,23 @@ public class DebuggerTest {
             } else {
                 return abs(num)
             }""",
-          List.of(Map.of("num", "2", "this", "[object Object]", "n1", "0", "n2", "1")));
+          List.of(Map.of("num", "2", "this", "[object Object]", "n1", "0", "n2", "1"))
+        );
         event.prepareStepOver(1);
       });
       this.debuggerTester.expectSuspended(event -> {
-        assertState(event, "fib", 5, SuspendAnchor.BEFORE, "var i = 1",
+        assertState(
+          event, "fib", 5, SuspendAnchor.BEFORE, "var i = 1",
           List.of(
             Map.of("num", "2", "this", "[object Object]", "n1", "0", "n2", "1"),
-            Map.of("i", "nil")));
+            Map.of("i", "nil")
+          )
+        );
         event.prepareStepOver(1);
       });
       this.debuggerTester.expectSuspended(event -> {
-        assertState(event, "fib", 6, SuspendAnchor.BEFORE, """
+        assertState(
+          event, "fib", 6, SuspendAnchor.BEFORE, """
             while (i < num) {
                 const next = n1 + n2
                 n1 = n2
@@ -113,46 +123,63 @@ public class DebuggerTest {
             }""",
           List.of(
             Map.of("num", "2", "this", "[object Object]", "n1", "0", "n2", "1"),
-            Map.of("i", "1")));
+            Map.of("i", "1")
+          )
+        );
         event.prepareStepOver(1);
       });
       this.debuggerTester.expectSuspended(event -> {
-        assertState(event, "fib", 7, SuspendAnchor.BEFORE, "const next = n1 + n2",
+        assertState(
+          event, "fib", 7, SuspendAnchor.BEFORE, "const next = n1 + n2",
           List.of(
             Map.of("num", "2", "this", "[object Object]", "n1", "0", "n2", "1"),
             Map.of("i", "1"),
-            Map.of("next", "nil")));
+            Map.of("next", "nil")
+          )
+        );
         event.prepareStepOver(1);
       });
       this.debuggerTester.expectSuspended(event -> {
-        assertState(event, "fib", 8, SuspendAnchor.BEFORE, "n1 = n2",
+        assertState(
+          event, "fib", 8, SuspendAnchor.BEFORE, "n1 = n2",
           List.of(
             Map.of("num", "2", "this", "[object Object]", "n1", "0", "n2", "1"),
             Map.of("i", "1"),
-            Map.of("next", "1")));
+            Map.of("next", "1")
+          )
+        );
         event.prepareStepOver(1);
       });
       this.debuggerTester.expectSuspended(event -> {
-        assertState(event, "fib", 9, SuspendAnchor.BEFORE, "n2 = next",
+        assertState(
+          event, "fib", 9, SuspendAnchor.BEFORE, "n2 = next",
           List.of(
             Map.of("num", "2", "this", "[object Object]", "n1", "1", "n2", "1"),
             Map.of("i", "1"),
-            Map.of("next", "1")));
+            Map.of("next", "1")
+          )
+        );
         event.prepareStepOver(1);
       });
       this.debuggerTester.expectSuspended(event -> {
-        assertState(event, "fib", 10, SuspendAnchor.BEFORE, "i = i + 1",
+        assertState(
+          event, "fib", 10, SuspendAnchor.BEFORE, "i = i + 1",
           List.of(
             Map.of("num", "2", "this", "[object Object]", "n1", "1", "n2", "1"),
             Map.of("i", "1"),
-            Map.of("next", "1")));
+            Map.of("next", "1")
+          )
+        );
         event.prepareStepOver(1);
       });
       this.debuggerTester.expectSuspended(event -> {
-        assertState(event, "fib", 12, SuspendAnchor.BEFORE, "return n2",
+        assertState(
+          event, "fib", 12, SuspendAnchor.BEFORE, "return n2",
           List.of(
             Map.of("num", "2", "this", "[object Object]", "n1", "1", "n2", "1"),
-            Map.of("i", "2")));
+            Map.of("i", "2")
+          )
+        );
         event.prepareStepOut(1);
       });
       this.debuggerTester.expectSuspended(event -> {
@@ -167,7 +194,7 @@ public class DebuggerTest {
     }
   }
 
-//  @Test
+  //  @Test
   public void setting_breakpoint_suspends_execution() {
     Source source = Source.create("blade", FIB_ITER);
 
@@ -182,12 +209,14 @@ public class DebuggerTest {
         event.prepareContinue();
       });
       this.debuggerTester.expectSuspended(event -> {
-        assertState(event, "fib", 8, SuspendAnchor.BEFORE, "n1 = n2",
+        assertState(
+          event, "fib", 8, SuspendAnchor.BEFORE, "n1 = n2",
           List.of(
             Map.of("num", "2", "this", "[object Object]", "n1", "0", "n2", "1"),
             Map.of("i", "1"),
             Map.of("next", "1")
-          ));
+          )
+        );
         event.prepareContinue();
       });
 
