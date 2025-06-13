@@ -19,7 +19,7 @@ import org.blade.language.builtins.ObjectMethods;
 import org.blade.language.nodes.NBlockRootNode;
 import org.blade.language.nodes.expressions.NSetPropertyNodeGen;
 import org.blade.language.nodes.functions.NBuiltinFunctionNode;
-import org.blade.language.nodes.functions.NFunctionRootNode;
+import org.blade.language.nodes.functions.NRootFunctionNode;
 import org.blade.language.nodes.functions.NReadFunctionArgsExprNode;
 import org.blade.language.nodes.literals.NSelfLiteralNode;
 import org.blade.language.nodes.statements.NBlockStmtNode;
@@ -246,7 +246,7 @@ public class BladeLanguage extends TruffleLanguage<BladeContext> {
       .mapToObj(i -> new NReadFunctionArgsExprNode(offset ? i + 1 : i, "arg"+i))
       .toArray(NReadFunctionArgsExprNode[]::new);
 
-    NFunctionRootNode rootNode = new NFunctionRootNode(this, factory.createNode((Object) arguments));
+    NRootFunctionNode rootNode = new NRootFunctionNode(this, factory.createNode((Object) arguments));
 
     return rootNode.getCallTarget();
   }

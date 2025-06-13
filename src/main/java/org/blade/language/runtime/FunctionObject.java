@@ -68,8 +68,7 @@ public final class FunctionObject extends BladeObject {
 
   @ExplodeLoop
   @ExportMessage
-  Object execute(Object[] arguments,
-                 @Bind Node node) {
+  Object execute(Object[] arguments, @Bind Node node) {
     for (Object argument : arguments) {
       if (!isRemValue(argument)) {
         throw BladeRuntimeError.error(node, "invalid function argument value '", argument, "'");

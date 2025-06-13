@@ -1,7 +1,10 @@
 package org.blade.language.nodes;
 
+import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.dsl.TypeSystemReference;
+import com.oracle.truffle.api.frame.MaterializedFrame;
 import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.nodes.UnexpectedResultException;
 import com.oracle.truffle.api.source.SourceSection;
 import com.oracle.truffle.api.strings.TruffleString;
@@ -67,5 +70,14 @@ public abstract class NNode extends NBaseNode {
   @Override
   public SourceSection getSourceSection() {
     return sourceSection;
+  }
+
+  @ExplodeLoop
+  public static MaterializedFrame getParentFrame(VirtualFrame frame, int depth) {
+    MaterializedFrame parentFrame = (MaterializedFrame) frame.getValue(0);
+    while(depth-- > 1) {
+      parentFrame = (MaterializedFrame) parentFrame.getValue(0);
+    }
+    return parentFrame;
   }
 }

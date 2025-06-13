@@ -43,6 +43,7 @@ public class BladeTranslator extends BaseVisitor<NNode> {
 
   // Trackers
   private int localsCount = 0;
+  private int scopeDepth = 0;
   private LocalScope localScope = new LocalScope();
   private BladeClass currentClass = null;
 
@@ -62,20 +63,8 @@ public class BladeTranslator extends BaseVisitor<NNode> {
   public NTranslateResult translate(List<Stmt> stmtList) {
     List<NNode> nodes = new ArrayList<>();
 
-    // 1. Add all functions first.
-    // This allows using functions in statements (such as other functions)
-    // before being defined
     for (Stmt stmt : stmtList) {
-      if (stmt instanceof Stmt.Function function) {
-        nodes.add(visitFunctionStmt(function));
-      }
-    }
-
-    // 2. Add everything not a function after
-    for (Stmt stmt : stmtList) {
-      if (stmt != null && !(stmt instanceof Stmt.Function)) {
-        nodes.add(visitStmt(stmt));
-      }
+      nodes.add(visitStmt(stmt));
     }
 
     return new NTranslateResult(nodes, frameDescriptor.build());
@@ -159,14 +148,13 @@ public class BladeTranslator extends BaseVisitor<NNode> {
     String id = expr.token.literal();
     NFrameMember member = localScope.findFrameMember(id);
 
-    if(member == null) {
-      NFrameMember.CloseVariable closeVariable = localScope.findClosedFrameMember(id);
-      if(closeVariable != null) {
-        //noinspection StatementWithEmptyBody
-        if(closeVariable.member instanceof NFrameMember.ClassObject) {
-          member = closeVariable.member;
-        } else {
-          // TODO: handle actual up-values here...
+    if (member == null) {
+      NFrameMember.ClosedVariable closedVariable = localScope.findClosedFrameMember(id);
+      if (closedVariable != null) {
+        if (closedVariable.member instanceof NFrameMember.LocalVariable localVariable) {
+          return new NClosedRefNode(localVariable.index, closedVariable.scopeDepth);
+        } else if (closedVariable.member instanceof NFrameMember.FunctionArgument functionArgument) {
+          return new NClosedRefNode(functionArgument.index + 1, closedVariable.scopeDepth);
         }
       }
     }
@@ -178,59 +166,66 @@ public class BladeTranslator extends BaseVisitor<NNode> {
         member instanceof NFrameMember.FunctionArgument argument
           ? new NReadFunctionArgsExprNode(argument.index, id)
           : NLocalRefNodeGen.create(((NFrameMember.LocalVariable) member).index),
-        expr);
+        expr
+      );
     }
   }
 
   @Override
   public NNode visitBinaryExpr(Expr.Binary expr) {
-    return sourceSection(switch (expr.op.type()) {
-      case PLUS -> NAddNodeGen.create(visitExpr(expr.left), visitExpr(expr.right));
-      case MINUS -> NSubtractNodeGen.create(visitExpr(expr.left), visitExpr(expr.right));
-      case MULTIPLY -> NMultiplyNodeGen.create(visitExpr(expr.left), visitExpr(expr.right));
-      case DIVIDE -> NDivideNodeGen.create(visitExpr(expr.left), visitExpr(expr.right));
-      case FLOOR -> NFloorDivideNodeGen.create(visitExpr(expr.left), visitExpr(expr.right));
-      case PERCENT -> NModuloNodeGen.create(visitExpr(expr.left), visitExpr(expr.right));
-      case POW -> NPowNodeGen.create(visitExpr(expr.left), visitExpr(expr.right));
-      case EQUAL_EQ -> NEqualNodeGen.create(visitExpr(expr.left), visitExpr(expr.right));
-      case BANG_EQ -> NNotEqualNodeGen.create(visitExpr(expr.left), visitExpr(expr.right));
-      case LESS -> NLessThanNodeGen.create(visitExpr(expr.left), visitExpr(expr.right));
-      case LESS_EQ -> NLessThanOrEqualNodeGen.create(visitExpr(expr.left), visitExpr(expr.right));
-      case GREATER -> NGreaterThanNodeGen.create(visitExpr(expr.left), visitExpr(expr.right));
-      case GREATER_EQ -> NGreaterThanOrEqualNodeGen.create(visitExpr(expr.left), visitExpr(expr.right));
-      case AMP -> NBitAndNodeGen.create(visitExpr(expr.left), visitExpr(expr.right));
-      case BAR -> NBitOrNodeGen.create(visitExpr(expr.left), visitExpr(expr.right));
-      case XOR -> NBitXorNodeGen.create(visitExpr(expr.left), visitExpr(expr.right));
-      case LSHIFT -> NBitLeftShiftNodeGen.create(visitExpr(expr.left), visitExpr(expr.right));
-      case RSHIFT -> NBitRightShiftNodeGen.create(visitExpr(expr.left), visitExpr(expr.right));
-      case URSHIFT -> NBitUnsignedRightShiftNodeGen.create(visitExpr(expr.left), visitExpr(expr.right));
-      default -> throw new UnsupportedOperationException(expr.op.literal());
-    }, expr);
+    return sourceSection(
+      switch (expr.op.type()) {
+        case PLUS -> NAddNodeGen.create(visitExpr(expr.left), visitExpr(expr.right));
+        case MINUS -> NSubtractNodeGen.create(visitExpr(expr.left), visitExpr(expr.right));
+        case MULTIPLY -> NMultiplyNodeGen.create(visitExpr(expr.left), visitExpr(expr.right));
+        case DIVIDE -> NDivideNodeGen.create(visitExpr(expr.left), visitExpr(expr.right));
+        case FLOOR -> NFloorDivideNodeGen.create(visitExpr(expr.left), visitExpr(expr.right));
+        case PERCENT -> NModuloNodeGen.create(visitExpr(expr.left), visitExpr(expr.right));
+        case POW -> NPowNodeGen.create(visitExpr(expr.left), visitExpr(expr.right));
+        case EQUAL_EQ -> NEqualNodeGen.create(visitExpr(expr.left), visitExpr(expr.right));
+        case BANG_EQ -> NNotEqualNodeGen.create(visitExpr(expr.left), visitExpr(expr.right));
+        case LESS -> NLessThanNodeGen.create(visitExpr(expr.left), visitExpr(expr.right));
+        case LESS_EQ -> NLessThanOrEqualNodeGen.create(visitExpr(expr.left), visitExpr(expr.right));
+        case GREATER -> NGreaterThanNodeGen.create(visitExpr(expr.left), visitExpr(expr.right));
+        case GREATER_EQ -> NGreaterThanOrEqualNodeGen.create(visitExpr(expr.left), visitExpr(expr.right));
+        case AMP -> NBitAndNodeGen.create(visitExpr(expr.left), visitExpr(expr.right));
+        case BAR -> NBitOrNodeGen.create(visitExpr(expr.left), visitExpr(expr.right));
+        case XOR -> NBitXorNodeGen.create(visitExpr(expr.left), visitExpr(expr.right));
+        case LSHIFT -> NBitLeftShiftNodeGen.create(visitExpr(expr.left), visitExpr(expr.right));
+        case RSHIFT -> NBitRightShiftNodeGen.create(visitExpr(expr.left), visitExpr(expr.right));
+        case URSHIFT -> NBitUnsignedRightShiftNodeGen.create(visitExpr(expr.left), visitExpr(expr.right));
+        default -> throw new UnsupportedOperationException(expr.op.literal());
+      }, expr
+    );
   }
 
   @Override
   public NNode visitUnaryExpr(Expr.Unary expr) {
-    return sourceSection(switch (expr.op.type()) {
-      case MINUS -> NNegateNodeGen.create(visitExpr(expr.right));
-      case BANG -> NLogicalNotNodeGen.create(visitExpr(expr.right));
-      case TILDE -> NBitNotNodeGen.create(visitExpr(expr.right));
-      default -> throw new UnsupportedOperationException(expr.op.literal());
-    }, expr);
+    return sourceSection(
+      switch (expr.op.type()) {
+        case MINUS -> NNegateNodeGen.create(visitExpr(expr.right));
+        case BANG -> NLogicalNotNodeGen.create(visitExpr(expr.right));
+        case TILDE -> NBitNotNodeGen.create(visitExpr(expr.right));
+        default -> throw new UnsupportedOperationException(expr.op.literal());
+      }, expr
+    );
   }
 
   @Override
   public NNode visitLogicalExpr(Expr.Logical expr) {
-    return sourceSection(switch (expr.op.type()) {
-      case EQUAL_EQ -> NEqualNodeGen.create(visitExpr(expr.left), visitExpr(expr.right));
-      case BANG_EQ -> NNotEqualNodeGen.create(visitExpr(expr.left), visitExpr(expr.right));
-      case LESS -> NLessThanNodeGen.create(visitExpr(expr.left), visitExpr(expr.right));
-      case LESS_EQ -> NLessThanOrEqualNodeGen.create(visitExpr(expr.left), visitExpr(expr.right));
-      case GREATER -> NGreaterThanNodeGen.create(visitExpr(expr.left), visitExpr(expr.right));
-      case GREATER_EQ -> NGreaterThanOrEqualNodeGen.create(visitExpr(expr.left), visitExpr(expr.right));
-      case AND -> new NLogicalAndNode(visitExpr(expr.left), visitExpr(expr.right));
-      case OR -> new NLogicalOrNode(visitExpr(expr.left), visitExpr(expr.right));
-      default -> throw new UnsupportedOperationException(expr.op.literal());
-    }, expr);
+    return sourceSection(
+      switch (expr.op.type()) {
+        case EQUAL_EQ -> NEqualNodeGen.create(visitExpr(expr.left), visitExpr(expr.right));
+        case BANG_EQ -> NNotEqualNodeGen.create(visitExpr(expr.left), visitExpr(expr.right));
+        case LESS -> NLessThanNodeGen.create(visitExpr(expr.left), visitExpr(expr.right));
+        case LESS_EQ -> NLessThanOrEqualNodeGen.create(visitExpr(expr.left), visitExpr(expr.right));
+        case GREATER -> NGreaterThanNodeGen.create(visitExpr(expr.left), visitExpr(expr.right));
+        case GREATER_EQ -> NGreaterThanOrEqualNodeGen.create(visitExpr(expr.left), visitExpr(expr.right));
+        case AND -> new NLogicalAndNode(visitExpr(expr.left), visitExpr(expr.right));
+        case OR -> new NLogicalOrNode(visitExpr(expr.left), visitExpr(expr.right));
+        default -> throw new UnsupportedOperationException(expr.op.literal());
+      }, expr
+    );
   }
 
   @Override
@@ -240,11 +235,13 @@ public class BladeTranslator extends BaseVisitor<NNode> {
 
   @Override
   public NNode visitConditionExpr(Expr.Condition expr) {
-    return sourceSection(new NConditionalNode(
-      visitExpr(expr.expression),
-      visitExpr(expr.truth),
-      visitExpr(expr.falsy)
-    ), expr);
+    return sourceSection(
+      new NConditionalNode(
+        visitExpr(expr.expression),
+        visitExpr(expr.truth),
+        visitExpr(expr.falsy)
+      ), expr
+    );
   }
 
   @Override
@@ -255,9 +252,15 @@ public class BladeTranslator extends BaseVisitor<NNode> {
 
       NFrameMember member = localScope.findFrameMember(name);
 
-      //noinspection StatementWithEmptyBody
-      if(member == null) {
-        // TODO: Find closed values and act appropriately if found.
+      if (member == null) {
+        NFrameMember.ClosedVariable closedVariable = localScope.findClosedFrameMember(name);
+        if (closedVariable != null) {
+          if (closedVariable.member instanceof NFrameMember.LocalVariable localVariable) {
+            return NClosedAssignNodeGen.create(value, name, localVariable.index, closedVariable.scopeDepth);
+          } else if (closedVariable.member instanceof NFrameMember.FunctionArgument functionArgument) {
+            return NClosedAssignNodeGen.create(value, name, functionArgument.index + 1, closedVariable.scopeDepth);
+          }
+        }
       }
 
       if (member == null) {
@@ -277,11 +280,13 @@ public class BladeTranslator extends BaseVisitor<NNode> {
         }
       }
     } else if (expr.expression instanceof Expr.Index index) {
-      return sourceSection(NListIndexWriteNodeGen.create(
-        visitExpr(index.callee),
-        visitExpr(index.argument),
-        value
-      ), expr);
+      return sourceSection(
+        NListIndexWriteNodeGen.create(
+          visitExpr(index.callee),
+          visitExpr(index.argument),
+          value
+        ), expr
+      );
     }
 
     throw BladeRuntimeError.error(value, "Invalid assignment expression");
@@ -316,11 +321,13 @@ public class BladeTranslator extends BaseVisitor<NNode> {
 
   @Override
   public NNode visitSetExpr(Expr.Set expr) {
-    return sourceSection(NSetPropertyNodeGen.create(
-      visitExpr(expr.expression),
-      visitExpr(expr.value),
-      expr.name.token.literal()
-    ), expr);
+    return sourceSection(
+      NSetPropertyNodeGen.create(
+        visitExpr(expr.expression),
+        visitExpr(expr.value),
+        expr.name.token.literal()
+      ), expr
+    );
   }
 
   @Override
@@ -420,11 +427,13 @@ public class BladeTranslator extends BaseVisitor<NNode> {
 
   @Override
   public NNode visitPropertyStmt(Stmt.Property stmt) {
-    return sourceSection(NSetPropertyNodeGen.create(
-      new NDynamicObjectRefNode(currentClass),
-      stmt.value == null ? new NNilLiteralNode() : sourceSection(visitExpr(stmt.value), stmt.value),
-      stmt.name.literal()
-    ), stmt);
+    return sourceSection(
+      NSetPropertyNodeGen.create(
+        new NDynamicObjectRefNode(currentClass),
+        stmt.value == null ? new NNilLiteralNode() : sourceSection(visitExpr(stmt.value), stmt.value),
+        stmt.name.literal()
+      ), stmt
+    );
   }
 
   @Override
@@ -443,11 +452,13 @@ public class BladeTranslator extends BaseVisitor<NNode> {
 
   @Override
   public NNode visitIfStmt(Stmt.If stmt) {
-    return sourceSection(new NIfStmtNode(
-      visitExpr(stmt.condition),
-      visitStmt(stmt.thenBranch),
-      visitStmt(stmt.elseBranch)
-    ), stmt);
+    return sourceSection(
+      new NIfStmtNode(
+        visitExpr(stmt.condition),
+        visitStmt(stmt.thenBranch),
+        visitStmt(stmt.elseBranch)
+      ), stmt
+    );
   }
 
   @Override
@@ -462,28 +473,34 @@ public class BladeTranslator extends BaseVisitor<NNode> {
 
   @Override
   public NNode visitWhileStmt(Stmt.While stmt) {
-    return sourceSection(new NWhileStmtNode(
-      visitExpr(stmt.condition),
-      visitStmt(stmt.body)
-    ), stmt);
+    return sourceSection(
+      new NWhileStmtNode(
+        visitExpr(stmt.condition),
+        visitStmt(stmt.body)
+      ), stmt
+    );
   }
 
   @Override
   public NNode visitDoWhileStmt(Stmt.DoWhile stmt) {
-    return sourceSection(new NDoWhileStmtNode(
-      visitExpr(stmt.condition),
-      visitStmt(stmt.body)
-    ), stmt);
+    return sourceSection(
+      new NDoWhileStmtNode(
+        visitExpr(stmt.condition),
+        visitStmt(stmt.body)
+      ), stmt
+    );
   }
 
   @Override
   public NNode visitIterStmt(Stmt.Iter stmt) {
-    return newLocalScope(() -> sourceSection(new NIterStmtNode(
-      stmt.declaration != null ? visitStmt(stmt.declaration) : null,
-      stmt.condition != null ? visitExpr(stmt.condition) : null,
-      stmt.interation != null ? visitExpressionStmt(stmt.interation) : null,
-      visitStmt(stmt.body)
-    ), stmt));
+    return newLocalScope(() -> sourceSection(
+      new NIterStmtNode(
+        stmt.declaration != null ? visitStmt(stmt.declaration) : null,
+        stmt.condition != null ? visitExpr(stmt.condition) : null,
+        stmt.interation != null ? visitExpressionStmt(stmt.interation) : null,
+        visitStmt(stmt.body)
+      ), stmt
+    ));
   }
 
   @Override
@@ -583,12 +600,14 @@ public class BladeTranslator extends BaseVisitor<NNode> {
 
     // deliberately not wrapped in sourceSection so that debuggers won't stop
     // in class declarations and their global variable
-    return sourceSection(NGlobalDeclNodeGen.create(
-      NGlobalScopeObjectNodeGen.create(),
-      sourceSection(new NClassDeclNode(methods, properties, operators, classObject), stmt),
-      className,
-      false
-    ), stmt);
+    return sourceSection(
+      NGlobalDeclNodeGen.create(
+        NGlobalScopeObjectNodeGen.create(),
+        sourceSection(new NClassDeclNode(methods, properties, operators, classObject), stmt),
+        className,
+        false
+      ), stmt
+    );
   }
 
   @Override
@@ -616,21 +635,27 @@ public class BladeTranslator extends BaseVisitor<NNode> {
 
   @Override
   public NNode visitAssertStmt(Stmt.Assert stmt) {
-    return sourceSection(new NAssertStmtNode(
-      sourceSection(visitExpr(stmt.expression), stmt.expression),
-      sourceSection(NRaiseStmtNodeGen.create(
-        stmt.message == null || stmt.message instanceof Expr.Literal ?
-          sourceSection(NNewExprNodeGen.create(
-            NGlobalVarRefExprNodeGen.create(globalScopeNode, "AssertError"),
-            List.of(new NStringLiteralNode(stmt.message instanceof Expr.Literal literal ?
-              literal.token.literal() :
-              "Failed assertion"
-            ))
-          ), stmt) :
-          visitExpr(stmt.message),
-        true
-      ), stmt.message == null ? stmt : stmt.message)
-    ), stmt);
+    return sourceSection(
+      new NAssertStmtNode(
+        sourceSection(visitExpr(stmt.expression), stmt.expression),
+        sourceSection(
+          NRaiseStmtNodeGen.create(
+            stmt.message == null || stmt.message instanceof Expr.Literal ?
+              sourceSection(
+                NNewExprNodeGen.create(
+                  NGlobalVarRefExprNodeGen.create(globalScopeNode, "AssertError"),
+                  List.of(new NStringLiteralNode(stmt.message instanceof Expr.Literal literal ?
+                    literal.token.literal() :
+                    "Failed assertion"
+                  ))
+                ), stmt
+              ) :
+              visitExpr(stmt.message),
+            true
+          ), stmt.message == null ? stmt : stmt.message
+        )
+      ), stmt
+    );
   }
 
   @Override
@@ -677,85 +702,43 @@ public class BladeTranslator extends BaseVisitor<NNode> {
 
     this.frameDescriptor = FrameDescriptor.newBuilder();
     this.state = ParserState.FUNC_DEF;
-    this.localScope = new LocalScope(previousLocalScopes);
+    this.localScope = new LocalScope(previousLocalScopes, ++scopeDepth);
+
+    frameDescriptor.addSlot(FrameSlotKind.Object, new LocalRefSlot(name, ++localsCount), 0);
+
+    // for the `self` objects
+    frameDescriptor.addSlot(FrameSlotKind.Object, new LocalRefSlot("self", ++localsCount), 0);
 
     Map<String, NFrameMember> localVariables = new HashMap<>();
     for (int i = 0; i < parameters.size(); i++) {
-      localVariables.put(parameters.get(i).token.literal(), new NFrameMember.FunctionArgument(i + 1));
+      String param = parameters.get(i).token.literal();
+      localVariables.put(param, new NFrameMember.FunctionArgument(i + 1));
+
+      frameDescriptor.addSlot(FrameSlotKind.Illegal, new LocalRefSlot(param, ++localsCount), 0);
     }
     this.localScope.push(localVariables);
 
     NBlockStmtNode statements = visitBlockStmt(body);
 
+    boolean captured = localScope.captures;
+
     FrameDescriptor frameDescriptor = this.frameDescriptor.build();
     this.frameDescriptor = previousFrameDescriptor;
     this.state = previousState;
     this.localScope = previousLocalScopes;
+    scopeDepth--;
 
-    return sourceSection(NFunctionStmtNodeGen.create(
-      root,
-      name,
-      frameDescriptor,
-      (NFunctionBodyNode) sourceSection(new NFunctionBodyNode(statements), body),
-      parameters.size(),
-      isVariadic ? 1 : 0
-    ), source);
-  }
-
-  private static class LocalScope {
-    private final Stack<Map<String, NFrameMember>> stack = new Stack<>();
-    private final LocalScope parent;
-
-    public LocalScope(LocalScope parent) {
-      this.parent = parent;
-    }
-
-    public LocalScope() {
-      this(null);
-    }
-
-    void push(Map<String, NFrameMember> item) {
-      stack.push(item);
-    }
-
-    void pop() {
-      stack.pop();
-    }
-
-    Map<String, NFrameMember> peek() {
-      return stack.peek();
-    }
-
-    Map<String, NFrameMember> getFirst() {
-      return stack.get(0);
-    }
-
-    NFrameMember findFrameMember(String name) {
-      for (Map<String, NFrameMember> scope : stack) {
-        NFrameMember member = scope.get(name);
-        if (member != null) {
-          return member;
-        }
-      }
-
-      return null;
-    }
-
-    NFrameMember.CloseVariable findClosedFrameMember(String name) {
-      if(parent != null) {
-        NFrameMember value = parent.findFrameMember(name);
-        if(value != null) {
-          return new NFrameMember.CloseVariable(value, false);
-        }
-
-        value = parent.findClosedFrameMember(name);
-        if(value != null) {
-          return new NFrameMember.CloseVariable(value, true);
-        }
-      }
-
-      return null;
-    }
+    return sourceSection(
+      NFunctionStmtNodeGen.create(
+        root,
+        name,
+        frameDescriptor,
+        (NFunctionBodyNode) sourceSection(new NFunctionBodyNode(statements), body),
+        parameters.size(),
+        isVariadic ? 1 : 0,
+        captured ? 1 : 0
+      ), source
+    );
   }
 
   private NNode newLocalScope(Callback callback) {
@@ -794,4 +777,5 @@ public class BladeTranslator extends BaseVisitor<NNode> {
   interface Callback {
     NNode run();
   }
+
 }

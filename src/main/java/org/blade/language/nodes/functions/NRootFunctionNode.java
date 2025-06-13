@@ -5,11 +5,11 @@ import com.oracle.truffle.api.nodes.RootNode;
 import org.blade.language.BladeLanguage;
 import org.blade.language.nodes.NNode;
 
-public class NFunctionRootNode extends RootNode {
+public class NRootFunctionNode extends RootNode {
   @SuppressWarnings("FieldMayBeFinal")
   @Child private NNode body;
 
-  public NFunctionRootNode(BladeLanguage language, NNode functionBody) {
+  public NRootFunctionNode(BladeLanguage language, NNode functionBody) {
     super(language);
     this.body = functionBody;
   }

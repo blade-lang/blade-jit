@@ -22,13 +22,13 @@ public abstract class NFrameMember {
     }
   }
 
-  public static final class CloseVariable extends NFrameMember {
+  public static final class ClosedVariable extends NFrameMember {
     public final NFrameMember member;
-    public final boolean isLocal;
+    public final int scopeDepth;
 
-    public CloseVariable(NFrameMember member, boolean isLocal) {
+    public ClosedVariable(NFrameMember member, int scopeDepth) {
       this.member = member;
-      this.isLocal = isLocal;
+      this.scopeDepth = scopeDepth;
     }
   }
 

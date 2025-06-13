@@ -3,8 +3,8 @@ package org.blade;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-//@RunWith(BladeTestRunner.class)
-//@BladeTestSuite({"tests"})
+@RunWith(BladeTestRunner.class)
+@BladeTestSuite({"tests"})
 public class BladeTests {
   public static void main(String[] args) throws Exception {
     BladeTestRunner.runInMain(BladeTestSuite.class, args);
