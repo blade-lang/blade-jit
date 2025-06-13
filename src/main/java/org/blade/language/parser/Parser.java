@@ -833,11 +833,12 @@ public class Parser {
           if (state == 1) {
             throw new ParserException(
               lexer.getSource(),
-              previous(), false, "'when' cannot exist after a default"
+              previous(), false, "'when' or 'default' state cannot exist after a default state"
             );
           }
 
           if (previous().type() == NEWLINE) {
+            // do nothing
           } else if (previous().type() == WHEN) {
             List<Expr> tmp_cases = new ArrayList<>();
             do {

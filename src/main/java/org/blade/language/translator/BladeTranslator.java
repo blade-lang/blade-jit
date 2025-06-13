@@ -4,10 +4,7 @@ import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.FrameSlotKind;
 import com.oracle.truffle.api.object.Shape;
 import com.oracle.truffle.api.source.SourceSection;
-import org.blade.language.nodes.NDynamicObjectRefNode;
-import org.blade.language.nodes.NGlobalScopeObjectNode;
-import org.blade.language.nodes.NGlobalScopeObjectNodeGen;
-import org.blade.language.nodes.NNode;
+import org.blade.language.nodes.*;
 import org.blade.language.nodes.expressions.*;
 import org.blade.language.nodes.expressions.arithemetic.*;
 import org.blade.language.nodes.expressions.bitwise.*;
@@ -20,6 +17,8 @@ import org.blade.language.nodes.literals.*;
 import org.blade.language.nodes.statements.*;
 import org.blade.language.nodes.statements.loops.*;
 import org.blade.language.nodes.string.NStringLiteralNode;
+import org.blade.language.nodes.using.NUsingNode;
+import org.blade.language.nodes.using.NWhenNode;
 import org.blade.language.parser.BaseVisitor;
 import org.blade.language.parser.Parser;
 import org.blade.language.parser.ast.AST;
@@ -696,6 +695,25 @@ public class BladeTranslator extends BaseVisitor<NNode> {
         expr.function.isVariadic
       )
     );
+  }
+
+  @Override
+  public NNode visitUsingStmt(Stmt.Using stmt) {
+    NNode value = visitExpr(stmt.expression);
+
+    int casesLength = stmt.caseLabels.size();
+    NWhenNode[] cases = new NWhenNode[casesLength];
+
+    for(int i = 0; i < casesLength; i++) {
+      cases[i] = new NWhenNode(visitExpr(stmt.caseLabels.get(i)), visitStmt(stmt.caseBodies.get(i)));
+    }
+
+    NNode defaultCase = null;
+    if(stmt.defaultCase != null) {
+      defaultCase = visitStmt(stmt.defaultCase);
+    }
+
+    return new NUsingNode(value, cases, defaultCase);
   }
 
   private NNode translateFunction(Stmt source, String name, List<Expr.Identifier> parameters, Stmt.Block body, NNode root, boolean isVariadic) {

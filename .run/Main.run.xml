@@ -1,13 +1,13 @@
 <component name="ProjectRunConfigurationManager">
-    <configuration default="false" name="Main" type="Application" factoryName="Application">
-        <option name="ALTERNATIVE_JRE_PATH" value="graalvm-24.0.1"/>
-        <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="true"/>
-        <option name="MAIN_CLASS_NAME" value="org.blade.Main"/>
-        <module name="blade.main"/>
-        <option name="PROGRAM_PARAMETERS" value="$PROJECT_DIR$/tests/closure.b"/>
-        <option name="VM_PARAMETERS" value="--enable-native-access=ALL-UNNAMED --sun-misc-unsafe-memory-access=allow "/>
-        <method v="2">
-            <option name="Make" enabled="true"/>
-        </method>
-    </configuration>
+  <configuration default="false" name="Main" type="Application" factoryName="Application">
+    <option name="ALTERNATIVE_JRE_PATH" value="graalvm-24.0.1" />
+    <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="true" />
+    <option name="MAIN_CLASS_NAME" value="org.blade.Main" />
+    <module name="blade.main" />
+    <option name="PROGRAM_PARAMETERS" value="$PROJECT_DIR$/tests/using.b" />
+    <option name="VM_PARAMETERS" value="--enable-native-access=ALL-UNNAMED --sun-misc-unsafe-memory-access=allow " />
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
 </component>
