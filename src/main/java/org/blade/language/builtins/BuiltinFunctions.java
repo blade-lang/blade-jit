@@ -5,6 +5,7 @@ import com.oracle.truffle.api.dsl.*;
 import com.oracle.truffle.api.interop.InteropLibrary;
 import com.oracle.truffle.api.library.CachedLibrary;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
+import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.strings.TruffleString;
 import org.blade.language.BaseBuiltinDeclaration;
 import org.blade.language.BladeLanguage;
@@ -112,6 +113,11 @@ public final class BuiltinFunctions implements BaseBuiltinDeclaration {
     @Specialization(replaces = "doLong")
     protected double doDouble(double arg) {
       return Math.abs(arg);
+    }
+
+    @Specialization
+    protected Object doObject(BladeObject arg, @CachedLibrary(limit = "3") InteropLibrary interopLibrary) {
+      return methodOverride(this, "@abs", arg, interopLibrary, Double.NaN);
     }
 
     @Fallback
@@ -494,6 +500,10 @@ public final class BuiltinFunctions implements BaseBuiltinDeclaration {
     @CompilerDirectives.TruffleBoundary
     protected long getBigIntValue(BigInteger bigInteger) {
       return bigInteger.intValue();
+    }
+
+    protected Object doObject(BladeObject object, @CachedLibrary(limit = "3") InteropLibrary interopLibrary) {
+      return methodOverride(this, "@number", object, interopLibrary, 0);
     }
 
     @Fallback
