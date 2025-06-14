@@ -13,7 +13,6 @@ import com.oracle.truffle.api.object.DynamicObjectLibrary;
 import com.oracle.truffle.api.object.Shape;
 import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.strings.TruffleString;
-import com.oracle.truffle.api.utilities.CyclicAssumption;
 import org.blade.language.builtins.*;
 import org.blade.language.nodes.NBlockRootNode;
 import org.blade.language.nodes.expressions.NSetPropertyNodeGen;
@@ -37,7 +36,6 @@ import java.lang.invoke.MethodHandles;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.IntStream;
 
 @TruffleLanguage.Registration(
@@ -67,7 +65,6 @@ public class BladeLanguage extends TruffleLanguage<BladeContext> {
   public final Shape listShape = createShape(ListObject.class);
   public final Shape dictionayShape = createShape(DictionaryObject.class);
   private final Assumption assumption = Truffle.getRuntime().createAssumption("Single Blade context.");
-  private final Map<String, CyclicAssumption> moduleContentAssumptions = new ConcurrentHashMap<>();
   // models
   private final BObject objectClass = new BObject(rootShape);
   private final BladeClass functionClass = new BladeClass(rootShape, "Function", objectClass);
@@ -83,13 +80,6 @@ public class BladeLanguage extends TruffleLanguage<BladeContext> {
       .allowImplicitCastIntToLong(true)
       .layout(layout, MethodHandles.lookup())
       .build();
-  }
-
-  public CyclicAssumption getModuleContentAssumption(String modulePath) {
-    return moduleContentAssumptions.computeIfAbsent(
-      modulePath,
-      k -> new CyclicAssumption("module " + k + " content stable")
-    );
   }
 
   @Override

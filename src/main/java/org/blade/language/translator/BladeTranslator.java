@@ -1,9 +1,11 @@
 package org.blade.language.translator;
 
+import com.oracle.truffle.api.TruffleOptions;
 import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.FrameSlotKind;
 import com.oracle.truffle.api.object.Shape;
 import com.oracle.truffle.api.source.SourceSection;
+import org.blade.Main;
 import org.blade.language.nodes.NDynamicObjectRefNode;
 import org.blade.language.nodes.NGlobalScopeObjectNode;
 import org.blade.language.nodes.NGlobalScopeObjectNodeGen;
@@ -32,9 +34,12 @@ import org.blade.language.runtime.BladeClass;
 import org.blade.language.runtime.BladeRuntimeError;
 import org.blade.language.shared.BuiltinClassesModel;
 import org.blade.language.shared.LocalRefSlot;
+import org.graalvm.nativeimage.ProcessProperties;
 
 import java.io.File;
 import java.math.BigInteger;
+import java.net.URISyntaxException;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -724,26 +729,84 @@ public class BladeTranslator extends BaseVisitor<NNode> {
   @Override
   public NNode visitImportStmt(Stmt.Import stmt) {
     NNode name = visitExpr(stmt.name);
+    String moduleName = stmt.name.token.literal();
 
     File currentDir = new File(parser.lexer.source.getPath()).getParentFile();
-    String moduleName = stmt.path;
     String sep = File.separator;
 
-    File moduleFile = new File(currentDir, moduleName + ".b");
-    if (!moduleFile.exists()) {
-      moduleFile = new File(currentDir, String.join(sep, moduleName, "index.b"));
-      if (!moduleFile.exists()) {
-        moduleFile = new File(currentDir, String.join(sep, ".blade", "libs", moduleName + ".b"));
-        if (!moduleFile.exists()) {
-          moduleFile = new File(currentDir, String.join(sep, ".blade", "libs", moduleName, "index.b"));
-          if (!moduleFile.exists()) {
-            // We've finished checking all the local paths. We should now check the runtime standard library path
+    File moduleFile;
 
-            // TODO: Check Blade standard library directory.
+    // TODO: Handle importing built-in modules.
+
+    if(stmt.path.startsWith(".")) {
+      moduleFile = new File(currentDir, stmt.path + ".b");
+      if (!moduleFile.exists()) {
+        moduleFile = new File(currentDir, String.join(sep, stmt.path, "index.b"));
+        if (!moduleFile.exists()) {
+          // That's all for relative import
+          throw BladeRuntimeError.error(
+            name,
+            "Module '" + moduleName + "' not found"
+          );
+        }
+      }
+    } else {
+      File baseRootDirectory = null;
+      if (TruffleOptions.AOT) {
+        baseRootDirectory = new File(ProcessProperties.getExecutableName()).getParentFile();
+      } else {
+        try {
+          baseRootDirectory = Path.of(
+            Main.class.getProtectionDomain()
+              .getCodeSource()
+              .getLocation()
+              .toURI()
+          ).getParent().toFile();
+        } catch (URISyntaxException ignored) {}
+      }
+
+      // Non-relative imports start from the `.blade/libs` directory in the current directory
+      // and progress to the application root directory.
+      moduleFile = new File(currentDir, String.join(sep, ".blade", "libs", stmt.path + ".b"));
+      if (!moduleFile.exists()) {
+        moduleFile = new File(currentDir, String.join(sep, ".blade", "libs", stmt.path, "index.b"));
+        if (!moduleFile.exists()) {
+
+          if (baseRootDirectory == null || !baseRootDirectory.exists()) {
             throw BladeRuntimeError.error(
               name,
-              "Module ' " + moduleName + "' not found"
+              "Module '" + moduleName + "' not found"
             );
+          }
+
+          // Next progress to the `apps` directory of the Blade installation.
+          // This is where the user's global libraries live, and they can be used
+          // to override the built-in libraries. So we're starting here...
+          File rootDirectory = new File(baseRootDirectory, "apps");
+
+          moduleFile = new File(rootDirectory, stmt.path + ".b");
+          if (!moduleFile.exists()) {
+            moduleFile = new File(rootDirectory, String.join(sep, stmt.path, "index.b"));
+          }
+
+
+          if (!moduleFile.exists()) {
+            // If we still haven't found the module,
+            // We can start checking the Blade's standard library directory.
+            rootDirectory = new File(baseRootDirectory, "libs");
+
+            moduleFile = new File(rootDirectory, stmt.path + ".b");
+            if (!moduleFile.exists()) {
+              moduleFile = new File(rootDirectory, String.join(sep, stmt.path, "index.b"));
+              if (!moduleFile.exists()) {
+
+                // We've checked everywhere and still can't find it.
+                throw BladeRuntimeError.error(
+                  name,
+                  "Module '" + moduleName + "' not found"
+                );
+              }
+            }
           }
         }
       }
@@ -757,7 +820,7 @@ public class BladeTranslator extends BaseVisitor<NNode> {
     // module file exists
     return new NImportNode(
       new NStringLiteralNode(moduleFile.getAbsolutePath()),
-      new NStringLiteralNode(stmt.name.token.literal()),
+      new NStringLiteralNode(moduleName),
       elements,
       stmt.all
     );

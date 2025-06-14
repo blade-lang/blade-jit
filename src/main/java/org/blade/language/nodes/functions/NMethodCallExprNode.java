@@ -6,33 +6,32 @@ import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.profiles.CountingConditionProfile;
 import org.blade.language.nodes.NNode;
 import org.blade.language.runtime.BladeClass;
+import org.blade.language.runtime.ModuleObject;
 
 import java.util.List;
 
 public final class NMethodCallExprNode extends NNode {
 
+  @Children
+  private final NNode[] arguments;
+  private final CountingConditionProfile branchProfile = CountingConditionProfile.create();
+  private final int length;
   @SuppressWarnings("FieldMayBeFinal")
   @Child
   private NNode target;
-
-  @Children
-  private final NNode[] arguments;
-
   @SuppressWarnings("FieldMayBeFinal")
   @Child
   private NMethodDispatchNode dispatchNode;
-
   @SuppressWarnings("FieldMayBeFinal")
   @Child
-  private NFunctionDispatchNode functionDispatchNode;
-
-  private final CountingConditionProfile branchProfile = CountingConditionProfile.create();
+  private NFunctionCallExprNode functionCallNode;
 
   public NMethodCallExprNode(NNode target, List<NNode> arguments) {
     this.target = target;
     this.arguments = arguments.toArray(new NNode[0]);
     dispatchNode = NMethodDispatchNodeGen.create();
-    functionDispatchNode = NFunctionDispatchNodeGen.create();
+    functionCallNode = NFunctionCallExprNodeGen.create(target, arguments);
+    length = arguments.size();
   }
 
   @ExplodeLoop
@@ -41,15 +40,18 @@ public final class NMethodCallExprNode extends NNode {
     Object receiver = target.evaluateReceiver(frame);
     Object function = target.evaluateFunction(frame, receiver);
 
-    CompilerAsserts.compilationConstant(arguments.length);
+    CompilerAsserts.compilationConstant(length);
 
-    Object[] values = new Object[arguments.length];
-    for (int i = 0; i < arguments.length; i++) {
+    Object[] values = new Object[length];
+    for (int i = 0; i < length; i++) {
       values[i] = arguments[i].execute(frame);
     }
 
-    if (branchProfile.profile(receiver instanceof BladeClass bladeClass && bladeClass.isBuiltin)) {
-      return functionDispatchNode.executeDispatch(function, values);
+    if (branchProfile.profile(
+      receiver instanceof ModuleObject
+        || (receiver instanceof BladeClass bladeClass && bladeClass.isBuiltin))
+    ) {
+      return functionCallNode.execute(frame);
     }
 
     return dispatchNode.executeDispatch(function, receiver, values);

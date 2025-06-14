@@ -874,14 +874,19 @@ public class Parser {
       List<String> paths = new ArrayList<>();
       List<Expr.Identifier> elements = new ArrayList<>();
       Expr.Identifier name = null;
+      String sep = File.separator;
+
+      // range can only exist at the beginning of import path and
+      // nowhere else within it
+      if(match(RANGE)) {
+        paths.add(previous().literal());
+      }
 
       while (match(IDENTIFIER, DOT)) {
-        advance();
         paths.add(previous().literal());
       }
 
       boolean importsAll = false;
-      int selectCount = 0;
 
       if (match(LBRACE)) {
         var scan = true;
@@ -890,7 +895,6 @@ public class Parser {
           ignoreNewlines();
           Token element = consumeAny("identifier expected", IDENTIFIER, MULTIPLY);
 
-          selectCount++;
           if (element.type() == MULTIPLY) {
             if (!elements.isEmpty()) {
               throw new ParserException(
@@ -919,14 +923,8 @@ public class Parser {
         });
       }
 
-      String sep = File.separator;
 
-      String finalPath = String.join("", paths).replace(".", sep);
-      if (finalPath.startsWith(sep + sep)) {
-        finalPath = ".." + sep + finalPath.substring(2);
-      } else if (finalPath.startsWith(sep)) {
-        finalPath = "." + File.separatorChar + finalPath.substring(1);
-      }
+      String finalPath = String.join(sep, paths);
 
       if (name == null) {
         name = new Expr.Identifier(previous().copyToType(

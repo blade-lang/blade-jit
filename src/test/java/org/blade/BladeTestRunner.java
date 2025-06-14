@@ -4,7 +4,6 @@ import com.oracle.truffle.api.dsl.NodeFactory;
 import org.blade.language.BladeLanguage;
 import org.blade.language.nodes.functions.NBuiltinFunctionNode;
 import org.graalvm.polyglot.Context;
-import org.graalvm.polyglot.HostAccess;
 import org.graalvm.polyglot.PolyglotException;
 import org.graalvm.polyglot.Source;
 import org.hamcrest.MatcherAssert;

@@ -1,20 +1,21 @@
 package org.blade.language.runtime;
 
-import com.oracle.truffle.api.*;
+import com.oracle.truffle.api.CallTarget;
+import com.oracle.truffle.api.CompilerDirectives;
+import com.oracle.truffle.api.TruffleLanguage;
 import com.oracle.truffle.api.dsl.Bind;
-import com.oracle.truffle.api.frame.FrameDescriptor;
-import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.interop.*;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.object.DynamicObject;
 import com.oracle.truffle.api.object.DynamicObjectLibrary;
 import com.oracle.truffle.api.source.Source;
-import com.oracle.truffle.api.utilities.CyclicAssumption;
 import org.blade.language.BladeLanguage;
-import org.blade.language.nodes.functions.NRootFunctionNode;
 import org.blade.language.shared.BuiltinClassesModel;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -77,20 +78,24 @@ public class BladeContext {
     env = newEnv;
   }
 
+  @CompilerDirectives.TruffleBoundary
+  private Source getSource(Node node, String path) {
+    try {
+      return Source.newBuilder(BladeLanguage.ID, env.getPublicTruffleFile(path)).build();
+    } catch (IOException e) {
+      throw BladeRuntimeError.error(node, "Failed to load module file ", path);
+    }
+  }
+
   public ModuleObject loadModule(Node node, String name, String path) {
     // Check cache first
-    ModuleObject module = loadedModules.get(path);
+    ModuleObject module = getCachedModule(path);
     if (module != null) {
       return module;
     }
 
     // Parse and execute the module
-    Source source = null;
-    try {
-      source = Source.newBuilder(BladeLanguage.ID, env.getPublicTruffleFile(path)).build();
-    } catch (IOException e) {
-      throw BladeRuntimeError.error(node, "Failed to load module file ", path);
-    }
+    Source source = getSource(node, path);
 
     DynamicObject previousGlobalScope = globalScope;
     globalScope = module = new ModuleObject(objectsModel.rootShape, path, name);
@@ -99,22 +104,19 @@ public class BladeContext {
 
     moduleCallTarget.call();
 
-    loadedModules.put(path, module);
+    registerModule(path, module);
     globalScope = previousGlobalScope;
     return module;
   }
 
-  public void invalidateModule(String modulePath) {
-    CyclicAssumption assumption = language.getModuleContentAssumption(modulePath);
-    if (assumption != null) {
-      assumption.invalidate("Module content changed: " + modulePath);
-    }
-
-    clearModuleFromCache(modulePath);
+  @CompilerDirectives.TruffleBoundary
+  private ModuleObject getCachedModule(String path) {
+    return loadedModules.get(path);
   }
 
-  public void clearModuleFromCache(String modulePath) {
-    loadedModules.remove(modulePath);
+  @CompilerDirectives.TruffleBoundary
+  private void registerModule(String path, ModuleObject module) {
+    loadedModules.put(path, module);
   }
 
   /**

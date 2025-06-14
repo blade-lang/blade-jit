@@ -10,10 +10,8 @@ import com.oracle.truffle.api.interop.UnsupportedMessageException;
 import com.oracle.truffle.api.interop.UnsupportedTypeException;
 import com.oracle.truffle.api.library.CachedLibrary;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
-import com.oracle.truffle.api.nodes.InvalidAssumptionException;
 import com.oracle.truffle.api.object.DynamicObject;
 import com.oracle.truffle.api.strings.TruffleString;
-import com.oracle.truffle.api.utilities.CyclicAssumption;
 import org.blade.language.nodes.NNode;
 import org.blade.language.runtime.*;
 
@@ -62,27 +60,9 @@ public abstract class NImportProcessorNode extends NNode {
                             @Cached @Cached.Exclusive TruffleString.ToJavaStringNode loadCachedPathToStringNode,
                             @Cached("toString(cachedPathToStringNode, cachedName)") String cachedNameString,
                             @Cached("loadModule(cachedName, cachedModulePath, nameToStringNode, pathToStringNode)") ModuleObject cachedModule,
-                            @Cached("getAssumption(cachedModulePath, loadCachedPathToStringNode)") CyclicAssumption moduleContentAssumption,
                             @Cached(value = "languageContext().globalScope", neverDefault = true) @Cached.Shared("globalScope") DynamicObject globalScope,
                             @CachedLibrary(limit = "3") @Cached.Shared("objectLibrary") InteropLibrary objectLibrary
   ) {
-    // Check if the module's content assumption is still valid.
-    // If the module's content could change on disk, you'd invalidate this assumption.
-    try {
-      moduleContentAssumption.getAssumption().check();
-    } catch (InvalidAssumptionException e) {
-      moduleContentAssumption.getAssumption().invalidate();
-
-      return doUncached(
-        cachedModulePath,
-        cachedName,
-        globalScope,
-        pathToStringNode,
-        nameToStringNode,
-        objectLibrary
-      );
-    }
-
     try {
       bindImportedSymbols(cachedModule, cachedNameString, globalScope, objectLibrary);
     } catch (UnsupportedMessageException | UnknownIdentifierException | UnsupportedTypeException e) {
@@ -103,10 +83,6 @@ public abstract class NImportProcessorNode extends NNode {
         Object exportedValue = module.getExport(symbol);
         objectLibrary.writeMember(globalScope, symbol, exportedValue);
       } catch (UnknownIdentifierException e) {
-        MemberNamesObject moduleMembers = (MemberNamesObject) objectLibrary.getMembers(module, false);
-        for (Object member : moduleMembers.getNames()) {
-          System.out.println(member);
-        }
         throw BladeRuntimeError.error(this, "Symbol '", symbol, "' not found in module '", module.path, "'");
       }
     }
@@ -132,9 +108,5 @@ public abstract class NImportProcessorNode extends NNode {
       BString.toString(nameToStringNode, name),
       BString.toString(pathToStringNode, path)
     );
-  }
-
-  protected CyclicAssumption getAssumption(TruffleString path, TruffleString.ToJavaStringNode toJavaStringNode) {
-    return languageContext().language.getModuleContentAssumption(BString.toString(toJavaStringNode, path));
   }
 }

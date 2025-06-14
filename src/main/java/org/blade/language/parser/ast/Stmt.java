@@ -3,6 +3,7 @@
 package org.blade.language.parser.ast;
 
 import org.blade.language.parser.Token;
+
 import java.util.List;
 
 public abstract class Stmt extends AST {
