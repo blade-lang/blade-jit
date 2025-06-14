@@ -13,6 +13,7 @@ import org.blade.language.nodes.expressions.arithemetic.*;
 import org.blade.language.nodes.expressions.bitwise.*;
 import org.blade.language.nodes.expressions.logical.*;
 import org.blade.language.nodes.functions.*;
+import org.blade.language.nodes.imports.NImportNode;
 import org.blade.language.nodes.list.NListIndexReadNodeGen;
 import org.blade.language.nodes.list.NListIndexWriteNodeGen;
 import org.blade.language.nodes.list.NListLiteralNode;
@@ -32,6 +33,7 @@ import org.blade.language.runtime.BladeRuntimeError;
 import org.blade.language.shared.BuiltinClassesModel;
 import org.blade.language.shared.LocalRefSlot;
 
+import java.io.File;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -707,16 +709,58 @@ public class BladeTranslator extends BaseVisitor<NNode> {
     int casesLength = stmt.caseLabels.size();
     NWhenNode[] cases = new NWhenNode[casesLength];
 
-    for(int i = 0; i < casesLength; i++) {
+    for (int i = 0; i < casesLength; i++) {
       cases[i] = new NWhenNode(visitExpr(stmt.caseLabels.get(i)), visitStmt(stmt.caseBodies.get(i)));
     }
 
     NNode defaultCase = null;
-    if(stmt.defaultCase != null) {
+    if (stmt.defaultCase != null) {
       defaultCase = visitStmt(stmt.defaultCase);
     }
 
     return new NUsingNode(value, cases, defaultCase);
+  }
+
+  @Override
+  public NNode visitImportStmt(Stmt.Import stmt) {
+    NNode name = visitExpr(stmt.name);
+
+    File currentDir = new File(parser.lexer.source.getPath()).getParentFile();
+    String moduleName = stmt.path;
+    String sep = File.separator;
+
+    File moduleFile = new File(currentDir, moduleName + ".b");
+    if (!moduleFile.exists()) {
+      moduleFile = new File(currentDir, String.join(sep, moduleName, "index.b"));
+      if (!moduleFile.exists()) {
+        moduleFile = new File(currentDir, String.join(sep, ".blade", "libs", moduleName + ".b"));
+        if (!moduleFile.exists()) {
+          moduleFile = new File(currentDir, String.join(sep, ".blade", "libs", moduleName, "index.b"));
+          if (!moduleFile.exists()) {
+            // We've finished checking all the local paths. We should now check the runtime standard library path
+
+            // TODO: Check Blade standard library directory.
+            throw BladeRuntimeError.error(
+              name,
+              "Module ' " + moduleName + "' not found"
+            );
+          }
+        }
+      }
+    }
+
+    String[] elements = new String[stmt.elements.size()];
+    for (int i = 0; i < stmt.elements.size(); i++) {
+      elements[i] = stmt.elements.get(i).token.literal();
+    }
+
+    // module file exists
+    return new NImportNode(
+      new NStringLiteralNode(moduleFile.getAbsolutePath()),
+      new NStringLiteralNode(stmt.name.token.literal()),
+      elements,
+      stmt.all
+    );
   }
 
   private NNode translateFunction(Stmt source, String name, List<Expr.Identifier> parameters, Stmt.Block body, NNode root, boolean isVariadic) {

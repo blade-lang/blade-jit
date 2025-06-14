@@ -1,22 +1,24 @@
 package org.blade.language.runtime;
 
-import com.oracle.truffle.api.CallTarget;
-import com.oracle.truffle.api.CompilerDirectives;
-import com.oracle.truffle.api.TruffleLanguage;
+import com.oracle.truffle.api.*;
 import com.oracle.truffle.api.dsl.Bind;
+import com.oracle.truffle.api.frame.FrameDescriptor;
+import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.interop.*;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.object.DynamicObject;
 import com.oracle.truffle.api.object.DynamicObjectLibrary;
 import com.oracle.truffle.api.source.Source;
+import com.oracle.truffle.api.utilities.CyclicAssumption;
 import org.blade.language.BladeLanguage;
+import org.blade.language.nodes.functions.NRootFunctionNode;
 import org.blade.language.shared.BuiltinClassesModel;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import static com.oracle.truffle.api.CompilerDirectives.shouldNotReachHere;
 
@@ -27,7 +29,7 @@ public class BladeContext {
 
   private final List<FunctionObject> shutdownHooks = new ArrayList<>();
 
-  public final DynamicObject globalScope;
+  public DynamicObject globalScope;
   public final BuiltinClassesModel objectsModel;
   public final FunctionObject emptyFunction;
 
@@ -37,7 +39,11 @@ public class BladeContext {
 
   public TruffleLanguage.Env env;
 
-  public BladeContext(TruffleLanguage.Env env, DynamicObject globalScope, BuiltinClassesModel objectsModel, FunctionObject emptyFunction) {
+  public final BladeLanguage language;
+  private final Map<String, ModuleObject> loadedModules = new ConcurrentHashMap<>();
+
+  public BladeContext(BladeLanguage language, TruffleLanguage.Env env, DynamicObject globalScope, BuiltinClassesModel objectsModel, FunctionObject emptyFunction) {
+    this.language = language;
     this.globalScope = globalScope;
     this.objectsModel = objectsModel;
     this.emptyFunction = emptyFunction;
@@ -71,6 +77,46 @@ public class BladeContext {
     env = newEnv;
   }
 
+  public ModuleObject loadModule(Node node, String name, String path) {
+    // Check cache first
+    ModuleObject module = loadedModules.get(path);
+    if (module != null) {
+      return module;
+    }
+
+    // Parse and execute the module
+    Source source = null;
+    try {
+      source = Source.newBuilder(BladeLanguage.ID, env.getPublicTruffleFile(path)).build();
+    } catch (IOException e) {
+      throw BladeRuntimeError.error(node, "Failed to load module file ", path);
+    }
+
+    DynamicObject previousGlobalScope = globalScope;
+    globalScope = module = new ModuleObject(objectsModel.rootShape, path, name);
+
+    CallTarget moduleCallTarget = parse(source);
+
+    moduleCallTarget.call();
+
+    loadedModules.put(path, module);
+    globalScope = previousGlobalScope;
+    return module;
+  }
+
+  public void invalidateModule(String modulePath) {
+    CyclicAssumption assumption = language.getModuleContentAssumption(modulePath);
+    if (assumption != null) {
+      assumption.invalidate("Module content changed: " + modulePath);
+    }
+
+    clearModuleFromCache(modulePath);
+  }
+
+  public void clearModuleFromCache(String modulePath) {
+    loadedModules.remove(modulePath);
+  }
+
   /**
    * Register a function as a shutdown hook. Only no-parameter functions are supported.
    *
@@ -102,6 +148,7 @@ public class BladeContext {
 
   public BladeContext duplicate() {
     return new BladeContext(
+      language,
       env,
       ((GlobalScopeObject) globalScope).duplicate(DynamicObjectLibrary.getUncached()),
       objectsModel,

@@ -13,6 +13,7 @@ import com.oracle.truffle.api.object.DynamicObjectLibrary;
 import com.oracle.truffle.api.object.Shape;
 import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.strings.TruffleString;
+import com.oracle.truffle.api.utilities.CyclicAssumption;
 import org.blade.language.builtins.*;
 import org.blade.language.nodes.NBlockRootNode;
 import org.blade.language.nodes.expressions.NSetPropertyNodeGen;
@@ -36,6 +37,7 @@ import java.lang.invoke.MethodHandles;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.IntStream;
 
 @TruffleLanguage.Registration(
@@ -56,22 +58,21 @@ public class BladeLanguage extends TruffleLanguage<BladeContext> {
   public static final String ID = "blade";
   public static final String MIME_TYPE = "application/x-blade-lang";
   public final static TruffleString.Encoding ENCODING = TruffleString.Encoding.UTF_8;
-  private static final LanguageReference<BladeLanguage> REFERENCE = LanguageReference.create(BladeLanguage.class);
-  private final Assumption assumption = Truffle.getRuntime().createAssumption("Single Blade context.");
-
   @Option(help = "Enforce type hints in function parameters", category = OptionCategory.USER, stability = OptionStability.STABLE)
   //
   public static final OptionKey<Boolean> EnforceTypes = new OptionKey<>(false);
-  public boolean enforceTypes = false;
-
+  private static final LanguageReference<BladeLanguage> REFERENCE = LanguageReference.create(BladeLanguage.class);
   // Shapes
   public final Shape rootShape = Shape.newBuilder().build();
   public final Shape listShape = createShape(ListObject.class);
   public final Shape dictionayShape = createShape(DictionaryObject.class);
+  private final Assumption assumption = Truffle.getRuntime().createAssumption("Single Blade context.");
+  private final Map<String, CyclicAssumption> moduleContentAssumptions = new ConcurrentHashMap<>();
   // models
   private final BObject objectClass = new BObject(rootShape);
   private final BladeClass functionClass = new BladeClass(rootShape, "Function", objectClass);
   public final BuiltinClassesModel builtinObjects = createBuiltinClasses();
+  public boolean enforceTypes = false;
 
   public static BladeLanguage get(Node node) {
     return REFERENCE.get(node);
@@ -84,12 +85,20 @@ public class BladeLanguage extends TruffleLanguage<BladeContext> {
       .build();
   }
 
+  public CyclicAssumption getModuleContentAssumption(String modulePath) {
+    return moduleContentAssumptions.computeIfAbsent(
+      modulePath,
+      k -> new CyclicAssumption("module " + k + " content stable")
+    );
+  }
+
   @Override
   protected BladeContext createContext(Env env) {
     enforceTypes = EnforceTypes.getValue(env.getOptions());
 
     DynamicObjectLibrary objectLibrary = DynamicObjectLibrary.getUncached();
     return new BladeContext(
+      this,
       env,
       createGlobalScope(objectLibrary),
       builtinObjects,
@@ -135,7 +144,7 @@ public class BladeLanguage extends TruffleLanguage<BladeContext> {
     GlobalScopeObject globalScope = new GlobalScopeObject(rootShape);
 
     // register built-in functions
-    registerBuiltinFunctions(objectLibrary, BuiltinFunctions.class, globalScope);
+    registerBuiltinFunctions(objectLibrary, globalScope);
 
     // register builtin classes and their methods
     objectLibrary.putConstant(globalScope, "Object", objectClass, 0);
@@ -199,8 +208,8 @@ public class BladeLanguage extends TruffleLanguage<BladeContext> {
     return globalScope;
   }
 
-  private void registerBuiltinFunctions(DynamicObjectLibrary objectLibrary, Class<? extends BaseBuiltinDeclaration> source, DynamicObject scope) {
-    BuiltinDeclarationAccessor.get(source).forEach((factory) -> {
+  private void registerBuiltinFunctions(DynamicObjectLibrary objectLibrary, DynamicObject scope) {
+    BuiltinDeclarationAccessor.get(BuiltinFunctions.class).forEach((factory) -> {
       defineBuiltinFunction(objectLibrary, scope, factory.key(), factory.value(), factory.regulator());
     });
   }

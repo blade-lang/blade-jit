@@ -26,7 +26,7 @@ public class GlobalScopeObject extends DynamicObject {
   }
 
   @ExportMessage
-  Object getMembers(@SuppressWarnings("unused") boolean includeInternal,
+  public Object getMembers(@SuppressWarnings("unused") boolean includeInternal,
                     @CachedLibrary("this") DynamicObjectLibrary objectLibrary) {
     return new MemberNamesObject(objectLibrary.getKeyArray(this));
   }
@@ -54,8 +54,8 @@ public class GlobalScopeObject extends DynamicObject {
   }
 
   @ExportMessage
-  void writeMember(String member, Object value,
-                   @CachedLibrary("this") DynamicObjectLibrary objectLibrary) {
+  public void writeMember(String member, Object value,
+                          @CachedLibrary("this") DynamicObjectLibrary objectLibrary) {
     objectLibrary.put(this, member, value);
   }
 

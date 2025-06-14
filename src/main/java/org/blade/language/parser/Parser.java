@@ -5,6 +5,7 @@ import org.blade.language.parser.ast.AST;
 import org.blade.language.parser.ast.Expr;
 import org.blade.language.parser.ast.Stmt;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -870,53 +871,71 @@ public class Parser {
 
   private Stmt importStatement() {
     return wrap(() -> {
-      List<String> path = new ArrayList<>();
-      List<Token> elements = new ArrayList<>();
+      List<String> paths = new ArrayList<>();
+      List<Expr.Identifier> elements = new ArrayList<>();
+      Expr.Identifier name = null;
 
-      while (!match(NEWLINE, EOF, LBRACE)) {
+      while (match(IDENTIFIER, DOT)) {
         advance();
-        path.add(previous().literal());
+        paths.add(previous().literal());
       }
 
-      Token importsAll = null;
+      boolean importsAll = false;
       int selectCount = 0;
 
-      if (previous().type() == LBRACE) {
+      if (match(LBRACE)) {
         var scan = true;
 
         while (!check(RBRACE) && scan) {
           ignoreNewlines();
-          elements.add(consumeAny("identifier expected", IDENTIFIER, MULTIPLY));
+          Token element = consumeAny("identifier expected", IDENTIFIER, MULTIPLY);
 
           selectCount++;
-          if (previous().type() == MULTIPLY) {
-            if (importsAll != null) {
+          if (element.type() == MULTIPLY) {
+            if (!elements.isEmpty()) {
               throw new ParserException(
                 lexer.getSource(),
-                importsAll, false, "cannot repeat select all"
+                element, false, "Cannot import selected items and everything from the same import statement"
               );
             }
 
-            importsAll = previous();
+            importsAll = true;
+            break;
           }
 
+          elements.add(new Expr.Identifier(element));
           if (!match(COMMA)) {
             scan = false;
           }
+
           ignoreNewlines();
         }
 
         consume(RBRACE, "'}' expected at end of selective import");
+      } else if (match(AS)) {
+        name = wrap(() -> {
+          consume(IDENTIFIER, "Expected import name after `as`");
+          return new Expr.Identifier(previous());
+        });
       }
 
-      if (importsAll != null && selectCount > 1) {
-        throw new ParserException(
-          lexer.getSource(),
-          importsAll, false, "cannot import selected items and all at the same time"
-        );
+      String sep = File.separator;
+
+      String finalPath = String.join("", paths).replace(".", sep);
+      if (finalPath.startsWith(sep + sep)) {
+        finalPath = ".." + sep + finalPath.substring(2);
+      } else if (finalPath.startsWith(sep)) {
+        finalPath = "." + File.separatorChar + finalPath.substring(1);
       }
 
-      return new Stmt.Import(String.join("", path), elements, false);
+      if (name == null) {
+        name = new Expr.Identifier(previous().copyToType(
+          LITERAL,
+          paths.getLast()
+        ));
+      }
+
+      return new Stmt.Import(finalPath, name, elements, importsAll);
     });
   }
 

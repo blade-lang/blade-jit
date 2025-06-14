@@ -283,14 +283,11 @@ public class BladeTestRunner extends ParentRunner<BladeTestRunner.TestCase> {
     Context context = null;
     try {
       ByteArrayOutputStream out = new ByteArrayOutputStream();
-      for (NodeFactory<? extends NBuiltinFunctionNode> builtin : builtins) {
-//        NimbusLanguage.installBuiltin(builtin);
-      }
 
       Context.Builder builder = Context.newBuilder()
         .allowExperimentalOptions(true)
         .allowHostClassLookup((s) -> true)
-        .allowHostAccess(HostAccess.ALL)
+        .allowAllAccess(true)
         .in(
           new ByteArrayInputStream(testCase.testInput.getBytes(StandardCharsets.UTF_8)))
         .out(out)

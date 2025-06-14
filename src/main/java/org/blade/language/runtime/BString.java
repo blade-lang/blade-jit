@@ -97,6 +97,10 @@ public final class BString {
     return object.toString();
   }
 
+  public static String toString(TruffleString.ToJavaStringNode toJavaStringNode, TruffleString string) {
+    return toJavaStringNode.execute(string);
+  }
+
   public static String tryToString(Object object) {
     return object instanceof String
       ? (String) object
