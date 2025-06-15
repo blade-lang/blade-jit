@@ -1,16 +1,18 @@
 package org.blade.language.builtins;
 
+import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.Fallback;
 import com.oracle.truffle.api.dsl.NodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.interop.InteropLibrary;
 import com.oracle.truffle.api.library.CachedLibrary;
+import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.object.DynamicObjectLibrary;
+import com.oracle.truffle.api.object.Shape;
 import org.blade.language.BaseBuiltinDeclaration;
 import org.blade.language.nodes.functions.NBuiltinFunctionNode;
-import org.blade.language.runtime.BladeNil;
-import org.blade.language.runtime.BladeRuntimeError;
-import org.blade.language.runtime.RangeObject;
+import org.blade.language.runtime.*;
+import org.blade.language.shared.BuiltinClassesModel;
 import org.blade.utility.RegulatedMap;
 
 public final class RangeMethods implements BaseBuiltinDeclaration {
@@ -20,6 +22,7 @@ public final class RangeMethods implements BaseBuiltinDeclaration {
       add("@key", false, RangeMethodsFactory.NKeyDecoratorNodeFactory.getInstance());
       add("@value", false, RangeMethodsFactory.NValueDecoratorNodeFactory.getInstance());
       add("within", false, RangeMethodsFactory.NWithinMethodNodeFactory.getInstance());
+      add("to_list", false, RangeMethodsFactory.NToListMethodFactory.getInstance());
     }};
   }
 
@@ -91,6 +94,25 @@ public final class RangeMethods implements BaseBuiltinDeclaration {
     @Fallback
     protected Object doInvalid(Object object, Object value) {
       return false;
+    }
+  }
+
+  public abstract static class NToListMethod extends NBuiltinFunctionNode {
+    @ExplodeLoop
+    @Specialization
+    protected ListObject toList(RangeObject range,
+                                @Cached(value = "languageContext().objectsModel", neverDefault = true) BuiltinClassesModel classesModel,
+                                @Cached(value = "classesModel.listShape", neverDefault = true) Shape listShape,
+                                @Cached(value = "classesModel.listObject", neverDefault = true) BladeClass listObject) {
+      long lower = range.lower;
+      int length = (int) Math.abs(range.upper - lower);
+      Object[] items = new Object[length];
+
+      for (int i = 0; i < length; i++) {
+        items[i] = lower + i;
+      }
+
+      return new ListObject(listShape, listObject, items);
     }
   }
 }

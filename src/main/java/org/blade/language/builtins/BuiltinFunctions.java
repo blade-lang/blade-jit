@@ -39,6 +39,7 @@ public final class BuiltinFunctions implements BaseBuiltinDeclaration {
       add("ord", false, BuiltinFunctionsFactory.OrdFunctionNodeFactory.getInstance());
       add("rand", false, BuiltinFunctionsFactory.RandFunctionNodeFactory.getInstance());
       add("to_number", false, BuiltinFunctionsFactory.ToNumberFunctionNodeFactory.getInstance());
+      add("is_iterable", false, BuiltinFunctionsFactory.IsIterableNodeFactory.getInstance());
     }};
   }
 
@@ -506,8 +507,56 @@ public final class BuiltinFunctions implements BaseBuiltinDeclaration {
     }
 
     @Fallback
-    protected long doOthers(Object object) {
-      return 0;
+    protected Object doOthers(Object object) {
+      return Double.NaN;
+    }
+  }
+
+  public abstract static class IsIterableNode extends NBuiltinFunctionNode {
+    @Specialization
+    protected boolean doBoolean(boolean value) {
+      return false;
+    }
+
+    @Specialization
+    protected boolean doLong(long value) {
+      return false;
+    }
+
+    @Specialization
+    protected boolean doDouble(double value) {
+      return false;
+    }
+
+    @Specialization
+    protected boolean doBigInt(BigIntObject value) {
+      return false;
+    }
+
+    @Specialization
+    protected boolean doList(ListObject value) {
+      return true;
+    }
+
+    @Specialization
+    protected boolean doDict(DictionaryObject value) {
+      return true;
+    }
+
+    @Specialization
+    protected boolean doRange(RangeObject value) {
+      return true;
+    }
+
+    @Specialization
+    protected boolean doRange(BladeObject value, @CachedLibrary(limit = "3") InteropLibrary interopLibrary) {
+      return interopLibrary.isMemberReadable(value, "@key")
+        && interopLibrary.isMemberReadable(value, "@value");
+    }
+
+    @Fallback
+    protected boolean doOthers(Object value) {
+      return false;
     }
   }
 }

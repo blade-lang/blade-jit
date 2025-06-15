@@ -905,6 +905,11 @@ public class Parser {
 
             importsAll = true;
             break;
+          } else if(element.literal().startsWith("_")) {
+            throw new ParserException(
+              lexer.getSource(),
+              element, false, "Cannot import module private items"
+            );
           }
 
           elements.add(new Expr.Identifier(element));
@@ -922,7 +927,6 @@ public class Parser {
           return new Expr.Identifier(previous());
         });
       }
-
 
       String finalPath = String.join(sep, paths);
 

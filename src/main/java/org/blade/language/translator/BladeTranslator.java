@@ -731,7 +731,15 @@ public class BladeTranslator extends BaseVisitor<NNode> {
     NNode name = visitExpr(stmt.name);
     String moduleName = stmt.name.token.literal();
 
-    File currentDir = new File(parser.lexer.source.getPath()).getParentFile();
+    String currentSourcePath;
+    if(parser.lexer.source.getPath() != null) {
+      currentSourcePath = parser.lexer.source.getPath();
+    } else {
+      // We're in the REPL.
+      currentSourcePath = new File(".").getAbsolutePath();
+    }
+
+    File currentDir = new File(currentSourcePath).getParentFile();
     String sep = File.separator;
 
     File moduleFile;
