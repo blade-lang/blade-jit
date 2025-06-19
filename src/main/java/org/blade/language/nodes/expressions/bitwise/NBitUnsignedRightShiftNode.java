@@ -15,17 +15,17 @@ import org.blade.language.runtime.BladeRuntimeError;
 public abstract class NBitUnsignedRightShiftNode extends NBinaryNode {
 
   @Specialization
-  protected static long doLongs(long left, long right) {
+  public static long doLongs(long left, long right) {
     return toUInt32(left) >>> (toUInt32(right) & 31);
   }
 
   @Specialization(replaces = "doLongs")
-  protected static long doDoubles(double left, double right) {
+  public static long doDoubles(double left, double right) {
     return toUInt32(left) >>> (toUInt32(right) & 31);
   }
 
   @Specialization(limit = "3")
-  protected static Object doObjects(BladeObject left, BladeObject right,
+  public static Object doObjects(BladeObject left, BladeObject right,
                                     @Bind Node node, @CachedLibrary("left") InteropLibrary interopLibrary) {
     Object overrideValue = methodOverride(node, ">>>", left, right, interopLibrary);
     if (overrideValue != null) {
@@ -36,7 +36,7 @@ public abstract class NBitUnsignedRightShiftNode extends NBinaryNode {
   }
 
   @Fallback
-  protected static double doUnsupported(Object left, Object right, @Bind Node node) {
+  public static double doUnsupported(Object left, Object right, @Bind Node node) {
     throw BladeRuntimeError.argumentError(node, ">>>", left, right);
   }
 

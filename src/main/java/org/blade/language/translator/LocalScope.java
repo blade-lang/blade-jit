@@ -27,17 +27,26 @@
 
 package org.blade.language.translator;
 
-import java.util.Map;
-import java.util.Stack;
+import com.oracle.truffle.api.bytecode.BytecodeLocal;
+
+import java.util.*;
 
 class LocalScope {
   public final int scopeDepth;
-  private final Stack<Map<String, NFrameMember>> stack = new Stack<>();
   private final LocalScope parent;
+  private int totalLocals = 0;
+
+  // Maps local names to a unique index.
+  private final Map<String, Integer> locals;
+  // Tracks which locals have been initialized in this scope.
+  private final Set<String> initialized;
+
   public boolean captures = false;
 
   public LocalScope(LocalScope parent, int scopeDepth) {
     this.parent = parent;
+    locals = parent != null ? new HashMap<>(parent.locals) : new HashMap<>();
+    initialized = parent != null ? new HashSet<>(parent.initialized) : new HashSet<>();
     this.scopeDepth = scopeDepth;
   }
 
@@ -45,61 +54,71 @@ class LocalScope {
     this(null, 0);
   }
 
-  void push(Map<String, NFrameMember> item) {
-    stack.push(item);
+  boolean isDeclared(String name) {
+    return locals.containsKey(name);
   }
 
-  void pop() {
-    stack.pop();
+  void declare(String name) {
+    locals.put(name, totalLocals++);
   }
 
-  Map<String, NFrameMember> peek() {
-    return stack.peek();
+  int add(String name) {
+    locals.put(name, totalLocals++);
+    return totalLocals;
   }
 
-  Map<String, NFrameMember> getFirst() {
-    return stack.getFirst();
-  }
-
-  NFrameMember findFrameMember(String name) {
-    for (Map<String, NFrameMember> scope : stack) {
-      NFrameMember member = scope.get(name);
-      if (member != null) {
-        return member;
-      }
+  Integer getIndex(String name) {
+    Integer i = locals.get(name);
+    if (i == null) {
+      return -1;
+    } else {
+      return i;
     }
-
-    return null;
   }
 
-  NFrameMember.ClosedVariable findClosedFrameMember(String name, int scope) {
-    if (parent != null) {
-      NFrameMember value = parent.findFrameMember(name);
-
-      if (value != null) {
-        // This scope captures from a surrounding scope.
-        return new NFrameMember.ClosedVariable(value, scope - parent.scopeDepth);
-      }
-
-      return parent.findClosedFrameMember(name, scope);
-    }
-
-    return null;
+  boolean initialize(String name) {
+    return initialized.add(name);
   }
 
-  NFrameMember.ClosedVariable findClosedFrameMember(String name) {
-    NFrameMember.ClosedVariable value = findClosedFrameMember(name, scopeDepth);
+//  NFrameMember findFrameMember(String name) {
+//    for (Map<String, NFrameMember> scope : stack) {
+//      NFrameMember member = scope.get(name);
+//      if (member != null) {
+//        return member;
+//      }
+//    }
+//
+//    return null;
+//  }
 
-    if (value != null) {
-      for (
-        LocalScope next = this;
-        next != null && scopeDepth - next.scopeDepth < value.scopeDepth;
-        next = next.parent
-      ) {
-        next.captures = true;
-      }
-    }
-
-    return value;
-  }
+//  NFrameMember.ClosedVariable findClosedFrameMember(String name, int scope) {
+//    if (parent != null) {
+//      NFrameMember value = parent.findFrameMember(name);
+//
+//      if (value != null) {
+//        // This scope captures from a surrounding scope.
+//        return new NFrameMember.ClosedVariable(value, scope - parent.scopeDepth);
+//      }
+//
+//      return parent.findClosedFrameMember(name, scope);
+//    }
+//
+//    return null;
+//  }
+//
+//  NFrameMember.ClosedVariable findClosedFrameMember(String name) {
+//    NFrameMember.ClosedVariable value = findClosedFrameMember(name, scopeDepth);
+//
+//    if (value != null) {
+//      for (
+//        LocalScope next = this;
+//        next != null && scopeDepth - next.scopeDepth < value.scopeDepth;
+//        next = next.parent
+//      ) {
+//        next.captures = true;
+//      }
+//    }
+//
+//    return value;
+//  }
 }

@@ -20,62 +20,62 @@ import java.math.BigInteger;
 public abstract class NMultiplyNode extends NBinaryNode {
 
   @Specialization(rewriteOn = ArithmeticException.class)
-  protected static long doLongs(long left, long right) {
+  public static long doLongs(long left, long right) {
     return Math.multiplyExact(left, right);
   }
 
   @Specialization(guards = {"isDouble(left)", "isLong(right)"})
-  protected static double doDoubleLong(double left, long right) {
+  public static double doDoubleLong(double left, long right) {
     return left * (double) right;
   }
 
   @Specialization(guards = {"isLong(left)", "isDouble(right)"})
-  protected static double doLongDouble(long left, double right) {
+  public static double doLongDouble(long left, double right) {
     return (double) left * right;
   }
 
   @Specialization
   @CompilerDirectives.TruffleBoundary
-  protected static BigIntObject doBigIntLong(BigIntObject left, long right) {
+  public static BigIntObject doBigIntLong(BigIntObject left, long right) {
     return new BigIntObject(left.get().multiply(BigInteger.valueOf(right)));
   }
 
   @Specialization
   @CompilerDirectives.TruffleBoundary
-  protected static BigIntObject doLongBigInt(long left, BigIntObject right) {
+  public static BigIntObject doLongBigInt(long left, BigIntObject right) {
     return new BigIntObject(BigInteger.valueOf(left).multiply(right.get()));
   }
 
   @Specialization
   @CompilerDirectives.TruffleBoundary
-  protected static BigIntObject doBigInts(BigIntObject left, BigIntObject right) {
+  public static BigIntObject doBigInts(BigIntObject left, BigIntObject right) {
     return new BigIntObject(left.get().multiply(right.get()));
   }
 
   @Specialization(replaces = {"doLongs"})
-  protected static double doDoubles(double left, double right) {
+  public static double doDoubles(double left, double right) {
     return left * right;
   }
 
   @Specialization
-  protected static double doDoubleBigInt(double left, BigIntObject right) {
+  public static double doDoubleBigInt(double left, BigIntObject right) {
     return left * bigToLong(right.get());
   }
 
   @Specialization
-  protected static double doDoubleBigInt(BigIntObject left, double right) {
+  public static double doDoubleBigInt(BigIntObject left, double right) {
     return bigToLong(left.get()) * right;
   }
 
   @Specialization
-  protected static TruffleString doStringMultiplication(TruffleString string, long count,
+  public static TruffleString doStringMultiplication(TruffleString string, long count,
                                                         @Cached TruffleString.RepeatNode repeatNode) {
     return repeatNode.execute(string, (int) count, BladeLanguage.ENCODING);
   }
 
   @Specialization(guards = "count <= MAX_VALUE")
-  protected static ListObject doListMultiplication(ListObject list, long count, @Bind Node node,
-                                                   @Cached("get(node)") BladeContext context,
+  public static ListObject doListMultiplication(ListObject list, long count, @Bind Node node,
+                                                   @Cached(value = "get(node)", uncached = "getContext(node)") BladeContext context,
                                                    @Cached("context.objectsModel.listShape") Shape listShape,
                                                    @Cached("context.objectsModel.listObject") BladeClass listClass) {
     return new ListObject(
@@ -86,7 +86,7 @@ public abstract class NMultiplyNode extends NBinaryNode {
   }
 
   @Specialization(guards = "count > MAX_VALUE")
-  protected static ListObject doListMultiplicationOutOfBound(ListObject list, long count, @Bind Node node) {
+  public static ListObject doListMultiplicationOutOfBound(ListObject list, long count, @Bind Node node) {
     throw BladeRuntimeError.error(
       node,
       "List multiplication count out of bounds (",
@@ -112,7 +112,7 @@ public abstract class NMultiplyNode extends NBinaryNode {
   }
 
   @Specialization(limit = "3")
-  protected static Object doObjects(BladeObject left, BladeObject right,
+  public static Object doObjects(BladeObject left, BladeObject right,
                                     @Bind Node node, @CachedLibrary("left") InteropLibrary interopLibrary) {
     Object overrideValue = methodOverride(node, "*", left, right, interopLibrary);
     if (overrideValue != null) {
@@ -123,7 +123,11 @@ public abstract class NMultiplyNode extends NBinaryNode {
   }
 
   @Fallback
-  protected static double doUnsupported(Object left, Object right, @Bind Node node) {
+  public static double doUnsupported(Object left, Object right, @Bind Node node) {
     throw BladeRuntimeError.argumentError(node, "*", left, right);
+  }
+
+  public static BladeContext getContext(Node node) {
+    return BladeContext.get(node);
   }
 }

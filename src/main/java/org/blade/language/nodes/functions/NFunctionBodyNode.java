@@ -72,7 +72,7 @@ public final class NFunctionBodyNode extends NStmtNode {
       this, new NodeVisitor() {
         @Override
         public boolean visit(Node visitedNode) {
-          if (visitedNode instanceof NReadFunctionArgsExprNode readNode) {
+          if (visitedNode instanceof NReadArgumentExprNode readNode) {
             funcArgs.add(new FunctionArgRefObject(
               readNode.name,
               readNode.getSourceSection(),

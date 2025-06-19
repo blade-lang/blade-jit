@@ -26,7 +26,7 @@ public abstract class NBitNotNode extends NUnaryNode {
   private static NMethodDispatchNode dispatchNode = NMethodDispatchNodeGen.create();
 
   @Specialization
-  protected static long doLong(long value) {
+  public static long doLong(long value) {
     return ~(int) value;
   }
 
@@ -37,12 +37,12 @@ public abstract class NBitNotNode extends NUnaryNode {
   }
 
   @Specialization(replaces = {"doLong", "doBigInt"})
-  protected static long doDouble(double value) {
+  public static long doDouble(double value) {
     return ~(int) value;
   }
 
   @Specialization(limit = "3")
-  protected static Object doObject(BladeObject value,
+  public static Object doObject(BladeObject value,
                                    @Bind Node node,
                                    @CachedLibrary("value") InteropLibrary interopLibrary) {
     Object overrideFunction = null;
@@ -62,7 +62,7 @@ public abstract class NBitNotNode extends NUnaryNode {
   }
 
   @Fallback
-  protected static double doUnsupported(Object left, @Bind Node node) {
+  public static double doUnsupported(Object left, @Bind Node node) {
     throw BladeRuntimeError.argumentError(node, "~", left);
   }
 }

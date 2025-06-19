@@ -18,17 +18,17 @@ import java.math.BigInteger;
 public abstract class NAddNode extends NBinaryNode {
 
   @Specialization(rewriteOn = ArithmeticException.class)
-  protected static long doLongs(long left, long right) {
+  public static long doLongs(long left, long right) {
     return Math.addExact(left, right);
   }
 
   @Specialization(guards = {"isDouble(left)", "isLong(right)"})
-  protected static double doDoubleLong(double left, long right) {
+  public static double doDoubleLong(double left, long right) {
     return left + right;
   }
 
   @Specialization(guards = {"isLong(left)", "isDouble(right)"})
-  protected static double doLongDouble(long left, double right) {
+  public static double doLongDouble(long left, double right) {
     return left + right;
   }
 
@@ -51,35 +51,35 @@ public abstract class NAddNode extends NBinaryNode {
   }
 
   @Specialization(replaces = {"doLongs"})
-  protected static double doDoubles(double left, double right) {
+  public static double doDoubles(double left, double right) {
     return left + right;
   }
 
   @Specialization
-  protected static double doDoubleBigInt(double left, BigIntObject right) {
+  public static double doDoubleBigInt(double left, BigIntObject right) {
     return left + bigToLong(right.get());
   }
 
   @Specialization
-  protected static double doDoubleBigInt(BigIntObject left, double right) {
+  public static double doDoubleBigInt(BigIntObject left, double right) {
     return bigToLong(left.get()) + right;
   }
 
   @Specialization
-  protected static TruffleString doStrings(TruffleString left, TruffleString right,
+  public static TruffleString doStrings(TruffleString left, TruffleString right,
                                            @Cached @Cached.Shared("concatNode") TruffleString.ConcatNode concatNode) {
     return BString.concat(concatNode, left, right);
   }
 
   @Specialization
-  protected static TruffleString doStringLong(TruffleString left, long right,
+  public static TruffleString doStringLong(TruffleString left, long right,
                                               @Cached @Cached.Shared("fromLongNode") TruffleString.FromLongNode fromLongNode,
                                               @Cached @Cached.Shared("concatNode") TruffleString.ConcatNode concatNode) {
     return BString.concat(concatNode, left, BString.fromLong(fromLongNode, right));
   }
 
   @Specialization
-  protected static TruffleString doLongString(long left, TruffleString right,
+  public static TruffleString doLongString(long left, TruffleString right,
                                               @Cached @Cached.Shared("fromLongNode") TruffleString.FromLongNode fromLongNode,
                                               @Cached @Cached.Shared("concatNode") TruffleString.ConcatNode concatNode) {
     return BString.concat(concatNode, BString.fromLong(fromLongNode, left), right);
@@ -87,7 +87,7 @@ public abstract class NAddNode extends NBinaryNode {
 
   @CompilerDirectives.TruffleBoundary
   @Specialization(guards = "isString(left, right)")
-  protected static TruffleString doStringConverted(Object left, Object right,
+  public static TruffleString doStringConverted(Object left, Object right,
                                                    @Cached TruffleString.FromJavaStringNode leftFromJavaNode,
                                                    @Cached TruffleString.FromJavaStringNode rightFromJavaNode,
                                                    @Cached @Cached.Shared("concatNode") TruffleString.ConcatNode concatNode) {
@@ -99,8 +99,8 @@ public abstract class NAddNode extends NBinaryNode {
   }
 
   @Specialization
-  protected static Object doLists(ListObject left, ListObject right, @Bind Node node,
-                                  @Cached("get(node)") BladeContext context,
+  public static Object doLists(ListObject left, ListObject right, @Bind Node node,
+                                  @Cached(value = "get(node)", uncached = "getContext(node)") BladeContext context,
                                   @Cached("context.objectsModel.listShape") Shape listShape,
                                   @Cached("context.objectsModel.listObject") BladeClass listClass) {
     Object[] leftItems = left.items;
@@ -116,7 +116,7 @@ public abstract class NAddNode extends NBinaryNode {
   }
 
   @Specialization(limit = "3")
-  protected static Object doObjects(BladeObject left, BladeObject right,
+  public static Object doObjects(BladeObject left, BladeObject right,
                                     @Bind Node node, @CachedLibrary("left") InteropLibrary interopLibrary) {
     Object overrideValue = methodOverride(node, "+", left, right, interopLibrary);
     if (overrideValue != null) {
@@ -127,11 +127,11 @@ public abstract class NAddNode extends NBinaryNode {
   }
 
   @Fallback
-  protected static double doUnsupported(Object left, Object right, @Bind Node node) {
+  public static double doUnsupported(Object left, Object right, @Bind Node node) {
     throw BladeRuntimeError.argumentError(node, "+", left, right);
   }
 
-  protected static boolean isString(Object left, Object right) {
+  public static boolean isString(Object left, Object right) {
     return left instanceof TruffleString || right instanceof TruffleString;
   }
 

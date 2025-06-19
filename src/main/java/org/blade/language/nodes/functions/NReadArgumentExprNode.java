@@ -4,22 +4,20 @@ import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import org.blade.language.nodes.NNode;
 
-public final class NWriteFunctionArgExprNode extends NNode {
-  @Child
-  NNode value;
+public final class NReadArgumentExprNode extends NNode {
+  @CompilerDirectives.CompilationFinal
+  public final int index;
 
   @CompilerDirectives.CompilationFinal
-  private final int index;
+  public final String name;
 
-  public NWriteFunctionArgExprNode(NNode value, int index) {
-    this.value = value;
+  public NReadArgumentExprNode(int index, String name) {
     this.index = index;
+    this.name = name;
   }
 
   @Override
   public Object execute(VirtualFrame frame) {
-    Object result = value.execute(frame);
-    frame.getArguments()[index] = result;
-    return result;
+    return frame.getArguments()[index];
   }
 }

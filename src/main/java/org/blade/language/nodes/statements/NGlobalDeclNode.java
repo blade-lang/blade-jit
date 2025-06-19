@@ -1,53 +1,48 @@
 package org.blade.language.nodes.statements;
 
-import com.oracle.truffle.api.CompilerDirectives;
-import com.oracle.truffle.api.dsl.NodeChild;
-import com.oracle.truffle.api.dsl.NodeField;
-import com.oracle.truffle.api.dsl.Specialization;
-import com.oracle.truffle.api.instrumentation.Tag;
+import com.oracle.truffle.api.dsl.*;
+import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.library.CachedLibrary;
+import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.object.DynamicObject;
 import com.oracle.truffle.api.object.DynamicObjectLibrary;
-import org.blade.language.nodes.NGlobalScopeObjectNode;
-import org.blade.language.nodes.NNode;
-import org.blade.language.nodes.NStmtNode;
-import org.blade.language.runtime.BladeRuntimeError;
+import com.oracle.truffle.api.strings.TruffleString;
 
-@NodeChild(value = "globalScopeNode", type = NGlobalScopeObjectNode.class)
-@NodeChild(value = "value", type = NNode.class)
-@NodeField(name = "name", type = String.class)
-@NodeField(name = "isConst", type = Boolean.class)
-public abstract class NGlobalDeclNode extends NStmtNode {
-  protected abstract String getName();
+@GenerateInline
+@GenerateUncached
+public abstract class NGlobalDeclNode extends Node {
 
-  protected abstract boolean getIsConst();
+  public static NGlobalDeclNode getUncached() {
+    return NGlobalDeclNodeGen.getUncached();
+  }
 
-  @CompilerDirectives.CompilationFinal
-  private boolean exists = true;
+  @NeverDefault
+  public static NGlobalDeclNode create() {
+    return NGlobalDeclNodeGen.create();
+  }
 
-  @Specialization(limit = "3")
-  protected Object create(DynamicObject globalScope, Object value,
+  public abstract Object executeGlobal(Node node, Object globals, TruffleString name, Object value, boolean isConstant);
+
+  @Specialization(limit = "1", guards = {"cachedGlobalScope == globalScope", "isConstant"})
+  public static Object createCachedConstant(Node node, DynamicObject globalScope, TruffleString name, Object value, boolean isConstant,
+                          @Cached("globalScope") DynamicObject cachedGlobalScope,
                           @CachedLibrary("globalScope") DynamicObjectLibrary objectLibrary) {
-    String name = getName();
-
-    if (exists) {
-      CompilerDirectives.transferToInterpreterAndInvalidate();
-      exists = false;
-
-      if (objectLibrary.containsKey(globalScope, name)) {
-        throw BladeRuntimeError.error(this, "'", name, "' already declared in this scope");
-      }
-    }
-
-    objectLibrary.putWithFlags(globalScope, name, value, getIsConst() ? 1 : 0);
+    objectLibrary.putWithFlags(globalScope, name, value, 1);
     return value;
   }
 
-  @Override
-  public boolean hasTag(Class<? extends Tag> tag) {
-    // Global variables representing class declarations don't provide a SourceSection,
-    // since we don't want the debugger to stop on them.
-    // For that reason, make sure to return the standard Statement tag only if we have a SourceSection
-    return this.getSourceSection() != null && super.hasTag(tag);
+  @Specialization(limit = "1", guards = {"cachedGlobalScope == globalScope", "!isConstant"})
+  public static Object createCachedVariable(Node node, DynamicObject globalScope, TruffleString name, Object value, boolean isConstant,
+                          @Cached("globalScope") DynamicObject cachedGlobalScope,
+                          @CachedLibrary("globalScope") DynamicObjectLibrary objectLibrary) {
+    objectLibrary.putWithFlags(globalScope, name, value, 0);
+    return value;
+  }
+
+  @Specialization(limit = "1", replaces = {"createCachedConstant", "createCachedVariable"})
+  public static Object createUncachedConstant(Node node, DynamicObject globalScope, TruffleString name, Object value, boolean isConstant,
+                          @CachedLibrary("globalScope") DynamicObjectLibrary objectLibrary) {
+    objectLibrary.putWithFlags(globalScope, name, value, isConstant ? 1 : 0);
+    return value;
   }
 }

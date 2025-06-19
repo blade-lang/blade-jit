@@ -19,34 +19,34 @@ import org.blade.language.runtime.BladeObject;
 public abstract class NNotEqualNode extends NBinaryNode {
 
   @Specialization
-  protected static boolean doBoolean(boolean left, boolean right) {
+  public static boolean doBoolean(boolean left, boolean right) {
     return left != right;
   }
 
   @Specialization
-  protected static boolean doLongs(long left, long right) {
+  public static boolean doLongs(long left, long right) {
     return left != right;
   }
 
   @Specialization
-  protected static boolean doDoubles(double left, double right) {
+  public static boolean doDoubles(double left, double right) {
     return left != right;
   }
 
   @CompilerDirectives.TruffleBoundary
   @Specialization
-  protected static boolean doBigInts(BigIntObject left, BigIntObject right) {
+  public static boolean doBigInts(BigIntObject left, BigIntObject right) {
     return !left.equals(right);
   }
 
   @Specialization
-  protected static boolean doStrings(TruffleString left, TruffleString right,
+  public static boolean doStrings(TruffleString left, TruffleString right,
                                      @Cached TruffleString.EqualNode equalNode) {
     return !equalNode.execute(left, right, BladeLanguage.ENCODING);
   }
 
   @Specialization(limit = "3")
-  protected static boolean doObjects(BladeObject left, BladeObject right,
+  public static boolean doObjects(BladeObject left, BladeObject right,
                                      @Bind Node node, @CachedLibrary("left") InteropLibrary interopLibrary) {
     Object overrideValue = methodOverride(node, "==", left, right, interopLibrary);
     if (overrideValue != null) {
@@ -57,7 +57,7 @@ public abstract class NNotEqualNode extends NBinaryNode {
   }
 
   @Fallback
-  protected static boolean doUnsupported(Object left, Object right) {
+  public static boolean doUnsupported(Object left, Object right) {
     return left != right;
   }
 }

@@ -19,45 +19,45 @@ import java.math.BigInteger;
 public abstract class NBitLeftShiftNode extends NBinaryNode {
 
   @Specialization
-  protected static long doLongs(long left, long right) {
+  public static long doLongs(long left, long right) {
     return toUInt32(left) << (toUInt32(right) & 31);
   }
 
   @Specialization
   @CompilerDirectives.TruffleBoundary
-  protected static BigIntObject doBigIntLong(BigIntObject left, long right) {
+  public static BigIntObject doBigIntLong(BigIntObject left, long right) {
     return new BigIntObject(left.get().shiftLeft((int) right));
   }
 
   @Specialization
   @CompilerDirectives.TruffleBoundary
-  protected static BigIntObject doLongBigInt(long left, BigIntObject right) {
+  public static BigIntObject doLongBigInt(long left, BigIntObject right) {
     return new BigIntObject(BigInteger.valueOf(left).shiftLeft(right.get().intValue()));
   }
 
   @Specialization
   @CompilerDirectives.TruffleBoundary
-  protected static BigIntObject doBigInts(BigIntObject left, BigIntObject right) {
+  public static BigIntObject doBigInts(BigIntObject left, BigIntObject right) {
     return new BigIntObject(left.get().shiftLeft(right.get().intValue()));
   }
 
   @Specialization(replaces = {"doLongs"})
-  protected static long doDoubles(double left, double right) {
+  public static long doDoubles(double left, double right) {
     return ((long) toUInt32(left) << (toUInt32(right) & 31));
   }
 
   @Specialization
-  protected static long doDoubleBigInt(double left, BigIntObject right) {
+  public static long doDoubleBigInt(double left, BigIntObject right) {
     return (long) toUInt32(left) << (toUInt32(bigToInt(right.get()) & 31));
   }
 
   @Specialization
-  protected static long doDoubleBigInt(BigIntObject left, double right) {
+  public static long doDoubleBigInt(BigIntObject left, double right) {
     return bigToLong(left.get()) & (long) right;
   }
 
   @Specialization(limit = "3")
-  protected static Object doObjects(BladeObject left, BladeObject right,
+  public static Object doObjects(BladeObject left, BladeObject right,
                                     @Bind Node node, @CachedLibrary("left") InteropLibrary interopLibrary) {
     Object overrideValue = methodOverride(node, "<<", left, right, interopLibrary);
     if (overrideValue != null) {
@@ -68,7 +68,7 @@ public abstract class NBitLeftShiftNode extends NBinaryNode {
   }
 
   @Fallback
-  protected static double doUnsupported(Object left, Object right, @Bind Node node) {
+  public static double doUnsupported(Object left, Object right, @Bind Node node) {
     throw BladeRuntimeError.argumentError(node, "<<", left, right);
   }
 

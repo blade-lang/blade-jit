@@ -1,6 +1,8 @@
 package org.blade.language;
 
 import com.oracle.truffle.api.*;
+import com.oracle.truffle.api.bytecode.BytecodeConfig;
+import com.oracle.truffle.api.bytecode.BytecodeRootNodes;
 import com.oracle.truffle.api.dsl.Bind;
 import com.oracle.truffle.api.dsl.NodeFactory;
 import com.oracle.truffle.api.frame.FrameDescriptor;
@@ -13,11 +15,15 @@ import com.oracle.truffle.api.object.DynamicObjectLibrary;
 import com.oracle.truffle.api.object.Shape;
 import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.strings.TruffleString;
+import com.oracle.truffle.api.bytecode.BytecodeParser;
+import com.oracle.truffle.api.debug.DebuggerTags;
 import org.blade.language.builtins.*;
 import org.blade.language.nodes.NBlockRootNode;
+import org.blade.language.nodes.NBytecodeRootNode;
+import org.blade.language.nodes.NBytecodeRootNodeGen;
 import org.blade.language.nodes.expressions.NSetPropertyNodeGen;
 import org.blade.language.nodes.functions.NBuiltinFunctionNode;
-import org.blade.language.nodes.functions.NReadFunctionArgsExprNode;
+import org.blade.language.nodes.functions.NReadArgumentExprNode;
 import org.blade.language.nodes.functions.NRootFunctionNode;
 import org.blade.language.nodes.literals.NSelfLiteralNode;
 import org.blade.language.nodes.statements.NBlockStmtNode;
@@ -48,7 +54,7 @@ import java.util.stream.IntStream;
 )
 @ProvidedTags({
   StatementTag.class, CallTag.class, RootTag.class, RootBodyTag.class, ExpressionTag.class, TryBlockTag.class,
-  ReadVariableTag.class, WriteVariableTag.class
+  ReadVariableTag.class, WriteVariableTag.class, DebuggerTags.AlwaysHalt.class
 })
 @Bind.DefaultExpression("get($node)")
 public class BladeLanguage extends TruffleLanguage<BladeContext> {
@@ -177,7 +183,7 @@ public class BladeLanguage extends TruffleLanguage<BladeContext> {
               // this.message = args[1];
               new NExprStmtNode(NSetPropertyNodeGen.create(
                 new NSelfLiteralNode(),
-                new NReadFunctionArgsExprNode(1, "arg"),
+                new NReadArgumentExprNode(1, "arg"),
                 "message"
               )),
               // this.type = <type>;
@@ -257,9 +263,9 @@ public class BladeLanguage extends TruffleLanguage<BladeContext> {
   private CallTarget createCallTarget(NodeFactory<? extends NBuiltinFunctionNode> factory, boolean offset) {
     int argumentCount = factory.getExecutionSignature().size();
 
-    NReadFunctionArgsExprNode[] arguments = IntStream.range(0, argumentCount)
-      .mapToObj(i -> new NReadFunctionArgsExprNode(offset ? i + 1 : i, "arg" + i))
-      .toArray(NReadFunctionArgsExprNode[]::new);
+    NReadArgumentExprNode[] arguments = IntStream.range(0, argumentCount)
+      .mapToObj(i -> new NReadArgumentExprNode(offset ? i + 1 : i, "arg" + i))
+      .toArray(NReadArgumentExprNode[]::new);
 
     NRootFunctionNode rootNode = new NRootFunctionNode(this, factory.createNode((Object) arguments));
 
@@ -273,12 +279,21 @@ public class BladeLanguage extends TruffleLanguage<BladeContext> {
     Parser parser = new Parser(new Lexer(source), this);
     List<Stmt> statements = parser.parse();
 
-    var visitor = new BladeTranslator(parser, builtinObjects);
-    var parseResult = visitor.translate(statements);
-    return new NBlockRootNode(
-      this, parseResult.frameDescriptor, parseResult.node,
-      "@.script", visitor.getRootSourceSection()
-    ).getCallTarget();
+    BytecodeParser<NBytecodeRootNodeGen.Builder> slParser = (b) -> {
+      BladeTranslator visitor = new BladeTranslator(this, parser, builtinObjects, b);
+      b.beginSource(source);
+      visitor.translate(statements);
+      b.endSource();
+    };
+
+    BytecodeRootNodes<NBytecodeRootNode> nodes = NBytecodeRootNodeGen.create(this, BytecodeConfig.DEFAULT, slParser);
+
+    for (NBytecodeRootNode node : nodes.getNodes()) {
+//      RootCallTarget callTarget = node.getCallTarget();
+      node.getBytecodeNode().setUncachedThreshold(0);
+    }
+
+    return nodes.getNode(0).getCallTarget();
   }
 
   @Override

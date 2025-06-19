@@ -4,13 +4,15 @@ import com.oracle.truffle.api.dsl.TypeSystemReference;
 import com.oracle.truffle.api.frame.MaterializedFrame;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
+import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.UnexpectedResultException;
 import com.oracle.truffle.api.source.SourceSection;
 import com.oracle.truffle.api.strings.TruffleString;
+import org.blade.language.runtime.BladeContext;
 import org.blade.language.runtime.BladeNil;
 import org.blade.language.runtime.ListObject;
 
-@TypeSystemReference(BladeTypes.class)
+//@TypeSystemReference(BladeTypes.class)
 public abstract class NNode extends NBaseNode {
   private SourceSection sourceSection = null;
 
@@ -77,5 +79,9 @@ public abstract class NNode extends NBaseNode {
       parentFrame = (MaterializedFrame) parentFrame.getValue(0);
     }
     return parentFrame;
+  }
+
+  public static BladeContext getContext(Node node) {
+    return BladeContext.get(node);
   }
 }

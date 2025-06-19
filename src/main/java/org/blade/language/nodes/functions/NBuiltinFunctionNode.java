@@ -14,7 +14,7 @@ import org.blade.language.runtime.BladeObject;
 import org.blade.language.runtime.BladeRuntimeError;
 import org.blade.language.runtime.FunctionObject;
 
-@NodeChild(value = "arguments", type = NReadFunctionArgsExprNode[].class)
+@NodeChild(value = "arguments", type = NReadArgumentExprNode[].class)
 @GenerateNodeFactory
 public abstract class NBuiltinFunctionNode extends NNode {
   protected boolean isDouble(Object object) {

@@ -14,7 +14,7 @@ import org.blade.language.runtime.BladeRuntimeError;
 public abstract class NNegateNode extends NUnaryNode {
 
   @Specialization(rewriteOn = ArithmeticException.class)
-  protected static long doLong(long value) {
+  public static long doLong(long value) {
     return -value;
   }
 
@@ -25,12 +25,12 @@ public abstract class NNegateNode extends NUnaryNode {
   }
 
   @Specialization(replaces = {"doLong", "doBigInt"})
-  protected static double doDouble(double value) {
+  public static double doDouble(double value) {
     return -value;
   }
 
   @Fallback
-  protected static double doUnsupported(Object value, @Bind Node node) {
+  public static double doUnsupported(Object value, @Bind Node node) {
     throw BladeRuntimeError.argumentError(node, "-", value);
   }
 }

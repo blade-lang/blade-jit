@@ -11,32 +11,32 @@ import org.blade.language.runtime.ListObject;
 public abstract class NLogicalNotNode extends NUnaryNode {
 
   @Specialization
-  protected static boolean doBoolean(boolean value) {
+  public static boolean doBoolean(boolean value) {
     return !value;
   }
 
   @Specialization
-  protected static boolean doLong(long value) {
+  public static boolean doLong(long value) {
     return value <= 0;
   }
 
   @Specialization
-  protected static boolean doDouble(double value) {
+  public static boolean doDouble(double value) {
     return value <= 0.0;
   }
 
   @Specialization
-  protected static boolean doString(TruffleString value) {
+  public static boolean doString(TruffleString value) {
     return value.isEmpty();
   }
 
   @Specialization
-  protected static boolean doList(ListObject value) {
+  public static boolean doList(ListObject value) {
     return value.getArraySize() == 0;
   }
 
   @Fallback
-  protected static boolean doOthers(Object value) {
+  public static boolean doOthers(Object value) {
     return !evaluateBoolean(value);
   }
 }

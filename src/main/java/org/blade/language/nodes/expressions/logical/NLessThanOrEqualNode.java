@@ -21,28 +21,28 @@ import java.math.BigInteger;
 public abstract class NLessThanOrEqualNode extends NBinaryNode {
 
   @Specialization
-  protected static boolean doLongs(long left, long right) {
+  public static boolean doLongs(long left, long right) {
     return left <= right;
   }
 
   @Specialization
-  protected static boolean doDoubles(double left, double right) {
+  public static boolean doDoubles(double left, double right) {
     return left <= right;
   }
 
   @Specialization
-  protected static boolean doBigInts(BigIntObject left, BigIntObject right) {
+  public static boolean doBigInts(BigIntObject left, BigIntObject right) {
     return compareBigInts(left.get(), right.get()) <= 0;
   }
 
   @Specialization
-  protected static boolean doStrings(TruffleString left, TruffleString right,
+  public static boolean doStrings(TruffleString left, TruffleString right,
                                      @Cached TruffleString.CompareBytesNode compareNode) {
     return compareNode.execute(left, right, BladeLanguage.ENCODING) <= 0;
   }
 
   @Specialization(limit = "3")
-  protected static Object doObjects(BladeObject left, BladeObject right,
+  public static Object doObjects(BladeObject left, BladeObject right,
                                     @Bind Node node, @CachedLibrary("left") InteropLibrary interopLibrary) {
     Object overrideValue = methodOverride(node, "<", left, right, interopLibrary);
     if (overrideValue != null) {
@@ -59,12 +59,12 @@ public abstract class NLessThanOrEqualNode extends NBinaryNode {
   }
 
   @Fallback
-  protected static boolean doUnsupported(Object left, Object right) {
+  public static boolean doUnsupported(Object left, Object right) {
     return false;
   }
 
   @CompilerDirectives.TruffleBoundary
-  protected static int compareBigInts(BigInteger left, BigInteger right) {
+  public static int compareBigInts(BigInteger left, BigInteger right) {
     return left.compareTo(right);
   }
 }

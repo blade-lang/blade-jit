@@ -19,17 +19,17 @@ import java.math.BigInteger;
 public abstract class NSubtractNode extends NBinaryNode {
 
   @Specialization(rewriteOn = ArithmeticException.class)
-  protected static long doLongs(long left, long right) {
+  public static long doLongs(long left, long right) {
     return Math.subtractExact(left, right);
   }
 
   @Specialization(guards = {"isDouble(left)", "isLong(right)"})
-  protected static double doDoubleLong(double left, long right) {
+  public static double doDoubleLong(double left, long right) {
     return left - right;
   }
 
   @Specialization(guards = {"isLong(left)", "isDouble(right)"})
-  protected static double doLongDouble(long left, double right) {
+  public static double doLongDouble(long left, double right) {
     return (double) left - right;
   }
 
@@ -52,22 +52,22 @@ public abstract class NSubtractNode extends NBinaryNode {
   }
 
   @Specialization(replaces = {"doLongs"})
-  protected static double doDoubles(double left, double right) {
+  public static double doDoubles(double left, double right) {
     return left - right;
   }
 
   @Specialization
-  protected static double doDoubleBigInt(double left, BigIntObject right) {
+  public static double doDoubleBigInt(double left, BigIntObject right) {
     return left - bigToLong(right.get());
   }
 
   @Specialization
-  protected static double doDoubleBigInt(BigIntObject left, double right) {
+  public static double doDoubleBigInt(BigIntObject left, double right) {
     return bigToLong(left.get()) - right;
   }
 
   @Specialization(limit = "3")
-  protected static Object doObjects(BladeObject left, BladeObject right,
+  public static Object doObjects(BladeObject left, BladeObject right,
                                     @Bind Node node, @CachedLibrary("left") InteropLibrary interopLibrary) {
     Object overrideValue = methodOverride(node, "-", left, right, interopLibrary);
     if (overrideValue != null) {
@@ -78,7 +78,7 @@ public abstract class NSubtractNode extends NBinaryNode {
   }
 
   @Fallback
-  protected static double doUnsupported(Object left, Object right, @Bind Node node) {
+  public static double doUnsupported(Object left, Object right, @Bind Node node) {
     throw BladeRuntimeError.argumentError(node, "-", left, right);
   }
 }
