@@ -28,6 +28,7 @@
 package org.blade.language.translator;
 
 import com.oracle.truffle.api.bytecode.BytecodeLocal;
+import com.oracle.truffle.api.strings.TruffleString;
 
 import java.util.*;
 
@@ -37,9 +38,9 @@ class LocalScope {
   private int totalLocals = 0;
 
   // Maps local names to a unique index.
-  private final Map<String, Integer> locals;
+  private final Map<TruffleString, Integer> locals;
   // Tracks which locals have been initialized in this scope.
-  private final Set<String> initialized;
+  private final Set<TruffleString> initialized;
 
   public boolean captures = false;
 
@@ -54,20 +55,20 @@ class LocalScope {
     this(null, 0);
   }
 
-  boolean isDeclared(String name) {
+  boolean isDeclared(TruffleString name) {
     return locals.containsKey(name);
   }
 
-  void declare(String name) {
+  void declare(TruffleString name) {
     locals.put(name, totalLocals++);
   }
 
-  int add(String name) {
+  int add(TruffleString name) {
     locals.put(name, totalLocals++);
     return totalLocals;
   }
 
-  Integer getIndex(String name) {
+  Integer getIndex(TruffleString name) {
     Integer i = locals.get(name);
     if (i == null) {
       return -1;
@@ -76,7 +77,7 @@ class LocalScope {
     }
   }
 
-  boolean initialize(String name) {
+  boolean initialize(TruffleString name) {
     return initialized.add(name);
   }
 

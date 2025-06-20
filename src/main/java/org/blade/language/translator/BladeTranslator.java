@@ -6,6 +6,7 @@ import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.instrumentation.StandardTags;
 import com.oracle.truffle.api.object.Shape;
 import com.oracle.truffle.api.source.SourceSection;
+import com.oracle.truffle.api.strings.TruffleString;
 import org.blade.language.BladeLanguage;
 import org.blade.language.nodes.*;
 import org.blade.language.parser.BaseVisitor;
@@ -33,7 +34,6 @@ public class BladeTranslator extends BaseVisitor<Void> {
 
   // Globals
   private final Parser parser;
-  private final Shape objectShape;
   private final NGlobalScopeObjectNode globalScopeNode = NGlobalScopeObjectNodeGen.create();
   private final BladeLanguage language;
 
@@ -41,7 +41,6 @@ public class BladeTranslator extends BaseVisitor<Void> {
   private final NBytecodeRootNodeGen.Builder b;
 
   // Trackers
-  private final int localsCount = 0;
   private final Stack<ArrayList<Object>> locals = new Stack<>();
   private final BladeClass currentClass = null;
   ArrayDeque<Class<?>[]> tagStack = new ArrayDeque<>();
@@ -49,24 +48,14 @@ public class BladeTranslator extends BaseVisitor<Void> {
   private BytecodeLabel continueLabel;
 
   // State
-  private FrameDescriptor.Builder frameDescriptor = FrameDescriptor.newBuilder();
   private ParserState state = ParserState.TOP_LEVEL;
   private int scopeDepth = 0;
   private LocalScope localScope = new LocalScope();
 
   public BladeTranslator(BladeLanguage language, Parser parser, BuiltinClassesModel classesModel, NBytecodeRootNodeGen.Builder builder) {
     this.parser = parser;
-    this.objectShape = classesModel.rootShape;
     this.language = language;
     this.b = builder;
-
-//    // Put the Object class into the local scope so that every class, function, and module
-//    // is aware that it exists.
-//    Map<String, NFrameMember> objectClasses = new HashMap<>();
-//    for (Map.Entry<String, BladeClass> classEntry : classesModel.builtinClasses.entrySet()) {
-//      objectClasses.put(classEntry.getKey(), new NFrameMember.ClassObject(classEntry.getValue()));
-//    }
-//    localScope.push(objectClasses);
   }
 
   public void translate(List<Stmt> stmtList) {
@@ -100,18 +89,16 @@ public class BladeTranslator extends BaseVisitor<Void> {
 
     NBytecodeRootNode node = b.endRoot();
     node.setParametersCount(0);
-    node.setName(parser.lexer.source.getName());
+    node.setName(BString.fromJavaString(parser.lexer.source.getName()));
 
     b.endSourceSection();
   }
 
   @Override
   public Void visitStmt(Stmt stmt) {
-    beginAttribution(STATEMENT, stmt);
     if (stmt != null) {
       stmt.accept(this);
     }
-    endAttribution(STATEMENT);
 
     return null;
   }
@@ -189,7 +176,7 @@ public class BladeTranslator extends BaseVisitor<Void> {
 
   @Override
   public Void visitIdentifierExpr(Expr.Identifier expr) {
-    String id = expr.token.literal();
+    TruffleString id = BString.fromJavaString(expr.token.literal());
 
     int localId = localScope.getIndex(id);
     beginAttribution(READ_VARIABLE, expr);
@@ -197,7 +184,7 @@ public class BladeTranslator extends BaseVisitor<Void> {
       b.emitLoadLocal(getLocal(localId));
     } else {
       // default to global value
-      b.emitNGetGlobal(BString.fromJavaString(id));
+      b.emitNGetGlobal(id);
     }
     endAttribution(READ_VARIABLE);
 
@@ -402,7 +389,7 @@ public class BladeTranslator extends BaseVisitor<Void> {
   @Override
   public Void visitAssignExpr(Expr.Assign expr) {
     if (expr.expression instanceof Expr.Identifier identifier) {
-      String name = identifier.token.literal();
+      TruffleString name = BString.fromJavaString(identifier.token.literal());
 
       int localId = localScope.getIndex(name);
       beginAttribution(WRITE_VARIABLE, expr);
@@ -416,7 +403,7 @@ public class BladeTranslator extends BaseVisitor<Void> {
         b.endBlock();
       } else {
         // default to global value
-        b.beginNUpdateGlobal(BString.fromJavaString(name));
+        b.beginNUpdateGlobal(name);
         visitExpr(expr.value);
         b.endNUpdateGlobal();
       }
@@ -446,24 +433,20 @@ public class BladeTranslator extends BaseVisitor<Void> {
 //
 //    sourceSection(NNewExprNodeGen.create(visitExpr(expr.expression), arguments), expr);
 //  }
-//
-//  @Override
-//  public Void visitCallExpr(Expr.Call expr) {
-//    List<NNode> arguments = new ArrayList<>();
-//    if (expr.callee instanceof Expr.Identifier) {
-//      arguments.add(new NNilLiteralNode());
-//    }
-//
-//    for (Expr arg : expr.args) {
-//      arguments.add(visitExpr(arg));
-//    }
-//
-//    if (expr.callee instanceof Expr.Identifier || expr.callee instanceof Expr.Anonymous) {
-//      sourceSection(NFunctionCallExprNodeGen.create(visitExpr(expr.callee), arguments), expr);
-//    }
-//    sourceSection(new NMethodCallExprNode(visitExpr(expr.callee), arguments), expr);
-//  }
-//
+
+  @Override
+  public Void visitCallExpr(Expr.Call expr) {
+    beginAttribution(CALL, expr);
+    b.beginNDefCallNode(expr.args.size());
+    visitExpr(expr.callee);
+    for (Expr arg : expr.args) {
+      visitUnboxed(arg);
+    }
+    b.endNDefCallNode();
+    endAttribution(CALL);
+    return null;
+  }
+
 //  @Override
 //  public Void visitSetExpr(Expr.Set expr) {
 //    sourceSection(
@@ -531,7 +514,9 @@ public class BladeTranslator extends BaseVisitor<Void> {
   @Override
   public Void visitExpressionStmt(Stmt.Expression stmt) {
     assert stmt.expression != null;
+    beginAttribution(STATEMENT, stmt);
     visitExpr(stmt.expression);
+    endAttribution(STATEMENT);
     return null;
   }
 
@@ -546,15 +531,15 @@ public class BladeTranslator extends BaseVisitor<Void> {
   @Override
   public Void visitVarStmt(Stmt.Var stmt) {
     boolean isConstant = stmt.isConstant;
-    String name = stmt.name.literal();
+    TruffleString name = BString.fromJavaString(stmt.name.literal());
 
     if (isConstant && stmt.value == null) {
       throw new BladeRuntimeError("Constant '" + name + "' not initialized");
     }
 
+    beginAttribution(WRITE_VARIABLE, stmt);
     if (state != ParserState.TOP_LEVEL) {
       if (!localScope.isDeclared(name)) {
-        beginAttribution(WRITE_VARIABLE, stmt);
         BytecodeLocal local = getLocal(localScope.add(name));
         b.beginBlock();
         b.beginStoreLocal(local);
@@ -568,13 +553,13 @@ public class BladeTranslator extends BaseVisitor<Void> {
         b.endStoreLocal();
         b.emitLoadLocal(local);
         b.endBlock();
-        endAttribution(WRITE_VARIABLE);
       } else {
         throw new BladeRuntimeError("'" + name + "' is already declared in this scope");
       }
     } else {
       // default to global value
-      b.beginNSetGlobal(BString.fromJavaString(name), isConstant);
+      b.beginBlock();
+      b.beginNSetGlobal(name, isConstant);
 
       if (stmt.value != null) {
         visitExpr(stmt.value);
@@ -583,7 +568,9 @@ public class BladeTranslator extends BaseVisitor<Void> {
       }
 
       b.endNSetGlobal();
+      b.endBlock();
     }
+    endAttribution(WRITE_VARIABLE);
 
     return null;
   }
@@ -1048,7 +1035,7 @@ public class BladeTranslator extends BaseVisitor<Void> {
 //    );
 //  }
 //
-  private NNode translateFunction(Stmt source, String name, List<Expr.Identifier> parameters, Stmt.Block body, NNode root, boolean isVariadic) {
+  private void translateFunction(Stmt source, TruffleString name, List<Expr.Identifier> parameters, Stmt.Block body, NNode root, boolean isVariadic) {
 //    FrameDescriptor.Builder previousFrameDescriptor = frameDescriptor;
 //    ParserState previousState = state;
 //    var previousLocalScopes = localScope;
@@ -1093,12 +1080,16 @@ public class BladeTranslator extends BaseVisitor<Void> {
 //      ), source
 //    );
 
+    boolean startedInLocal = state == ParserState.FUNC_DEF;
+    if (startedInLocal && localScope.isDeclared(name)) {
+      throw new BladeRuntimeError("'"+ name +"' is already declared in this scope");
+    }
+
     ParserState previousState = state;
     var previousLocalScopes = localScope;
 
     locals.push(new ArrayList<>());
 
-    this.frameDescriptor = FrameDescriptor.newBuilder();
     this.localScope = new LocalScope(previousLocalScopes, ++scopeDepth);
     this.state = ParserState.FUNC_DEF;
 
@@ -1111,7 +1102,7 @@ public class BladeTranslator extends BaseVisitor<Void> {
     for (int i = 0; i < paramsCount; i++) {
       Expr.Identifier paramAst = parameters.get(i);
       String paramName = paramAst.token.literal();
-      localScope.declare(paramName);
+      localScope.declare(BString.fromJavaString(paramName));
 
       BytecodeLocal argLocal = b.createLocal(paramName, null);
       locals.peek().add(argLocal);
@@ -1147,14 +1138,24 @@ public class BladeTranslator extends BaseVisitor<Void> {
 
     b.endSourceSection();
 
-    return null;
+    if(startedInLocal) {
+      // FIXME
+      throw new BladeRuntimeError("Closures are not yet supported");
+    }
+
+    b.beginNSetGlobal(name, false);
+    b.emitLoadConstant(new FunctionObj(name, node.getCallTarget(), paramsCount, isVariadic));
+    b.endNSetGlobal();
+  }
+
+  private void translateFunction(Stmt source, String name, List<Expr.Identifier> parameters, Stmt.Block body, NNode root, boolean isVariadic) {
+    translateFunction(source, BString.fromJavaString(name), parameters, body, root, isVariadic);
   }
 
   private void newLocalScope(Callback callback) {
     ParserState previousState = state;
     var previousLocalScopes = localScope;
 
-    this.frameDescriptor = FrameDescriptor.newBuilder();
     this.localScope = new LocalScope(previousLocalScopes, ++scopeDepth);
 
     if (state == ParserState.TOP_LEVEL) {

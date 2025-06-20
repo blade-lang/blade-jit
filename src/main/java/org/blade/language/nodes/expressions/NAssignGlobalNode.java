@@ -30,9 +30,9 @@ public abstract class NAssignGlobalNode extends Node {
                           @CachedLibrary("globalScope") DynamicObjectLibrary objectLibrary) {
     Property property = objectLibrary.getProperty(globalScope, name);
     if (property == null) {
-      throw BladeRuntimeError.error(this, "'", name, "' is not defined in this scope");
+      throw BladeRuntimeError.error(node, "'", name, "' is not defined in this scope");
     } else if (property.getFlags() == 1) {
-      throw BladeRuntimeError.error(this, "Assignment to constant variable '", name, "'");
+      throw BladeRuntimeError.error(node, "Assignment to constant variable '", name, "'");
     }
 
     objectLibrary.put(globalScope, name, value);

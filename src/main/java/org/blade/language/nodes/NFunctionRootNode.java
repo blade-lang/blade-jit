@@ -4,6 +4,7 @@ import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.MaterializedFrame;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.RootNode;
+import com.oracle.truffle.api.strings.TruffleString;
 import org.blade.language.BladeLanguage;
 import org.blade.language.nodes.functions.NFunctionBodyNode;
 

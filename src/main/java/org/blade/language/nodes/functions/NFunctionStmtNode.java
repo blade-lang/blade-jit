@@ -13,6 +13,7 @@ import com.oracle.truffle.api.object.DynamicObject;
 import com.oracle.truffle.api.object.DynamicObjectLibrary;
 import com.oracle.truffle.api.object.Shape;
 import com.oracle.truffle.api.source.SourceSection;
+import com.oracle.truffle.api.strings.TruffleString;
 import org.blade.language.BladeLanguage;
 import org.blade.language.nodes.NFunctionRootNode;
 import org.blade.language.nodes.NNode;

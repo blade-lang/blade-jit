@@ -28,7 +28,7 @@ public abstract class NGetGlobalNode extends Node {
                         @CachedLibrary("globalScope") DynamicObjectLibrary objectLibrary) {
     Object value = objectLibrary.getOrDefault(globalScope, name, null);
     if (value == null) {
-      throw BladeRuntimeError.error(this, "'", name, "' is not defined in this scope");
+      throw BladeRuntimeError.error(node, "'", name, "' is not defined in this scope");
     }
     return value;
   }
