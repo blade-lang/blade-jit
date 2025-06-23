@@ -1,5 +1,6 @@
 package org.blade.language.builtins;
 
+import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.Fallback;
 import com.oracle.truffle.api.dsl.NodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
@@ -10,6 +11,7 @@ import com.oracle.truffle.api.interop.UnsupportedTypeException;
 import com.oracle.truffle.api.library.CachedLibrary;
 import com.oracle.truffle.api.object.DynamicObject;
 import com.oracle.truffle.api.object.DynamicObjectLibrary;
+import com.oracle.truffle.api.strings.TruffleString;
 import org.blade.language.BaseBuiltinDeclaration;
 import org.blade.language.nodes.functions.NBuiltinFunctionNode;
 import org.blade.language.runtime.BladeNil;
@@ -75,12 +77,13 @@ public final class ListMethods implements BaseBuiltinDeclaration {
   public abstract static class NAppendMethodNode extends NBuiltinFunctionNode {
     @Specialization
     protected Object doAny(DynamicObject self, Object item,
+                           @Cached TruffleString.FromJavaStringNode fromJavaStringNode,
                            @CachedLibrary(limit = "3") DynamicObjectLibrary objectLibrary,
                            @CachedLibrary(limit = "3") InteropLibrary interopLibrary) {
       try {
         ListObject list = (ListObject) self;
         long size = list.getArraySize();
-        list.resize(size + 1, objectLibrary);
+        list.resize(size + 1, objectLibrary, fromJavaStringNode);
         interopLibrary.writeArrayElement(self, size, item);
       } catch (UnsupportedMessageException | UnsupportedTypeException | InvalidArrayIndexException e) {
         throw BladeRuntimeError.error(this, e.getMessage());

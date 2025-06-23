@@ -771,7 +771,7 @@ public class Parser {
       //   break
       // }
       stmtList.add(new Stmt.If(
-        new Expr.Binary(
+        new Expr.Logical(
           new Expr.Identifier(key.name),
           key.name.copyToType(EQUAL_EQ, "=="),
           new Expr.Nil()

@@ -35,7 +35,6 @@ import java.util.*;
 class LocalScope {
   public final int scopeDepth;
   private final LocalScope parent;
-  private int totalLocals = 0;
 
   // Maps local names to a unique index.
   private final Map<TruffleString, Integer> locals;
@@ -59,13 +58,13 @@ class LocalScope {
     return locals.containsKey(name);
   }
 
-  void declare(TruffleString name) {
-    locals.put(name, totalLocals++);
+  void declare(TruffleString name, int index) {
+    locals.put(name, index);
   }
 
-  int add(TruffleString name) {
-    locals.put(name, totalLocals++);
-    return totalLocals;
+  int add(TruffleString name, int index) {
+    locals.put(name, index);
+    return index;
   }
 
   Integer getIndex(TruffleString name) {

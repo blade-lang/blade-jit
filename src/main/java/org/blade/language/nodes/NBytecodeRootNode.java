@@ -1,18 +1,11 @@
 package org.blade.language.nodes;
 
-import com.oracle.truffle.api.Assumption;
-import com.oracle.truffle.api.RootCallTarget;
+import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.bytecode.*;
 import com.oracle.truffle.api.debug.DebuggerTags;
 import com.oracle.truffle.api.dsl.*;
 import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.VirtualFrame;
-import com.oracle.truffle.api.interop.ArityException;
-import com.oracle.truffle.api.interop.InteropLibrary;
-import com.oracle.truffle.api.interop.UnsupportedMessageException;
-import com.oracle.truffle.api.interop.UnsupportedTypeException;
-import com.oracle.truffle.api.library.CachedLibrary;
-import com.oracle.truffle.api.nodes.DirectCallNode;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.RootNode;
@@ -22,10 +15,16 @@ import com.oracle.truffle.api.strings.TruffleString;
 import org.blade.language.BladeLanguage;
 import org.blade.language.nodes.expressions.NAssignGlobalNode;
 import org.blade.language.nodes.expressions.NGetGlobalNode;
+import org.blade.language.nodes.expressions.NGetSliceNode;
 import org.blade.language.nodes.expressions.arithemetic.*;
 import org.blade.language.nodes.expressions.bitwise.*;
 import org.blade.language.nodes.expressions.logical.*;
+import org.blade.language.nodes.functions.NBuiltinFunctionNode;
+import org.blade.language.nodes.functions.NDefCallNode;
+import org.blade.language.nodes.list.NReadListIndexNode;
+import org.blade.language.nodes.list.NWriteIndexNode;
 import org.blade.language.nodes.statements.NGlobalDeclNode;
+import org.blade.language.nodes.string.NReadStringPropertyNode;
 import org.blade.language.nodes.util.NToBooleanNode;
 import org.blade.language.nodes.util.NUnboxNode;
 import org.blade.language.runtime.*;
@@ -134,7 +133,7 @@ public abstract class NBytecodeRootNode extends RootNode implements BytecodeRoot
     public static void perform(VirtualFrame frame, TruffleString name, boolean isConstant, Object value,
                                @Bind Node node,
                                @Cached NGlobalScopeObjectNode globalScope,
-                               @Cached NGlobalDeclNode declareNode) {
+                               @Cached(inline = true) NGlobalDeclNode declareNode) {
       declareNode.executeGlobal(node, globalScope.execute(frame), name, value, isConstant);
     }
   }
@@ -146,7 +145,7 @@ public abstract class NBytecodeRootNode extends RootNode implements BytecodeRoot
     public static Object perform(VirtualFrame frame, TruffleString name,
                                  @Bind Node node,
                                  @Cached NGlobalScopeObjectNode globalScope,
-                                 @Cached NGetGlobalNode getNode) {
+                                 @Cached(inline = true) NGetGlobalNode getNode) {
       return getNode.executeGet(node, globalScope.execute(frame), name);
     }
   }
@@ -158,168 +157,205 @@ public abstract class NBytecodeRootNode extends RootNode implements BytecodeRoot
     public static Object perform(VirtualFrame frame, TruffleString name, Object value,
                                  @Bind Node node,
                                  @Cached NGlobalScopeObjectNode globalScope,
-                                 @Cached NAssignGlobalNode assignNode) {
+                                 @Cached(inline = true) NAssignGlobalNode assignNode) {
       return assignNode.executeSet(node, globalScope.execute(frame), name, value);
     }
   }
 
   @Operation
-  @ConstantOperand(type = int.class)
+  public static final class NEcho {
+    @Specialization
+    public static Object doDouble(Object value, @Bind Node node) {
+      BladeContext.get(node).println(value);
+      return BladeNil.SINGLETON;
+    }
+  }
+
+  @Operation
   @ImportStatic(BladeContext.class)
-  public static final class NDefCallNode {
+  public static final class NCreateList {
+    @Specialization
+    static Object doAny(@Variadic Object[] items,
+                               @Bind Node node,
+                               @Cached(value = "get(node)", neverDefault = true) BladeContext context,
+                               @Cached(value = "context.objectsModel.listShape", neverDefault = true) Shape listShape,
+                               @Cached(value = "context.objectsModel.listObject", neverDefault = true) BladeClass listClass) {
+      return new ListObject(listShape, listClass, items);
+    }
+  }
 
-    @Specialization(guards = {"function.getArgumentsCount() == argumentsLength", "!function.isVariadic()"}, assumptions = "callTargetStable")
-    public static Object doSameSize(int argumentsLength, FunctionObj function, @Variadic Object[] arguments,
-                                    @Cached("function.getCallTargetStable()") Assumption callTargetStable,
-                                    @Cached("function.getCallTarget()") RootCallTarget cachedTarget,
-                                    @Cached("create(cachedTarget)") DirectCallNode callNode) {
-      return callNode.call(arguments);
+  @Operation
+  @ImportStatic(BladeContext.class)
+  public static final class NCreateRange {
+    @Specialization
+    static Object doAny(long lower, long upper, @Bind Node node,
+                               @Cached(value = "get(node)", neverDefault = true) BladeContext context,
+                               @Cached(value = "context.objectsModel.rootShape", neverDefault = true) Shape rootShape,
+                               @Cached(value = "context.objectsModel.rangeObject", neverDefault = true) BladeClass rangeClass) {
+      return new RangeObject(rootShape, rangeClass, lower, upper);
     }
 
-    @Specialization(guards = {"function.isVariadic()", "argumentsLength < function.getArgumentsCount()"}, assumptions = "callTargetStable")
-    public static Object doVariableLessSize(int argumentsLength, FunctionObj function, @Variadic Object[] arguments,
-                                            @Bind Node node,
-                                            @Cached("function.getCallTargetStable()") Assumption callTargetStable,
-                                            @Cached("function.getCallTarget()") RootCallTarget cachedTarget,
-                                            @Cached("create(cachedTarget)") DirectCallNode callNode,
-                                            @Cached(value = "get(node)", uncached = "get(node)") BladeContext context,
-                                            @Cached("context.objectsModel.listShape") Shape listShape,
-                                            @Cached("context.objectsModel.listObject") BladeClass listClass) {
-      return callNode.call(expandLessVarArguments(
-        arguments,
-        function.getArgumentsCount(),
-        argumentsLength,
-        listShape,
-        listClass
-      ));
+    @Fallback
+    static Object doUnsupported(Object lower, Object upper, @Bind Node node) {
+      throw BladeRuntimeError.argumentError(node, "..", lower, upper);
     }
+  }
 
-    @Specialization(guards = {"function.isVariadic()", "argumentsLength >= function.getArgumentsCount()", "function.getArgumentsCount() > 1"}, assumptions = "callTargetStable")
-    public static Object doVariableMoreSize(int argumentsLength, FunctionObj function, @Variadic Object[] arguments,
-                                            @Bind Node node,
-                                            @Cached("function.getCallTargetStable()") Assumption callTargetStable,
-                                            @Cached("function.getCallTarget()") RootCallTarget cachedTarget,
-                                            @Cached("create(cachedTarget)") DirectCallNode callNode,
-                                            @Cached(value = "get(node)", uncached = "get(node)") BladeContext context,
-                                            @Cached("context.objectsModel.listShape") Shape listShape,
-                                            @Cached("context.objectsModel.listObject") BladeClass listClass) {
-      return callNode.call(expandMoreVarArguments(
-        arguments,
-        function.getArgumentsCount(),
-        argumentsLength,
-        listShape,
-        listClass
-      ));
-    }
-
-    @Specialization(guards = {"function.isVariadic()", "arguments.length >= function.getArgumentsCount()", "function.getArgumentsCount() == 1"}, assumptions = "callTargetStable")
-    public static Object doVariableNoSize(int argumentsLength, FunctionObj function, @Variadic Object[] arguments,
-                                          @Bind Node node,
-                                          @Cached("function.getCallTargetStable()") Assumption callTargetStable,
-                                          @Cached("function.getCallTarget()") RootCallTarget cachedTarget,
-                                          @Cached("create(cachedTarget)") DirectCallNode callNode,
-                                          @Cached(value = "get(node)", uncached = "get(node)") BladeContext context,
-                                          @Cached("context.objectsModel.listShape") Shape listShape,
-                                          @Cached("context.objectsModel.listObject") BladeClass listClass) {
-      return callNode.call(expandNoVarArguments(arguments, argumentsLength, listShape, listClass));
-    }
-
-    @Specialization(replaces = "doSameSize")
-    public static Object doNotSameSize(int argumentsLength, FunctionObj function, @Variadic Object[] arguments,
-                                       @Cached("function.getCallTargetStable()") Assumption callTargetStable,
-                                       @Cached("function.getCallTarget()") RootCallTarget cachedTarget,
-                                       @Cached("create(cachedTarget)") DirectCallNode callNode) {
-      return callNode.call(extendArguments(arguments, function.getArgumentsCount() + 1));
+  @Operation
+  public static final class NGetIndex {
+    @Specialization
+    public static Object doListLong(ListObject list, Object index, @Cached NReadListIndexNode readNode) {
+      return readNode.executeRead(list, index);
     }
 
     @Specialization
-    public static Object doInterop(int argumentsLength, Object function, @Variadic Object[] arguments,
-                                   @CachedLibrary(limit = "3") InteropLibrary library, @Bind Node node) {
+    public static Object doString(TruffleString list, Object index, @Cached NReadStringPropertyNode readNode) {
+      return readNode.executeProperty(list, index);
+    }
+
+    @Fallback
+    public static Object doOthers(Object list, Object index, @Cached NSharedPropertyReaderNode readNode) {
+      return readNode.executeRead(list, index);
+    }
+  }
+
+  @Operation
+  public static final class NSetIndex {
+    @Specialization
+    public static Object perform(Object list, Object index, Object value, @Cached NWriteIndexNode readNode) {
+      return readNode.executeWrite(list, index, value);
+    }
+  }
+
+  @Operation
+  public static final class NGetSlice {
+    @Specialization
+    public static Object doListLong(ListObject list, Object lower, Object upper, @Cached NGetSliceNode getSliceNode) {
+      return getSliceNode.executeSlice(list, lower, upper);
+    }
+  }
+
+  @Operation
+  @ConstantOperand(type = TruffleString.class)
+  public static final class NGetProperty {
+    @Specialization
+    public static Object perform(TruffleString name, Object object,
+                                 @Cached NSharedPropertyReaderNode propertyReaderNode) {
+      Object result = propertyReaderNode.executeRead(object, name);
+
+      if(result instanceof BoundFunctionObj boundFunction) {
+        boundFunction.setInstance(object);
+      }
+
+      return result;
+    }
+  }
+
+  @Operation
+  @ConstantOperand(type = TruffleString.class)
+  public static final class NSetProperty {
+    @Specialization
+    public static Object perform(TruffleString name, Object object, Object value,
+                                 @Cached NSharedPropertyWriterNode propertyWriterNode) {
+      return propertyWriterNode.executeWrite(object, name.toJavaStringUncached(), value);
+    }
+  }
+
+  @Operation
+  @ConstantOperand(type = int.class)
+  public static final class NDefCall {
+    @Specialization(guards = "!isNull(boundFunction.getInstance())")
+    public static Object doValidBoundFunction(int argumentsLength, BoundFunctionObj boundFunction, @Variadic Object[] arguments,
+                                    @Cached NDefCallNode defCallNode) {
+      return defCallNode.executeCall(argumentsLength + 1, boundFunction, boundArguments(argumentsLength, boundFunction.getInstance(), arguments));
+    }
+
+    @Specialization(guards = "isNull(boundFunction.getInstance())")
+    public static Object doInvalidBoundFunction(int argumentsLength, BoundFunctionObj boundFunction, @Variadic Object[] arguments,
+                                    @Bind Node node) {
+      throw BladeRuntimeError.error(node, "Invalid bound function");
+    }
+
+    @Specialization
+    public static Object doAll(int argumentsLength, Object function, @Variadic Object[] arguments,
+                                    @Cached NDefCallNode defCallNode) {
+      return defCallNode.executeCall(argumentsLength, function, arguments);
+    }
+
+    static boolean isNull(Object v) {
+      return v == null;
+    }
+
+    @ExplodeLoop
+    static Object[] boundArguments(int length, Object value, Object[] arguments) {
+      final int argumentsLength = length + 1;
+      Object[] boundArguments = new Object[argumentsLength];
+      boundArguments[0] = value;
+
+      System.arraycopy(arguments, 0, boundArguments, 1, length);
+
+      return boundArguments;
+    }
+  }
+
+  @Operation
+  @ConstantOperand(type = NodeFactory.class)
+  @ConstantOperand(type = int.class)
+  @ConstantOperand(type = boolean.class)
+  public static final class NBuiltin {
+
+    @Specialization(guards = {"arguments.length == argumentCount"})
+    @SuppressWarnings("unused")
+    static Object doInBounds(VirtualFrame frame,
+                             NodeFactory<?> factory,
+                             int argumentCount,
+                             boolean isVariadic,
+                             @Bind Node bytecode,
+                             @Bind("frame.getArguments()") Object[] arguments,
+                             @Cached.Shared @Cached(value = "createBuiltin(factory)", uncached = "getUncachedBuiltin()", neverDefault = true) NBuiltinFunctionNode builtin) {
+      return doInvoke(frame, bytecode, builtin, arguments);
+    }
+
+    @Fallback
+    @ExplodeLoop
+    @SuppressWarnings("unused")
+    static Object doOutOfBounds(VirtualFrame frame,
+                                NodeFactory<?> factory,
+                                int argumentCount,
+                                boolean isVariadic,
+                                @Bind Node bytecode,
+                                @Cached.Shared @Cached(value = "createBuiltin(factory)", uncached = "getUncachedBuiltin()", neverDefault = true) NBuiltinFunctionNode builtin) {
+      Object[] originalArguments = frame.getArguments();
+      Object[] arguments = new Object[argumentCount];
+      for (int i = 0; i < argumentCount; i++) {
+        if (i < originalArguments.length) {
+          arguments[i] = originalArguments[i];
+        } else {
+          arguments[i] = BladeNil.SINGLETON;
+        }
+      }
+      return doInvoke(frame, bytecode, builtin, arguments);
+    }
+
+    static NBuiltinFunctionNode createBuiltin(NodeFactory<?> factory) {
+      return (NBuiltinFunctionNode) factory.createNode();
+    }
+
+    static NBuiltinFunctionNode getUncachedBuiltin() {
+      throw CompilerDirectives.shouldNotReachHere("Builtins should not execute uncached.");
+    }
+
+    private static Object doInvoke(VirtualFrame frame, Node node, NBuiltinFunctionNode builtin, Object[] arguments) {
       try {
-        return library.execute(function, arguments);
-      } catch (UnsupportedTypeException | ArityException | UnsupportedMessageException e) {
-        throw BladeRuntimeError.error(node, "'", function, "' is not a callable function");
+        if (builtin.getParent() == null) {
+          CompilerDirectives.transferToInterpreterAndInvalidate();
+          node.insert(builtin);
+        }
+
+        return builtin.execute(frame, arguments);
+      } catch (UnsupportedSpecializationException e) {
+        throw BladeRuntimeError.typeError(e.getNode(), "", e.getSuppliedValues());
       }
-    }
-
-    @ExplodeLoop
-    private static Object[] extendArguments(Object[] arguments, int finalLength) {
-      int argumentLength = arguments.length;
-
-      Object[] ret = new Object[finalLength];
-
-      if (argumentLength > 0) {
-        System.arraycopy(arguments, 1, ret, 1, argumentLength - 1);
-      }
-
-      for (int i = argumentLength; i < finalLength; i++) {
-        ret[i] = BladeNil.SINGLETON;
-      }
-
-      return ret;
-    }
-
-    // Specially used for variadic functions
-    @ExplodeLoop
-    private static Object[] expandLessVarArguments(Object[] arguments, int functionArity, int argumentsLength, Shape listShape, BladeClass listClass) {
-      int argumentLength = arguments.length;
-
-      int finalLength = functionArity + 1;
-      Object[] ret = new Object[finalLength];
-
-      if (argumentLength > 0) {
-        System.arraycopy(arguments, 1, ret, 1, argumentLength - 1);
-      }
-
-      for (int i = argumentLength; i < functionArity; i++) {
-        ret[i] = BladeNil.SINGLETON;
-      }
-
-      ret[functionArity] = new ListObject(
-        listShape,
-        listClass,
-        new Object[0]
-      );
-
-      return ret;
-    }
-
-    // Specially used for variadic functions
-    @ExplodeLoop
-    private static Object[] expandMoreVarArguments(Object[] arguments, int functionArity, int argumentsLength, Shape listShape, BladeClass listClass) {
-      int finalLength = functionArity + 1;
-      Object[] ret = new Object[finalLength];
-
-      System.arraycopy(arguments, 1, ret, 1, functionArity - 1);
-
-      int varLength = argumentsLength - functionArity;
-      Object[] variadic = new Object[varLength];
-      System.arraycopy(arguments, functionArity, variadic, 0, varLength);
-
-      ret[functionArity] = new ListObject(
-        listShape,
-        listClass,
-        variadic
-      );
-
-      return ret;
-    }
-
-    // Specially used for variadic functions
-    @ExplodeLoop
-    private static Object[] expandNoVarArguments(Object[] arguments, int argumentsLength, Shape listShape, BladeClass listClass) {
-      Object[] ret = new Object[2];
-
-      Object[] variadic = new Object[argumentsLength - 1];
-      System.arraycopy(arguments, 1, variadic, 0, argumentsLength - 1);
-
-      ret[1] = new ListObject(
-        listShape,
-        listClass,
-        variadic
-      );
-
-      return ret;
     }
   }
 

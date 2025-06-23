@@ -1,6 +1,7 @@
 package org.blade.language.runtime;
 
 import com.oracle.truffle.api.CompilerDirectives;
+import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.interop.InteropLibrary;
 import com.oracle.truffle.api.interop.UnknownIdentifierException;
 import com.oracle.truffle.api.interop.UnsupportedMessageException;
@@ -10,6 +11,7 @@ import com.oracle.truffle.api.library.ExportMessage;
 import com.oracle.truffle.api.object.DynamicObject;
 import com.oracle.truffle.api.object.DynamicObjectLibrary;
 import com.oracle.truffle.api.object.Shape;
+import com.oracle.truffle.api.strings.TruffleString;
 import org.blade.annotations.ObjectName;
 
 @ExportLibrary(InteropLibrary.class)
@@ -33,13 +35,14 @@ public final class RangeObject extends BladeObject {
 
   @ExportMessage
   Object readMember(String member,
+                    @Cached @Cached.Shared("fromJavaStringNode") TruffleString.FromJavaStringNode fromJavaStringNode,
                     @CachedLibrary("this") DynamicObjectLibrary objectLibrary,
                     @CachedLibrary("this.classObject") InteropLibrary classInteropLibrary) throws UnsupportedMessageException, UnknownIdentifierException {
     return switch (member) {
       case "upper" -> upper;
       case "lower" -> lower;
       case "range" -> range;
-      default -> super.readMember(member, objectLibrary, classInteropLibrary);
+      default -> super.readMember(member, fromJavaStringNode, objectLibrary, classInteropLibrary);
     };
   }
 

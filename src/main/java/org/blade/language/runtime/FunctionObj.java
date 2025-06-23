@@ -21,13 +21,13 @@ import com.oracle.truffle.api.utilities.TriState;
 import org.blade.language.BladeLanguage;
 
 @ExportLibrary(InteropLibrary.class)
-public final class FunctionObj implements TruffleObject {
+public class FunctionObj implements TruffleObject {
 
   public static final int INLINE_CACHE_SIZE = 2;
 
-  private final TruffleString name;
-  private final int argumentsCount;
-  private final boolean variadic;
+  protected final TruffleString name;
+  protected final int argumentsCount;
+  protected final boolean variadic;
   private final CyclicAssumption callTargetStable;
 
   public RootCallTarget callTarget;
@@ -125,7 +125,7 @@ public final class FunctionObj implements TruffleObject {
 
   @Override
   public String toString() {
-    String format = variadic ? "<function %s(%d...) at 0x%x>" : "<function %s(%d) at 0x%x>";
+    String format = "<function %s(%d" +(variadic ? "..." : "")+ ") at 0x%x>";
     return BString.format(format, name.toJavaStringUncached(), argumentsCount, callTarget.hashCode());
   }
 

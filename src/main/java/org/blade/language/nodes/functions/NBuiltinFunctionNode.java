@@ -1,8 +1,10 @@
 package org.blade.language.nodes.functions;
 
 import com.oracle.truffle.api.CompilerDirectives;
+import com.oracle.truffle.api.dsl.GenerateInline;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.NodeChild;
+import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.interop.InteropLibrary;
 import com.oracle.truffle.api.interop.UnknownIdentifierException;
 import com.oracle.truffle.api.interop.UnsupportedMessageException;
@@ -14,9 +16,9 @@ import org.blade.language.runtime.BladeObject;
 import org.blade.language.runtime.BladeRuntimeError;
 import org.blade.language.runtime.FunctionObject;
 
-@NodeChild(value = "arguments", type = NReadArgumentExprNode[].class)
 @GenerateNodeFactory
-public abstract class NBuiltinFunctionNode extends NNode {
+@GenerateInline(value = false, inherit = true)
+public abstract class NBuiltinFunctionNode extends Node {
   protected boolean isDouble(Object object) {
     return object instanceof Double;
   }
@@ -59,4 +61,6 @@ public abstract class NBuiltinFunctionNode extends NNode {
   private static NMethodDispatchNode getDispatchNode() {
     return NMethodDispatchNodeGen.create();
   }
+
+  public abstract Object execute(VirtualFrame frame, Object... arguments);
 }

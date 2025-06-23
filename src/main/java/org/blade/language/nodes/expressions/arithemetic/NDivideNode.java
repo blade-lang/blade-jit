@@ -50,8 +50,12 @@ public abstract class NDivideNode extends NBinaryNode {
 
   @Specialization
   @CompilerDirectives.TruffleBoundary
-  public static BigIntObject doBigInts(BigIntObject left, BigIntObject right) {
-    return new BigIntObject(left.get().divide(right.get()));
+  public static BigIntObject doBigInts(BigIntObject left, BigIntObject right, @Bind Node node) {
+    try {
+      return new BigIntObject(left.get().divide(right.get()));
+    } catch (ArithmeticException e) {
+      throw BladeRuntimeError.error(node, e.getMessage().replace("BigInteger", "BigInt"));
+    }
   }
 
   @Specialization(replaces = {"doLongs"})

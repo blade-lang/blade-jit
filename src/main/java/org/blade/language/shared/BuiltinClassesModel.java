@@ -1,7 +1,9 @@
 package org.blade.language.shared;
 
 import com.oracle.truffle.api.object.Shape;
+import com.oracle.truffle.api.strings.TruffleString;
 import org.blade.language.runtime.BObject;
+import org.blade.language.runtime.BString;
 import org.blade.language.runtime.BladeClass;
 
 import java.util.Collections;
@@ -23,7 +25,7 @@ public class BuiltinClassesModel {
   public final BladeClass rangeObject;
 
   public final ErrorsModel errorsModel;
-  public final Map<String, BladeClass> builtinClasses;
+  public final Map<TruffleString, BladeClass> builtinClasses;
 
   public BuiltinClassesModel(
     Shape rootShape, Shape listShape, Shape dictionaryShape, BObject objectObject,
@@ -34,17 +36,17 @@ public class BuiltinClassesModel {
     this.dictionaryShape = dictionaryShape;
     this.objectObject = objectObject;
     this.functionObject = functionObject;
-    this.listObject = new BladeClass(rootShape, "List", objectObject, true);
-    this.dictionaryObject = new BladeClass(rootShape, "Dictionary", objectObject, true);
-    this.stringObject = new BladeClass(rootShape, "String", objectObject, true);
-    this.numberObject = new BladeClass(rootShape, "Number", objectObject, true);
-    this.booleanObject = new BladeClass(rootShape, "Bool", objectObject, true);
-    this.bigIntObject = new BladeClass(rootShape, "BigInt", objectObject, true);
-    this.rangeObject = new BladeClass(rootShape, "Range", objectObject, true);
+    this.listObject = new BladeClass(rootShape, BString.fromJavaString("List"), objectObject, true);
+    this.dictionaryObject = new BladeClass(rootShape, BString.fromJavaString("Dictionary"), objectObject, true);
+    this.stringObject = new BladeClass(rootShape, BString.fromJavaString("String"), objectObject, true);
+    this.numberObject = new BladeClass(rootShape, BString.fromJavaString("Number"), objectObject, true);
+    this.booleanObject = new BladeClass(rootShape, BString.fromJavaString("Bool"), objectObject, true);
+    this.bigIntObject = new BladeClass(rootShape, BString.fromJavaString("BigInt"), objectObject, true);
+    this.rangeObject = new BladeClass(rootShape, BString.fromJavaString("Range"), objectObject, true);
     this.errorsModel = errorsModel;
 
-    Map<String, BladeClass> allBuiltInClasses = new HashMap<>();
-    allBuiltInClasses.put("Object", objectObject);
+    Map<TruffleString, BladeClass> allBuiltInClasses = new HashMap<>();
+    allBuiltInClasses.put(BString.fromJavaString("Object"), objectObject);
     allBuiltInClasses.putAll(errorsModel.ALL);
     builtinClasses = Collections.unmodifiableMap(allBuiltInClasses);
   }

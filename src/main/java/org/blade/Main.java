@@ -108,6 +108,7 @@ public class Main {
         }
       }
     } catch (IllegalArgumentException e) {
+      e.printStackTrace();
       System.err.println(e.getMessage());
     }
 

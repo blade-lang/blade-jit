@@ -1,12 +1,10 @@
 package org.blade.language.builtins;
 
-import com.oracle.truffle.api.dsl.Cached;
-import com.oracle.truffle.api.dsl.Fallback;
-import com.oracle.truffle.api.dsl.NodeFactory;
-import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.dsl.*;
 import com.oracle.truffle.api.interop.InteropLibrary;
 import com.oracle.truffle.api.library.CachedLibrary;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
+import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.object.DynamicObjectLibrary;
 import com.oracle.truffle.api.object.Shape;
 import org.blade.language.BaseBuiltinDeclaration;
@@ -97,11 +95,12 @@ public final class RangeMethods implements BaseBuiltinDeclaration {
     }
   }
 
+  @ImportStatic(BladeContext.class)
   public abstract static class NToListMethod extends NBuiltinFunctionNode {
     @ExplodeLoop
     @Specialization
-    protected ListObject toList(RangeObject range,
-                                @Cached(value = "languageContext().objectsModel", neverDefault = true) BuiltinClassesModel classesModel,
+    protected ListObject toList(RangeObject range, @Bind Node node,
+                                @Cached(value = "get(node).objectsModel", neverDefault = true) BuiltinClassesModel classesModel,
                                 @Cached(value = "classesModel.listShape", neverDefault = true) Shape listShape,
                                 @Cached(value = "classesModel.listObject", neverDefault = true) BladeClass listObject) {
       long lower = range.lower;

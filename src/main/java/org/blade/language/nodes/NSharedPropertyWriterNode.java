@@ -7,10 +7,11 @@ import com.oracle.truffle.api.interop.UnknownIdentifierException;
 import com.oracle.truffle.api.interop.UnsupportedMessageException;
 import com.oracle.truffle.api.interop.UnsupportedTypeException;
 import com.oracle.truffle.api.library.CachedLibrary;
+import com.oracle.truffle.api.nodes.Node;
 import org.blade.language.runtime.BladeRuntimeError;
 
 @SuppressWarnings("truffle-inlining")
-public abstract class NSharedPropertyWriterNode extends NBaseNode {
+public abstract class NSharedPropertyWriterNode extends Node {
   public abstract Object executeWrite(Object target, Object name, Object value);
 
   @Specialization(guards = "interopLibrary.isMemberWritable(target, name)", limit = "3")

@@ -7,18 +7,25 @@ import com.oracle.truffle.api.object.Shape;
 import com.oracle.truffle.api.strings.TruffleString;
 import org.blade.language.nodes.NNode;
 import org.blade.language.nodes.NNormalizeIndexNode;
-import org.blade.language.runtime.BString;
-import org.blade.language.runtime.BladeClass;
-import org.blade.language.runtime.BladeRuntimeError;
-import org.blade.language.runtime.ListObject;
+import org.blade.language.nodes.list.NReadListIndexNode;
+import org.blade.language.nodes.list.NReadListIndexNodeGen;
+import org.blade.language.runtime.*;
 import org.blade.language.shared.BladeUtil;
 import org.blade.language.shared.BuiltinClassesModel;
 
-@NodeChild("targetExpr")
-@NodeChild("lowerExpr")
-@NodeChild("upperExpr")
-@ImportStatic(BString.class)
-public abstract class NGetSliceNode extends NNode {
+@ImportStatic({BString.class, BladeContext.class})
+public abstract class NGetSliceNode extends Node {
+
+  public static NGetSliceNode getUncached() {
+    return NGetSliceNodeGen.getUncached();
+  }
+
+  @NeverDefault
+  public static NGetSliceNode create() {
+    return NGetSliceNodeGen.create();
+  }
+
+  public abstract Object executeSlice(Object object, Object lower, Object upper);
 
   @Specialization(guards = {"intLength(string, lengthNode) == 0"})
   protected Object doString(TruffleString string, long lower, long upper,
@@ -38,10 +45,11 @@ public abstract class NGetSliceNode extends NNode {
   protected Object doString3(TruffleString string, long lower, long upper,
                              @Cached @Cached.Shared("lengthNode") TruffleString.CodePointLengthNode lengthNode,
                              @Cached @Cached.Shared("substringNode") TruffleString.SubstringNode substringNode,
-                             @Cached @Cached.Shared("normalizeIndexNode") NNormalizeIndexNode normalizeIndexNode) {
+                             @Cached @Cached.Shared("normalizeLowerIndexNode") NNormalizeIndexNode normalizeLowerIndexNode,
+                             @Cached @Cached.Shared("normalizeUpperIndexNode") NNormalizeIndexNode normalizeUpperIndexNode) {
     final int length = BString.intLength(string, lengthNode);
-    final int effectiveLower = normalizeIndexNode.executeLong(this, lower, length);
-    final int effectiveUpper = normalizeIndexNode.executeLong(this, upper, length);
+    final int effectiveLower = normalizeLowerIndexNode.executeLong(this, lower, length);
+    final int effectiveUpper = normalizeUpperIndexNode.executeLong(this, upper, length);
 
     if (effectiveUpper < effectiveLower) {
       return BString.EMPTY;
@@ -52,8 +60,10 @@ public abstract class NGetSliceNode extends NNode {
 
   @Specialization(guards = {"items.length == 0"})
   protected Object doList(ListObject list, long lower, long upper,
+                          @Bind Node node,
                           @Cached(value = "list.items", dimensions = 1) Object[] items,
-                          @Cached(value = "languageContext().objectsModel", neverDefault = true) @Cached.Shared("classesModel") BuiltinClassesModel classesModel,
+                          @Cached(value = "get(node)") BladeContext context,
+                          @Cached(value = "context.objectsModel", neverDefault = true) BuiltinClassesModel classesModel,
                           @Cached("classesModel.listShape") Shape listShape,
                           @Cached("classesModel.listObject") BladeClass listObject) {
     return new ListObject(listShape, listObject, new Object[0]);
@@ -61,8 +71,10 @@ public abstract class NGetSliceNode extends NNode {
 
   @Specialization(guards = {"lower == upper"})
   protected Object doList2(ListObject list, long lower, long upper,
+                           @Bind Node node,
                            @Cached(value = "list.items", dimensions = 1) Object[] items,
-                           @Cached(value = "languageContext().objectsModel", neverDefault = true) @Cached.Shared("classesModel") BuiltinClassesModel classesModel,
+                           @Cached(value = "get(node)") BladeContext context,
+                           @Cached(value = "context.objectsModel", neverDefault = true) BuiltinClassesModel classesModel,
                            @Cached("classesModel.listShape") Shape listShape,
                            @Cached("classesModel.listObject") BladeClass listObject) {
     return new ListObject(listShape, listObject, new Object[0]);
@@ -73,13 +85,15 @@ public abstract class NGetSliceNode extends NNode {
   protected Object doList3(ListObject list, long lower, long upper,
                            @Bind Node node,
                            @Cached(value = "list.items", dimensions = 1) Object[] items,
-                           @Cached(value = "languageContext().objectsModel", neverDefault = true) @Cached.Shared("classesModel") BuiltinClassesModel classesModel,
-                           @Cached @Cached.Shared("normalizeIndexNode") NNormalizeIndexNode normalizeIndexNode,
+                           @Cached(value = "get(node)") BladeContext context,
+                           @Cached(value = "context.objectsModel", neverDefault = true) BuiltinClassesModel classesModel,
+                           @Cached @Cached.Shared("normalizeLowerIndexNode") NNormalizeIndexNode normalizeLowerIndexNode,
+                           @Cached @Cached.Shared("normalizeUpperIndexNode") NNormalizeIndexNode normalizeUpperIndexNode,
                            @Cached("classesModel.listShape") Shape listShape,
                            @Cached("classesModel.listObject") BladeClass listObject) {
     final int length = items.length;
-    final int effectiveLower = normalizeIndexNode.executeLong(node, lower, length);
-    final int effectiveUpper = normalizeIndexNode.executeLong(node, upper, length);
+    final int effectiveLower = normalizeLowerIndexNode.executeLong(node, lower, length);
+    final int effectiveUpper = normalizeUpperIndexNode.executeLong(node, upper, length);
 
     if (effectiveUpper < effectiveLower) {
       return new ListObject(listShape, listObject, new Object[0]);

@@ -2,7 +2,9 @@ package org.blade.language;
 
 import com.oracle.truffle.api.*;
 import com.oracle.truffle.api.bytecode.BytecodeConfig;
+import com.oracle.truffle.api.bytecode.BytecodeParser;
 import com.oracle.truffle.api.bytecode.BytecodeRootNodes;
+import com.oracle.truffle.api.debug.DebuggerTags;
 import com.oracle.truffle.api.dsl.Bind;
 import com.oracle.truffle.api.dsl.NodeFactory;
 import com.oracle.truffle.api.frame.FrameDescriptor;
@@ -15,8 +17,6 @@ import com.oracle.truffle.api.object.DynamicObjectLibrary;
 import com.oracle.truffle.api.object.Shape;
 import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.strings.TruffleString;
-import com.oracle.truffle.api.bytecode.BytecodeParser;
-import com.oracle.truffle.api.debug.DebuggerTags;
 import org.blade.language.builtins.*;
 import org.blade.language.nodes.NBlockRootNode;
 import org.blade.language.nodes.NBytecodeRootNode;
@@ -24,7 +24,6 @@ import org.blade.language.nodes.NBytecodeRootNodeGen;
 import org.blade.language.nodes.expressions.NSetPropertyNodeGen;
 import org.blade.language.nodes.functions.NBuiltinFunctionNode;
 import org.blade.language.nodes.functions.NReadArgumentExprNode;
-import org.blade.language.nodes.functions.NRootFunctionNode;
 import org.blade.language.nodes.literals.NSelfLiteralNode;
 import org.blade.language.nodes.statements.NBlockStmtNode;
 import org.blade.language.nodes.statements.NExprStmtNode;
@@ -42,7 +41,6 @@ import java.lang.invoke.MethodHandles;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.IntStream;
 
 @TruffleLanguage.Registration(
   id = BladeLanguage.ID,
@@ -66,6 +64,7 @@ public class BladeLanguage extends TruffleLanguage<BladeContext> {
   //
   public static final OptionKey<Boolean> EnforceTypes = new OptionKey<>(false);
   private static final LanguageReference<BladeLanguage> REFERENCE = LanguageReference.create(BladeLanguage.class);
+  private static final Source BUILTIN_SOURCE = Source.newBuilder(ID, "", "<native>").build();
   // Shapes
   public final Shape rootShape = Shape.newBuilder().build();
   public final Shape listShape = createShape(ListObject.class);
@@ -73,7 +72,7 @@ public class BladeLanguage extends TruffleLanguage<BladeContext> {
   private final Assumption assumption = Truffle.getRuntime().createAssumption("Single Blade context.");
   // models
   private final BObject objectClass = new BObject(rootShape);
-  private final BladeClass functionClass = new BladeClass(rootShape, "Function", objectClass);
+  private final BladeClass functionClass = new BladeClass(rootShape, BString.fromJavaString("Function"), objectClass);
   public final BuiltinClassesModel builtinObjects = createBuiltinClasses();
   public boolean enforceTypes = false;
 
@@ -126,11 +125,11 @@ public class BladeLanguage extends TruffleLanguage<BladeContext> {
 
   private ErrorsModel createErrorsModel() {
     return new ErrorsModel(
-      new BladeClass(rootShape, "Error", objectClass, true),
-      new BladeClass(rootShape, "TypeError", objectClass, true),
-      new BladeClass(rootShape, "ArgumentError", objectClass, true),
-      new BladeClass(rootShape, "ValueError", objectClass, true),
-      new BladeClass(rootShape, "AssertError", objectClass, true)
+      new BladeClass(rootShape,  BString.fromJavaString("Error"), objectClass, true),
+      new BladeClass(rootShape, BString.fromJavaString("TypeError"), objectClass, true),
+      new BladeClass(rootShape, BString.fromJavaString("ArgumentError"), objectClass, true),
+      new BladeClass(rootShape, BString.fromJavaString("ValueError"), objectClass, true),
+      new BladeClass(rootShape, BString.fromJavaString("AssertError"), objectClass, true)
     );
   }
 
@@ -143,38 +142,36 @@ public class BladeLanguage extends TruffleLanguage<BladeContext> {
     registerBuiltinFunctions(objectLibrary, globalScope);
 
     // register builtin classes and their methods
-    objectLibrary.putConstant(globalScope, "Object", objectClass, 0);
+    objectLibrary.putConstant(globalScope, BString.fromJavaString("Object"), objectClass, 0);
     registerBuiltinMethods(objectLibrary, ObjectMethods.class, objectClass);
 
-    objectLibrary.putConstant(globalScope, "Dictionary", builtinObjects.dictionaryObject, 0);
+    objectLibrary.putConstant(globalScope, BString.fromJavaString("Dictionary"), builtinObjects.dictionaryObject, 0);
     registerBuiltinMethods(objectLibrary, DictionaryMethods.class, builtinObjects.dictionaryObject);
 
-    objectLibrary.putConstant(globalScope, "List", builtinObjects.listObject, 0);
+    objectLibrary.putConstant(globalScope, BString.fromJavaString("List"), builtinObjects.listObject, 0);
     registerBuiltinMethods(objectLibrary, ListMethods.class, builtinObjects.listObject);
 
-    objectLibrary.putConstant(globalScope, "String", builtinObjects.stringObject, 0);
+    objectLibrary.putConstant(globalScope, BString.fromJavaString("String"), builtinObjects.stringObject, 0);
     registerBuiltinMethods(objectLibrary, StringMethods.class, builtinObjects.stringObject);
 
-    objectLibrary.putConstant(globalScope, "Range", builtinObjects.rangeObject, 0);
+    objectLibrary.putConstant(globalScope, BString.fromJavaString("Range"), builtinObjects.rangeObject, 0);
     registerBuiltinMethods(objectLibrary, RangeMethods.class, builtinObjects.rangeObject);
 
-    objectLibrary.putConstant(globalScope, "BigInt", builtinObjects.bigIntObject, 0);
-    objectLibrary.putConstant(globalScope, "Number", builtinObjects.numberObject, 0);
-    objectLibrary.putConstant(globalScope, "Bool", builtinObjects.booleanObject, 0);
+    objectLibrary.putConstant(globalScope, BString.fromJavaString("BigInt"), builtinObjects.bigIntObject, 0);
+    objectLibrary.putConstant(globalScope, BString.fromJavaString("Number"), builtinObjects.numberObject, 0);
+    objectLibrary.putConstant(globalScope, BString.fromJavaString("Bool"), builtinObjects.booleanObject, 0);
 
     // add all built-in class prototypes to the global scope
-    for (Map.Entry<String, BladeClass> entry : builtinObjects.builtinClasses.entrySet()) {
+    for (Map.Entry<TruffleString, BladeClass> entry : builtinObjects.builtinClasses.entrySet()) {
       objectLibrary.putConstant(globalScope, entry.getKey(), entry.getValue(), 0);
     }
 
     // add a constructor to all Error types
-    for (Map.Entry<String, BladeClass> entry : builtinObjects.errorsModel.ALL.entrySet()) {
+    for (Map.Entry<TruffleString, BladeClass> entry : builtinObjects.errorsModel.ALL.entrySet()) {
       objectLibrary.putConstant(
         entry.getValue(), "@new",
         // error subtype constructor
-        new FunctionObject(
-          rootShape,
-          functionClass,
+        new FunctionObj(
           entry.getKey(),
           new NBlockRootNode(
             this,
@@ -189,13 +186,14 @@ public class BladeLanguage extends TruffleLanguage<BladeContext> {
               // this.type = <type>;
               new NExprStmtNode(NSetPropertyNodeGen.create(
                 new NSelfLiteralNode(),
-                new NStringLiteralNode(entry.getKey()),
+                new NStringLiteralNode(entry.getKey().toJavaStringUncached()),
                 "type"
               ))
             )),
             "@new"
           ).getCallTarget(),
-          1
+          0,
+          false
         ),
         0
       );
@@ -220,56 +218,64 @@ public class BladeLanguage extends TruffleLanguage<BladeContext> {
     DynamicObjectLibrary objectLibrary, DynamicObject scope, String name,
     NodeFactory<? extends NBuiltinFunctionNode> factory, boolean variadic
   ) {
+    TruffleString tName = BString.fromJavaString(name);
+
+    NBytecodeRootNode node = NBytecodeRootNodeGen.create(
+      this, BytecodeConfig.DEFAULT, (b) -> {
+        b.beginSource(BUILTIN_SOURCE);
+        b.beginSourceSectionUnavailable();
+        b.beginRoot();
+        b.beginReturn();
+        b.beginTag(RootTag.class, RootBodyTag.class);
+        b.emitNBuiltin(factory, factory.getExecutionSignature().size(), variadic);
+        b.endTag(RootTag.class, RootBodyTag.class);
+        b.endReturn();
+        b.endRoot().setName(tName);
+        b.endSourceSectionUnavailable();
+        b.endSource();
+      }
+    ).getNodes().getFirst();
+
+    node.getBytecodeNode().setUncachedThreshold(0);
+
     objectLibrary.putConstant(
       scope,
-      name,
-      new FunctionObject(
-        rootShape,
-        functionClass,
-        name,
-        createCallTarget(factory, true),
-        factory.getExecutionSignature().size(),
-        variadic
-      ),
+      tName,
+      new FunctionObj(tName, node.getCallTarget(), factory.getExecutionSignature().size(), variadic),
       0
     );
-  }
-
-  private void defineBuiltinFunction(
-    DynamicObjectLibrary objectLibrary, GlobalScopeObject globalScope, String name,
-    NodeFactory<? extends NBuiltinFunctionNode> factory
-  ) {
-    defineBuiltinFunction(objectLibrary, globalScope, name, factory, false);
   }
 
   private void defineBuiltinMethod(
     DynamicObjectLibrary objectLibrary, BladeClass classObject, String name,
     NodeFactory<? extends NBuiltinFunctionNode> factory
   ) {
+    TruffleString tName = BString.fromJavaString(name);
+
+    NBytecodeRootNode node = NBytecodeRootNodeGen.create(
+      this, BytecodeConfig.DEFAULT, (b) -> {
+        b.beginSource(BUILTIN_SOURCE);
+        b.beginSourceSectionUnavailable();
+        b.beginRoot();
+        b.beginReturn();
+        b.beginTag(RootTag.class, RootBodyTag.class);
+        b.emitNBuiltin(factory, factory.getExecutionSignature().size(), false);
+        b.endTag(RootTag.class, RootBodyTag.class);
+        b.endReturn();
+        b.endRoot().setName(tName);
+        b.endSourceSectionUnavailable();
+        b.endSource();
+      }
+    ).getNodes().getFirst();
+
+    node.getBytecodeNode().setUncachedThreshold(0);
+
     objectLibrary.putConstant(
       classObject,
-      name,
-      new FunctionObject(
-        rootShape,
-        functionClass,
-        name,
-        createCallTarget(factory, false),
-        factory.getExecutionSignature().size() - 1
-      ),
+      tName,
+      new BoundFunctionObj(tName, null, node.getCallTarget(), factory.getExecutionSignature().size(), false),
       0
     );
-  }
-
-  private CallTarget createCallTarget(NodeFactory<? extends NBuiltinFunctionNode> factory, boolean offset) {
-    int argumentCount = factory.getExecutionSignature().size();
-
-    NReadArgumentExprNode[] arguments = IntStream.range(0, argumentCount)
-      .mapToObj(i -> new NReadArgumentExprNode(offset ? i + 1 : i, "arg" + i))
-      .toArray(NReadArgumentExprNode[]::new);
-
-    NRootFunctionNode rootNode = new NRootFunctionNode(this, factory.createNode((Object) arguments));
-
-    return rootNode.getCallTarget();
   }
 
   @Override

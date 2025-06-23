@@ -16,6 +16,7 @@ import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.object.DynamicObjectLibrary;
 import com.oracle.truffle.api.object.Shape;
 import com.oracle.truffle.api.profiles.InlinedConditionProfile;
+import com.oracle.truffle.api.strings.TruffleString;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -33,7 +34,7 @@ public final class ListObject extends BladeObject {
 
   public ListObject(Shape shape, BladeClass classObject, Object[] objects) {
     super(shape, classObject);
-    setArrayElements(objects, DynamicObjectLibrary.getUncached());
+    setArrayElements(objects, DynamicObjectLibrary.getUncached(), TruffleString.FromJavaStringNode.getUncached());
   }
 
   @ExportMessage
@@ -76,11 +77,12 @@ public final class ListObject extends BladeObject {
 
   @ExportMessage
   Object readMember(String member,
+                    @Cached @Cached.Shared("fromJavaStringNode") TruffleString.FromJavaStringNode fromJavaStringNode,
                     @CachedLibrary("this") DynamicObjectLibrary objectLibrary,
                     @CachedLibrary("this.classObject") InteropLibrary classInteropLibrary) throws UnsupportedMessageException, UnknownIdentifierException {
     return switch (member) {
       case "length" -> objectLibrary.getOrDefault(this, "length", 0);
-      default -> super.readMember(member, objectLibrary, classInteropLibrary);
+      default -> super.readMember(member, fromJavaStringNode, objectLibrary, classInteropLibrary);
     };
   }
 
@@ -126,9 +128,10 @@ public final class ListObject extends BladeObject {
     @Fallback
     static void writeNonLength(
       ListObject list, String member, Object value,
+      @Cached @Cached.Shared("fromJavaStringNode") TruffleString.FromJavaStringNode fromJavaStringNode,
       @CachedLibrary(limit = "3") DynamicObjectLibrary objectLibrary
     ) {
-      list.writeMember(member, value, objectLibrary);
+      list.writeMember(member, value, fromJavaStringNode, objectLibrary);
     }
   }
 
@@ -146,20 +149,20 @@ public final class ListObject extends BladeObject {
     return result;
   }
 
-  private void setArrayElements(Object[] items, DynamicObjectLibrary objectLibrary) {
+  private void setArrayElements(Object[] items, DynamicObjectLibrary objectLibrary, TruffleString.FromJavaStringNode fromJavaStringNode) {
     this.items = items;
-    writeMember(LENGTH_PROP, (long) items.length, objectLibrary);
+    writeMember(LENGTH_PROP, (long) items.length, fromJavaStringNode, objectLibrary);
   }
 
   @ExplodeLoop
-  public void resize(long length, DynamicObjectLibrary objectLibrary) {
+  public void resize(long length, DynamicObjectLibrary objectLibrary, TruffleString.FromJavaStringNode fromJavaStringNode) {
     Object[] newItems = new Object[(int) length];
     for (int i = 0; i < length; i++) {
       newItems[i] = i < this.items.length
         ? this.items[i]
         : BladeNil.SINGLETON;
     }
-    this.setArrayElements(newItems, objectLibrary);
+    this.setArrayElements(newItems, objectLibrary, fromJavaStringNode);
   }
 
   private long effectiveIndex(Node node, InlinedConditionProfile profile, long index, long length) {

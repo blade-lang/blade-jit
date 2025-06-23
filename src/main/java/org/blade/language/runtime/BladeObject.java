@@ -2,6 +2,7 @@ package org.blade.language.runtime;
 
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.TruffleLanguage;
+import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.interop.InteropLibrary;
 import com.oracle.truffle.api.interop.UnknownIdentifierException;
 import com.oracle.truffle.api.interop.UnsupportedMessageException;
@@ -11,6 +12,7 @@ import com.oracle.truffle.api.library.ExportMessage;
 import com.oracle.truffle.api.object.DynamicObject;
 import com.oracle.truffle.api.object.DynamicObjectLibrary;
 import com.oracle.truffle.api.object.Shape;
+import com.oracle.truffle.api.strings.TruffleString;
 import org.blade.language.BladeLanguage;
 
 @ExportLibrary(InteropLibrary.class)
@@ -61,33 +63,37 @@ public class BladeObject extends DynamicObject {
 
   @ExportMessage
   boolean isMemberReadable(String member,
+                           @Cached @Cached.Shared("fromJavaStringNode") TruffleString.FromJavaStringNode fromJavaStringNode,
                            @CachedLibrary("this") DynamicObjectLibrary instanceObjectLibrary,
                            @CachedLibrary("this.classObject") InteropLibrary classInteropLibrary) {
-    return instanceObjectLibrary.containsKey(this, member) ||
+    return instanceObjectLibrary.containsKey(this, BString.fromObject(fromJavaStringNode, member)) ||
       classInteropLibrary.isMemberReadable(classObject, member);
   }
 
   @ExportMessage
   boolean isMemberModifiable(String member,
+                             @Cached @Cached.Shared("fromJavaStringNode") TruffleString.FromJavaStringNode fromJavaStringNode,
                              @CachedLibrary("this") DynamicObjectLibrary instanceObjectLibrary,
                              @CachedLibrary("this.classObject") InteropLibrary classInteropLibrary) {
-    return isMemberReadable(member, instanceObjectLibrary, classInteropLibrary);
+    return isMemberReadable(member, fromJavaStringNode, instanceObjectLibrary, classInteropLibrary);
   }
 
   @ExportMessage
   boolean isMemberInsertable(String member,
+                             @Cached @Cached.Shared("fromJavaStringNode") TruffleString.FromJavaStringNode fromJavaStringNode,
                              @CachedLibrary("this") DynamicObjectLibrary instanceObjectLibrary,
                              @CachedLibrary("this.classObject") InteropLibrary classInteropLibrary) {
-    return !isMemberModifiable(member, instanceObjectLibrary, classInteropLibrary);
+    return !isMemberModifiable(member, fromJavaStringNode, instanceObjectLibrary, classInteropLibrary);
   }
 
   @ExportMessage
   Object readMember(
     String member,
+    @Cached @Cached.Shared("fromJavaStringNode") TruffleString.FromJavaStringNode fromJavaStringNode,
     @CachedLibrary("this") DynamicObjectLibrary instanceObjectLibrary,
     @CachedLibrary("this.classObject") InteropLibrary classInteropLibrary
   ) throws UnknownIdentifierException, UnsupportedMessageException {
-    Object value = instanceObjectLibrary.getOrDefault(this, member, null);
+    Object value = instanceObjectLibrary.getOrDefault(this, BString.fromObject(fromJavaStringNode, member), null);
     if (value == null) {
       value = classInteropLibrary.readMember(classObject, member);
     }
@@ -102,13 +108,14 @@ public class BladeObject extends DynamicObject {
 
   @ExportMessage
   public void writeMember(String member, Object value,
+                          @Cached @Cached.Shared("fromJavaStringNode") TruffleString.FromJavaStringNode fromJavaStringNode,
                           @CachedLibrary("this") DynamicObjectLibrary objectLibrary) {
-    objectLibrary.put(this, member, value);
+    objectLibrary.put(this, BString.fromObject(fromJavaStringNode, member), value);
   }
 
   @CompilerDirectives.TruffleBoundary
   public String getClassName() {
-    return ((BladeClass) classObject).name;
+    return ((BladeClass) classObject).name.toJavaStringUncached();
   }
 
   @CompilerDirectives.TruffleBoundary

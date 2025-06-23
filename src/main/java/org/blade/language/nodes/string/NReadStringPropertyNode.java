@@ -1,26 +1,33 @@
 package org.blade.language.nodes.string;
 
-import com.oracle.truffle.api.dsl.Cached;
-import com.oracle.truffle.api.dsl.Fallback;
-import com.oracle.truffle.api.dsl.ImportStatic;
-import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.dsl.*;
 import com.oracle.truffle.api.interop.InteropLibrary;
 import com.oracle.truffle.api.interop.UnknownIdentifierException;
 import com.oracle.truffle.api.interop.UnsupportedMessageException;
 import com.oracle.truffle.api.library.CachedLibrary;
+import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.strings.TruffleString;
 import org.blade.language.nodes.NBaseNode;
-import org.blade.language.runtime.BString;
-import org.blade.language.runtime.BladeClass;
-import org.blade.language.runtime.BladeNil;
-import org.blade.language.runtime.BladeRuntimeError;
+import org.blade.language.nodes.list.NReadListIndexNode;
+import org.blade.language.nodes.list.NReadListIndexNodeGen;
+import org.blade.language.runtime.*;
 
-@ImportStatic(BString.class)
+@ImportStatic({BString.class, BladeContext.class})
 @SuppressWarnings("truffle-inlining")
-public abstract class NReadStringPropertyNode extends NBaseNode {
-  public static final String LENGTH_PROP = "length";
+public abstract class NReadStringPropertyNode extends Node {
 
-  public abstract Object executeProperty(TruffleString self, Object property);
+  public static NReadStringPropertyNode getUncached() {
+    return NReadStringPropertyNodeGen.getUncached();
+  }
+
+  @NeverDefault
+  public static NReadStringPropertyNode create() {
+    return NReadStringPropertyNodeGen.create();
+  }
+
+  public static final TruffleString LENGTH_PROP = BString.fromJavaString("length");
+
+  public abstract Object executeProperty(Object self, Object property);
 
   @Specialization
   protected Object readStringIndex(
@@ -36,9 +43,10 @@ public abstract class NReadStringPropertyNode extends NBaseNode {
       : BString.substring(string, (int) index, 1, substringNode);
   }
 
-  @Specialization(guards = "LENGTH_PROP.equals(name)")
+  @Specialization(guards = "equals(LENGTH_PROP, name, equalNode)", limit = "1")
   protected long readLengthProperty(
-    TruffleString string, String name,
+    TruffleString string, TruffleString name,
+    @Cached TruffleString.EqualNode equalNode,
     @Cached @Cached.Shared("lengthNode") TruffleString.CodePointLengthNode lengthNode
   ) {
     return BString.length(string, lengthNode);
@@ -46,8 +54,9 @@ public abstract class NReadStringPropertyNode extends NBaseNode {
 
   @Fallback
   protected Object readOthers(
-    TruffleString string, Object property,
-    @Cached(value = "languageContext().objectsModel.stringObject", neverDefault = false) BladeClass stringClass,
+    Object object, Object property, @Bind Node node,
+    @Cached("get(node)") BladeContext context,
+    @Cached(value = "context.objectsModel.stringObject", neverDefault = false) BladeClass stringClass,
     @CachedLibrary(limit = "3") InteropLibrary interopLibrary
   ) {
     try {

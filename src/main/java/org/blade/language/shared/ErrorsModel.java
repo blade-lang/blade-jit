@@ -1,5 +1,7 @@
 package org.blade.language.shared;
 
+import com.oracle.truffle.api.strings.TruffleString;
+import org.blade.language.runtime.BString;
 import org.blade.language.runtime.BladeClass;
 
 import java.util.HashMap;
@@ -12,7 +14,7 @@ public class ErrorsModel {
   public final BladeClass valueError;
   public final BladeClass assertError;
 
-  public final Map<String, BladeClass> ALL = new HashMap<>();
+  public final Map<TruffleString, BladeClass> ALL = new HashMap<>();
 
   public ErrorsModel(BladeClass error, BladeClass typeError, BladeClass argumentError, BladeClass valueError, BladeClass assertError) {
     this.error = error;
@@ -21,10 +23,10 @@ public class ErrorsModel {
     this.valueError = valueError;
     this.assertError = assertError;
 
-    ALL.put("Error", error);
-    ALL.put("TypeError", typeError);
-    ALL.put("ArgumentError", argumentError);
-    ALL.put("ValueError", valueError);
-    ALL.put("AssertError", assertError);
+    ALL.put(BString.fromJavaString("Error"), error);
+    ALL.put(BString.fromJavaString("TypeError"), typeError);
+    ALL.put(BString.fromJavaString("ArgumentError"), argumentError);
+    ALL.put(BString.fromJavaString("ValueError"), valueError);
+    ALL.put(BString.fromJavaString("AssertError"), assertError);
   }
 }

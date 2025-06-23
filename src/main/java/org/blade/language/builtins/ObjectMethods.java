@@ -1,19 +1,18 @@
 package org.blade.language.builtins;
 
-import com.oracle.truffle.api.dsl.Cached;
-import com.oracle.truffle.api.dsl.Fallback;
-import com.oracle.truffle.api.dsl.NodeFactory;
-import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.dsl.*;
 import com.oracle.truffle.api.interop.InteropLibrary;
 import com.oracle.truffle.api.interop.UnknownIdentifierException;
 import com.oracle.truffle.api.interop.UnsupportedMessageException;
 import com.oracle.truffle.api.library.CachedLibrary;
+import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.object.DynamicObject;
 import com.oracle.truffle.api.object.DynamicObjectLibrary;
 import com.oracle.truffle.api.strings.TruffleString;
 import org.blade.language.BaseBuiltinDeclaration;
 import org.blade.language.nodes.functions.NBuiltinFunctionNode;
 import org.blade.language.nodes.string.NReadStringPropertyNode;
+import org.blade.language.nodes.util.NToBooleanNode;
 import org.blade.language.runtime.*;
 import org.blade.language.shared.BuiltinClassesModel;
 import org.blade.utility.RegulatedMap;
@@ -46,6 +45,7 @@ public class ObjectMethods implements BaseBuiltinDeclaration {
     }
   }
 
+  @ImportStatic(BladeContext.class)
   public abstract static class NObjectHasPropMethodNode extends NBuiltinFunctionNode {
     @Specialization(limit = "3")
     protected boolean doObject(DynamicObject self, Object property,
@@ -60,64 +60,67 @@ public class ObjectMethods implements BaseBuiltinDeclaration {
     }
 
     @Fallback
-    protected boolean doPrimitive(Object self, Object property,
-                                  @Cached(value = "languageContext().objectsModel.objectObject") DynamicObject clasObject,
-                                  @CachedLibrary(value = "languageContext().objectsModel.objectObject") InteropLibrary classInteropLibrary) {
+    protected boolean doPrimitive(Object self, Object property, @Bind Node node,
+                                  @Cached NToBooleanNode toBooleanNode,
+                                  @Cached("get(node)") BladeContext context,
+                                  @Cached(value = "context.objectsModel.objectObject") DynamicObject clasObject,
+                                  @CachedLibrary(value = "context.objectsModel.objectObject") InteropLibrary classInteropLibrary) {
       try {
-        return evaluateBoolean(classInteropLibrary.readMember(clasObject, BString.toString(property)));
+        return toBooleanNode.executeBoolean(classInteropLibrary.readMember(clasObject, BString.toString(property)));
       } catch (UnsupportedMessageException | UnknownIdentifierException e) {
         return false;
       }
     }
   }
 
+  @ImportStatic(BladeContext.class)
   public abstract static class GetClassMethodNode extends NBuiltinFunctionNode {
 
     @Specialization
-    protected Object doInt(int object,
-                           @Cached(value = "languageContext().objectsModel", neverDefault = true) @Cached.Shared("objectsModel") BuiltinClassesModel objectsModel,
+    protected Object doInt(int object, @Bind Node node,
+                           @Cached(value = "get(node).objectsModel", neverDefault = true) BuiltinClassesModel objectsModel,
                            @Cached(value = "objectsModel.numberObject", neverDefault = true) BladeClass numberObject) {
       return numberObject;
     }
 
     @Specialization
-    protected Object doLong(long object,
-                            @Cached(value = "languageContext().objectsModel", neverDefault = true) @Cached.Shared("objectsModel") BuiltinClassesModel objectsModel,
+    protected Object doLong(long object, @Bind Node node,
+                            @Cached(value = "get(node).objectsModel", neverDefault = true) BuiltinClassesModel objectsModel,
                             @Cached(value = "objectsModel.numberObject", neverDefault = true) BladeClass numberObject) {
       return numberObject;
     }
 
     @Specialization
-    protected Object doDouble(double object,
-                              @Cached(value = "languageContext().objectsModel", neverDefault = true) @Cached.Shared("objectsModel") BuiltinClassesModel objectsModel,
+    protected Object doDouble(double object, @Bind Node node,
+                              @Cached(value = "get(node).objectsModel", neverDefault = true) BuiltinClassesModel objectsModel,
                               @Cached(value = "objectsModel.numberObject", neverDefault = true) BladeClass numberObject) {
       return numberObject;
     }
 
     @Specialization
-    protected Object doBoolean(boolean object,
-                               @Cached(value = "languageContext().objectsModel", neverDefault = true) @Cached.Shared("objectsModel") BuiltinClassesModel objectsModel,
+    protected Object doBoolean(boolean object, @Bind Node node,
+                               @Cached(value = "get(node).objectsModel", neverDefault = true) BuiltinClassesModel objectsModel,
                                @Cached(value = "objectsModel.booleanObject", neverDefault = true) BladeClass booleanObject) {
       return booleanObject;
     }
 
     @Specialization
-    protected Object doBigInt(BigIntObject object,
-                              @Cached(value = "languageContext().objectsModel", neverDefault = true) @Cached.Shared("objectsModel") BuiltinClassesModel objectsModel,
+    protected Object doBigInt(BigIntObject object, @Bind Node node,
+                              @Cached(value = "get(node).objectsModel", neverDefault = true) BuiltinClassesModel objectsModel,
                               @Cached(value = "objectsModel.bigIntObject", neverDefault = true) BladeClass bigIntObject) {
       return bigIntObject;
     }
 
     @Specialization
-    protected Object doString(TruffleString object,
-                              @Cached(value = "languageContext().objectsModel", neverDefault = true) @Cached.Shared("objectsModel") BuiltinClassesModel objectsModel,
+    protected Object doString(TruffleString object, @Bind Node node,
+                              @Cached(value = "get(node).objectsModel", neverDefault = true) BuiltinClassesModel objectsModel,
                               @Cached(value = "objectsModel.stringObject", neverDefault = true) BladeClass stringObject) {
       return stringObject;
     }
 
     @Specialization
-    protected Object doRange(RangeObject object,
-                             @Cached(value = "languageContext().objectsModel", neverDefault = true) @Cached.Shared("objectsModel") BuiltinClassesModel objectsModel,
+    protected Object doRange(RangeObject object, @Bind Node node,
+                             @Cached(value = "get(node).objectsModel", neverDefault = true) BuiltinClassesModel objectsModel,
                              @Cached(value = "objectsModel.rangeObject", neverDefault = true) BladeClass rangeObject) {
       return rangeObject;
     }
@@ -128,8 +131,8 @@ public class ObjectMethods implements BaseBuiltinDeclaration {
     }
 
     @Fallback
-    protected Object doOthers(Object object,
-                              @Cached(value = "languageContext().objectsModel", neverDefault = true) @Cached.Shared("objectsModel") BuiltinClassesModel objectsModel) {
+    protected Object doOthers(Object object, @Bind Node node,
+                              @Cached(value = "get(node).objectsModel", neverDefault = true) BuiltinClassesModel objectsModel) {
       return objectsModel.objectObject;
     }
   }

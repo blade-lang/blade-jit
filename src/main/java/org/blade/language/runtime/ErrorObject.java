@@ -4,9 +4,11 @@ import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.object.DynamicObjectLibrary;
 import com.oracle.truffle.api.object.Shape;
+import com.oracle.truffle.api.strings.TruffleString;
 
 public final class ErrorObject extends BladeObject {
-  public final String type, message;
+  public final TruffleString type;
+  public final String message;
   private static final DynamicObjectLibrary UNCACHED_OBJ = DynamicObjectLibrary.getUncached();
 
   public ErrorObject(String message, DynamicObjectLibrary objectLibrary, Shape shape, BladeClass prototype) {
