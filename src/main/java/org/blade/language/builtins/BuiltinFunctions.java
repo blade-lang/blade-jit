@@ -216,22 +216,22 @@ public final class BuiltinFunctions implements BaseBuiltinDeclaration {
 
     @Specialization
     protected boolean doLong(long value, BladeClass testClass, @Bind Node node,
-                             @Cached(value = "get(node).objectsModel", neverDefault = true) BuiltinClassesModel objectsModel,
-                             @Cached(value = "objectsModel.objectObject", neverDefault = true) BladeClass objectObject) {
+                             @Cached(value = "get(node).objectsModel") BuiltinClassesModel objectsModel,
+                             @Cached(value = "objectsModel.objectObject") BladeClass objectObject) {
       return testClass == objectsModel.numberObject || testClass == objectObject;
     }
 
     @Specialization
     protected boolean doDouble(double value, BladeClass testClass, @Bind Node node,
-                               @Cached(value = "get(node).objectsModel", neverDefault = true) BuiltinClassesModel objectsModel,
-                               @Cached(value = "objectsModel.objectObject", neverDefault = true) BladeClass objectObject) {
+                               @Cached(value = "get(node).objectsModel") BuiltinClassesModel objectsModel,
+                               @Cached(value = "objectsModel.objectObject") BladeClass objectObject) {
       return testClass == objectsModel.numberObject || testClass == objectObject;
     }
 
     @Specialization
     protected boolean doBoolean(boolean value, BladeClass testClass, @Bind Node node,
-                                @Cached(value = "get(node).objectsModel", neverDefault = true) BuiltinClassesModel objectsModel,
-                                @Cached(value = "objectsModel.objectObject", neverDefault = true) BladeClass objectObject) {
+                                @Cached(value = "get(node).objectsModel") BuiltinClassesModel objectsModel,
+                                @Cached(value = "objectsModel.objectObject") BladeClass objectObject) {
       return testClass == objectsModel.booleanObject || testClass == objectObject;
     }
 

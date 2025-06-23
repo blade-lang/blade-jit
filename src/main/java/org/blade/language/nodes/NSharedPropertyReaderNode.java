@@ -38,7 +38,7 @@ public abstract class NSharedPropertyReaderNode extends Node {
                            @Cached("get(node)") BladeContext context,
                            @Cached(value = "context.objectsModel.rangeObject", neverDefault = false) BladeClass rangeObject,
                            @Cached(value = "context.objectsModel.objectObject") BladeClass objectObject,
-                           @CachedLibrary(limit = "3") DynamicObjectLibrary objectLibrary
+                           @CachedLibrary(limit = "3") @Cached.Shared("objectLibrary") DynamicObjectLibrary objectLibrary
   ) {
     Object value = objectLibrary.getOrDefault(rangeObject, property, null);
     if(value == null) {
@@ -52,7 +52,7 @@ public abstract class NSharedPropertyReaderNode extends Node {
                                 @Cached("get(node)") BladeContext context,
                                 @Cached(value = "context.objectsModel.dictionaryObject", neverDefault = false) BladeClass dictionaryObject,
                                 @Cached(value = "context.objectsModel.objectObject") BladeClass objectObject,
-                                @CachedLibrary(limit = "3") DynamicObjectLibrary objectLibrary
+                                @CachedLibrary(limit = "3") @Cached.Shared("objectLibrary") DynamicObjectLibrary objectLibrary
   ) {
     Object value = objectLibrary.getOrDefault(dictionaryObject, property, null);
     if(value == null) {
@@ -66,7 +66,7 @@ public abstract class NSharedPropertyReaderNode extends Node {
                             @Cached("get(node)") BladeContext context,
                             @Cached(value = "context.objectsModel.bigIntObject", neverDefault = false) BladeClass bigIntObject,
                             @Cached(value = "context.objectsModel.objectObject") BladeClass objectObject,
-                            @CachedLibrary(limit = "3") DynamicObjectLibrary objectLibrary
+                            @CachedLibrary(limit = "3") @Cached.Shared("objectLibrary") DynamicObjectLibrary objectLibrary
   ) {
     Object value = objectLibrary.getOrDefault(bigIntObject, property, null);
     if(value == null) {
@@ -91,7 +91,7 @@ public abstract class NSharedPropertyReaderNode extends Node {
   protected Object doUnknown(Object target, Object property, @Bind Node node,
                              @Cached("get(node)") BladeContext context,
                              @Cached(value = "context.objectsModel.objectObject", neverDefault = false) BObject objectObject,
-                             @CachedLibrary(limit = "3") DynamicObjectLibrary objectLibrary
+                             @CachedLibrary(limit = "3") @Cached.Shared("objectLibrary") DynamicObjectLibrary objectLibrary
   ) {
     return objectLibrary.getOrDefault(objectObject, property, BladeNil.SINGLETON);
   }

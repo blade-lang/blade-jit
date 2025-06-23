@@ -17,6 +17,7 @@ import org.blade.language.nodes.list.NReadListIndexNode;
 import org.blade.language.nodes.list.NReadListIndexNodeGen;
 import org.blade.language.runtime.*;
 
+@GenerateInline
 @ImportStatic(BladeContext.class)
 public abstract class NDefCallNode extends Node {
 
@@ -29,10 +30,10 @@ public abstract class NDefCallNode extends Node {
     return NDefCallNodeGen.create();
   }
 
-  public abstract Object executeCall(int argumentLength, Object function, Object[] arguments);
+  public abstract Object executeCall(Node node, int argumentLength, Object function, Object[] arguments);
 
   @Specialization(guards = {"function.getArgumentsCount() == argumentsLength", "!function.isVariadic()"}, assumptions = "callTargetStable")
-  public static Object doSameSize(int argumentsLength, FunctionObj function, @Variadic Object[] arguments,
+  public static Object doSameSize(Node node, int argumentsLength, FunctionObj function, @Variadic Object[] arguments,
                                   @Cached("function.getCallTargetStable()") Assumption callTargetStable,
                                   @Cached("function.getCallTarget()") RootCallTarget cachedTarget,
                                   @Cached("create(cachedTarget)") DirectCallNode callNode) {
@@ -40,8 +41,7 @@ public abstract class NDefCallNode extends Node {
   }
 
   @Specialization(guards = {"function.isVariadic()", "argumentsLength < function.getArgumentsCount()"}, assumptions = "callTargetStable")
-  public static Object doVariableLessSize(int argumentsLength, FunctionObj function, @Variadic Object[] arguments,
-                                          @Bind Node node,
+  public static Object doVariableLessSize(Node node, int argumentsLength, FunctionObj function, @Variadic Object[] arguments,
                                           @Cached("function.getCallTargetStable()") Assumption callTargetStable,
                                           @Cached("function.getCallTarget()") RootCallTarget cachedTarget,
                                           @Cached("create(cachedTarget)") DirectCallNode callNode,
@@ -58,8 +58,7 @@ public abstract class NDefCallNode extends Node {
   }
 
   @Specialization(guards = {"function.isVariadic()", "argumentsLength >= function.getArgumentsCount()", "function.getArgumentsCount() > 1"}, assumptions = "callTargetStable")
-  public static Object doVariableMoreSize(int argumentsLength, FunctionObj function, @Variadic Object[] arguments,
-                                          @Bind Node node,
+  public static Object doVariableMoreSize(Node node, int argumentsLength, FunctionObj function, @Variadic Object[] arguments,
                                           @Cached("function.getCallTargetStable()") Assumption callTargetStable,
                                           @Cached("function.getCallTarget()") RootCallTarget cachedTarget,
                                           @Cached("create(cachedTarget)") DirectCallNode callNode,
@@ -76,8 +75,7 @@ public abstract class NDefCallNode extends Node {
   }
 
   @Specialization(guards = {"function.isVariadic()", "arguments.length >= function.getArgumentsCount()", "function.getArgumentsCount() == 1"}, assumptions = "callTargetStable")
-  public static Object doVariableNoSize(int argumentsLength, FunctionObj function, @Variadic Object[] arguments,
-                                        @Bind Node node,
+  public static Object doVariableNoSize(Node node, int argumentsLength, FunctionObj function, @Variadic Object[] arguments,
                                         @Cached("function.getCallTargetStable()") Assumption callTargetStable,
                                         @Cached("function.getCallTarget()") RootCallTarget cachedTarget,
                                         @Cached("create(cachedTarget)") DirectCallNode callNode,
@@ -88,7 +86,7 @@ public abstract class NDefCallNode extends Node {
   }
 
   @Specialization(replaces = "doSameSize")
-  public static Object doNotSameSize(int argumentsLength, FunctionObj function, @Variadic Object[] arguments,
+  public static Object doNotSameSize(Node node, int argumentsLength, FunctionObj function, @Variadic Object[] arguments,
                                      @Cached("function.getCallTargetStable()") Assumption callTargetStable,
                                      @Cached("function.getCallTarget()") RootCallTarget cachedTarget,
                                      @Cached("create(cachedTarget)") DirectCallNode callNode) {
@@ -96,8 +94,8 @@ public abstract class NDefCallNode extends Node {
   }
 
   @Specialization
-  public static Object doInterop(int argumentsLength, Object function, @Variadic Object[] arguments,
-                                 @CachedLibrary(limit = "3") InteropLibrary library, @Bind Node node) {
+  public static Object doInterop(Node node, int argumentsLength, Object function, @Variadic Object[] arguments,
+                                 @CachedLibrary(limit = "3") InteropLibrary library) {
     try {
       return library.execute(function, arguments);
     } catch (UnsupportedTypeException | ArityException | UnsupportedMessageException e) {

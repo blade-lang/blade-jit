@@ -78,50 +78,50 @@ public class ObjectMethods implements BaseBuiltinDeclaration {
 
     @Specialization
     protected Object doInt(int object, @Bind Node node,
-                           @Cached(value = "get(node).objectsModel", neverDefault = true) BuiltinClassesModel objectsModel,
-                           @Cached(value = "objectsModel.numberObject", neverDefault = true) BladeClass numberObject) {
+                           @Cached(value = "get(node).objectsModel") BuiltinClassesModel objectsModel,
+                           @Cached(value = "objectsModel.numberObject") BladeClass numberObject) {
       return numberObject;
     }
 
     @Specialization
     protected Object doLong(long object, @Bind Node node,
-                            @Cached(value = "get(node).objectsModel", neverDefault = true) BuiltinClassesModel objectsModel,
-                            @Cached(value = "objectsModel.numberObject", neverDefault = true) BladeClass numberObject) {
+                            @Cached(value = "get(node).objectsModel") BuiltinClassesModel objectsModel,
+                            @Cached(value = "objectsModel.numberObject") BladeClass numberObject) {
       return numberObject;
     }
 
     @Specialization
     protected Object doDouble(double object, @Bind Node node,
-                              @Cached(value = "get(node).objectsModel", neverDefault = true) BuiltinClassesModel objectsModel,
-                              @Cached(value = "objectsModel.numberObject", neverDefault = true) BladeClass numberObject) {
+                              @Cached(value = "get(node).objectsModel") BuiltinClassesModel objectsModel,
+                              @Cached(value = "objectsModel.numberObject") BladeClass numberObject) {
       return numberObject;
     }
 
     @Specialization
     protected Object doBoolean(boolean object, @Bind Node node,
-                               @Cached(value = "get(node).objectsModel", neverDefault = true) BuiltinClassesModel objectsModel,
-                               @Cached(value = "objectsModel.booleanObject", neverDefault = true) BladeClass booleanObject) {
+                               @Cached(value = "get(node).objectsModel") BuiltinClassesModel objectsModel,
+                               @Cached(value = "objectsModel.booleanObject") BladeClass booleanObject) {
       return booleanObject;
     }
 
     @Specialization
     protected Object doBigInt(BigIntObject object, @Bind Node node,
-                              @Cached(value = "get(node).objectsModel", neverDefault = true) BuiltinClassesModel objectsModel,
-                              @Cached(value = "objectsModel.bigIntObject", neverDefault = true) BladeClass bigIntObject) {
+                              @Cached(value = "get(node).objectsModel") BuiltinClassesModel objectsModel,
+                              @Cached(value = "objectsModel.bigIntObject") BladeClass bigIntObject) {
       return bigIntObject;
     }
 
     @Specialization
     protected Object doString(TruffleString object, @Bind Node node,
-                              @Cached(value = "get(node).objectsModel", neverDefault = true) BuiltinClassesModel objectsModel,
-                              @Cached(value = "objectsModel.stringObject", neverDefault = true) BladeClass stringObject) {
+                              @Cached(value = "get(node).objectsModel") BuiltinClassesModel objectsModel,
+                              @Cached(value = "objectsModel.stringObject") BladeClass stringObject) {
       return stringObject;
     }
 
     @Specialization
     protected Object doRange(RangeObject object, @Bind Node node,
-                             @Cached(value = "get(node).objectsModel", neverDefault = true) BuiltinClassesModel objectsModel,
-                             @Cached(value = "objectsModel.rangeObject", neverDefault = true) BladeClass rangeObject) {
+                             @Cached(value = "get(node).objectsModel") BuiltinClassesModel objectsModel,
+                             @Cached(value = "objectsModel.rangeObject") BladeClass rangeObject) {
       return rangeObject;
     }
 

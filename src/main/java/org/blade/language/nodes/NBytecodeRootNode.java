@@ -204,8 +204,8 @@ public abstract class NBytecodeRootNode extends RootNode implements BytecodeRoot
   @Operation
   public static final class NGetIndex {
     @Specialization
-    public static Object doListLong(ListObject list, Object index, @Cached NReadListIndexNode readNode) {
-      return readNode.executeRead(list, index);
+    public static Object doListLong(ListObject list, Object index, @Bind Node node, @Cached(inline = true) NReadListIndexNode readNode) {
+      return readNode.executeRead(node, list, index);
     }
 
     @Specialization
@@ -222,16 +222,16 @@ public abstract class NBytecodeRootNode extends RootNode implements BytecodeRoot
   @Operation
   public static final class NSetIndex {
     @Specialization
-    public static Object perform(Object list, Object index, Object value, @Cached NWriteIndexNode readNode) {
-      return readNode.executeWrite(list, index, value);
+    public static Object perform(Object list, Object index, Object value, @Bind Node node, @Cached(inline = true) NWriteIndexNode readNode) {
+      return readNode.executeWrite(node, list, index, value);
     }
   }
 
   @Operation
   public static final class NGetSlice {
     @Specialization
-    public static Object doListLong(ListObject list, Object lower, Object upper, @Cached NGetSliceNode getSliceNode) {
-      return getSliceNode.executeSlice(list, lower, upper);
+    public static Object doListLong(ListObject list, Object lower, Object upper, @Bind Node node, @Cached(inline = true) NGetSliceNode getSliceNode) {
+      return getSliceNode.executeSlice(node, list, lower, upper);
     }
   }
 
@@ -265,9 +265,9 @@ public abstract class NBytecodeRootNode extends RootNode implements BytecodeRoot
   @ConstantOperand(type = int.class)
   public static final class NDefCall {
     @Specialization(guards = "!isNull(boundFunction.getInstance())")
-    public static Object doValidBoundFunction(int argumentsLength, BoundFunctionObj boundFunction, @Variadic Object[] arguments,
-                                    @Cached NDefCallNode defCallNode) {
-      return defCallNode.executeCall(argumentsLength + 1, boundFunction, boundArguments(argumentsLength, boundFunction.getInstance(), arguments));
+    public static Object doValidBoundFunction(int argumentsLength, BoundFunctionObj boundFunction, @Variadic Object[] arguments, @Bind Node node,
+                                    @Cached(inline = true) @Cached.Shared("defCallNode") NDefCallNode defCallNode) {
+      return defCallNode.executeCall(node, argumentsLength + 1, boundFunction, boundArguments(argumentsLength, boundFunction.getInstance(), arguments));
     }
 
     @Specialization(guards = "isNull(boundFunction.getInstance())")
@@ -277,9 +277,9 @@ public abstract class NBytecodeRootNode extends RootNode implements BytecodeRoot
     }
 
     @Specialization
-    public static Object doAll(int argumentsLength, Object function, @Variadic Object[] arguments,
-                                    @Cached NDefCallNode defCallNode) {
-      return defCallNode.executeCall(argumentsLength, function, arguments);
+    public static Object doAll(int argumentsLength, Object function, @Variadic Object[] arguments, @Bind Node node,
+                                    @Cached(inline = true) @Cached.Shared("defCallNode") NDefCallNode defCallNode) {
+      return defCallNode.executeCall(node, argumentsLength, function, arguments);
     }
 
     static boolean isNull(Object v) {

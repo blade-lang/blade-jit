@@ -20,9 +20,9 @@ public abstract class NRangeLiteralNode extends NNode {
 
   @Specialization
   protected Object doValid(long lower, long upper, @Bind Node node,
-                           @Cached("get(node)") BladeContext context,
-                           @Cached("context.objectsModel.rootShape")Shape rootShape,
-                           @Cached("context.objectsModel.rangeObject") BladeClass rangeClass) {
+                           @Cached(value = "get(node)", neverDefault = true) BladeContext context,
+                           @Cached(value = "context.objectsModel.rootShape", neverDefault = true)Shape rootShape,
+                           @Cached(value = "context.objectsModel.rangeObject", neverDefault = true) BladeClass rangeClass) {
     return new RangeObject(rootShape, rangeClass, lower, upper);
   }
 

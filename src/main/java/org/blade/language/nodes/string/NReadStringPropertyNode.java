@@ -56,7 +56,7 @@ public abstract class NReadStringPropertyNode extends Node {
   protected Object readOthers(
     Object object, Object property, @Bind Node node,
     @Cached("get(node)") BladeContext context,
-    @Cached(value = "context.objectsModel.stringObject", neverDefault = false) BladeClass stringClass,
+    @Cached(value = "context.objectsModel.stringObject") BladeClass stringClass,
     @CachedLibrary(limit = "3") InteropLibrary interopLibrary
   ) {
     try {
