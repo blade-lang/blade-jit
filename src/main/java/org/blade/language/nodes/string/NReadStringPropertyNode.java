@@ -16,10 +16,6 @@ import org.blade.language.runtime.*;
 @SuppressWarnings("truffle-inlining")
 public abstract class NReadStringPropertyNode extends Node {
 
-  public static NReadStringPropertyNode getUncached() {
-    return NReadStringPropertyNodeGen.getUncached();
-  }
-
   @NeverDefault
   public static NReadStringPropertyNode create() {
     return NReadStringPropertyNodeGen.create();

@@ -28,7 +28,6 @@ public abstract class NEqualNode extends NBinaryNode {
     return left == right;
   }
 
-  @CompilerDirectives.TruffleBoundary
   @Specialization
   public static boolean doBigInts(BigIntObject left, BigIntObject right) {
     return left.equals(right);

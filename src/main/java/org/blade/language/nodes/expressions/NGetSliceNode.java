@@ -17,10 +17,6 @@ import org.blade.language.shared.BuiltinClassesModel;
 @ImportStatic({BString.class, BladeContext.class})
 public abstract class NGetSliceNode extends Node {
 
-  public static NGetSliceNode getUncached() {
-    return NGetSliceNodeGen.getUncached();
-  }
-
   @NeverDefault
   public static NGetSliceNode create() {
     return NGetSliceNodeGen.create();

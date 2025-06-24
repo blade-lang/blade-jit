@@ -2,9 +2,7 @@ package org.blade.language.translator;
 
 import com.oracle.truffle.api.bytecode.BytecodeLabel;
 import com.oracle.truffle.api.bytecode.BytecodeLocal;
-import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.instrumentation.StandardTags;
-import com.oracle.truffle.api.object.Shape;
 import com.oracle.truffle.api.source.SourceSection;
 import com.oracle.truffle.api.strings.TruffleString;
 import org.blade.language.BladeLanguage;
@@ -57,6 +55,7 @@ public class BladeTranslator extends BaseVisitor<Void> {
     this.parser = parser;
     this.language = language;
     this.b = builder;
+    locals.push(new ArrayList<>());
   }
 
   public void translate(List<Stmt> stmtList) {
@@ -141,9 +140,9 @@ public class BladeTranslator extends BaseVisitor<Void> {
         b.emitLoadConstant(Long.parseLong(number.substring(2), 2));
       } else if (number.startsWith("0c")) {
         b.emitLoadConstant(Long.parseLong(number.substring(2), 8));
+      } else {
+        b.emitLoadConstant(Long.parseLong(number));
       }
-
-      b.emitLoadConstant(Long.parseLong(number));
     } catch (NumberFormatException e) {
       try {
         // Try to convert it to a big integer.
@@ -758,19 +757,21 @@ public class BladeTranslator extends BaseVisitor<Void> {
 
     b.beginBlock();
 
+    visitStmt(stmt.body);
+
     breakLabel = b.createLabel();
     continueLabel = b.createLabel();
 
     b.emitLabel(continueLabel);
     b.beginWhile();
 
-    visitStmt(stmt.body);
-
     b.beginNToBooleanNode();
     beginAttribution(CONDITION, stmt.condition);
     visitExpr(stmt.condition);
     endAttribution(CONDITION);
     b.endNToBooleanNode();
+
+    visitStmt(stmt.body);
 
     b.endWhile();
     b.emitLabel(breakLabel);
@@ -783,18 +784,55 @@ public class BladeTranslator extends BaseVisitor<Void> {
     return null;
   }
 
-  //  @Override
-//  public Void visitIterStmt(Stmt.Iter stmt) {
-//    newLocalScope(() -> sourceSection(
-//      new NIterStmtNode(
-//        stmt.declaration != null ? visitStmt(stmt.declaration) : null,
-//        stmt.condition != null ? visitExpr(stmt.condition) : null,
-//        stmt.interation != null ? visitExpressionStmt(stmt.interation) : null,
-//        visitStmt(stmt.body)
-//      ), stmt
-//    ));
-//  }
-//
+    @Override
+  public Void visitIterStmt(Stmt.Iter stmt) {
+      newLocalScope(() -> {
+        BytecodeLabel oldBreak = breakLabel;
+        BytecodeLabel oldContinue = continueLabel;
+
+        b.beginBlock();
+
+        if(stmt.declaration != null) {
+          visitStmt(stmt.declaration);
+        }
+
+        breakLabel = b.createLabel();
+        b.beginWhile();
+
+        if(stmt.condition != null) {
+          b.beginNToBooleanNode();
+          beginAttribution(CONDITION, stmt.condition);
+          visitExpr(stmt.condition);
+          endAttribution(CONDITION);
+          b.endNToBooleanNode();
+        } else {
+          beginAttribution(CONDITION, stmt);
+          b.emitLoadConstant(true);
+          endAttribution(CONDITION);
+        }
+
+        b.beginBlock();
+        continueLabel = b.createLabel();
+
+        visitStmt(stmt.body);
+
+        b.emitLabel(continueLabel);
+        if(stmt.iteration != null) {
+          visitExpressionStmt(stmt.iteration);
+        }
+        b.endBlock();
+
+        b.endWhile();
+        b.emitLabel(breakLabel);
+
+        b.endBlock();
+
+        breakLabel = oldBreak;
+        continueLabel = oldContinue;
+      });
+      return null;
+  }
+
   @Override
   public Void visitFunctionStmt(Stmt.Function stmt) {
     translateFunction(

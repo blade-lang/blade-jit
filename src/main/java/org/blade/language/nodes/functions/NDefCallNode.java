@@ -21,10 +21,6 @@ import org.blade.language.runtime.*;
 @ImportStatic(BladeContext.class)
 public abstract class NDefCallNode extends Node {
 
-  public static NDefCallNode getUncached() {
-    return NDefCallNodeGen.getUncached();
-  }
-
   @NeverDefault
   public static NDefCallNode create() {
     return NDefCallNodeGen.create();
@@ -90,7 +86,7 @@ public abstract class NDefCallNode extends Node {
                                      @Cached("function.getCallTargetStable()") Assumption callTargetStable,
                                      @Cached("function.getCallTarget()") RootCallTarget cachedTarget,
                                      @Cached("create(cachedTarget)") DirectCallNode callNode) {
-    return callNode.call(extendArguments(arguments, function.getArgumentsCount() + 1));
+    return callNode.call(extendArguments(arguments, argumentsLength, function.getArgumentsCount()));
   }
 
   @Specialization
@@ -104,13 +100,11 @@ public abstract class NDefCallNode extends Node {
   }
 
   @ExplodeLoop
-  private static Object[] extendArguments(Object[] arguments, int finalLength) {
-    int argumentLength = arguments.length;
-
+  private static Object[] extendArguments(Object[] arguments, int argumentLength, int finalLength) {
     Object[] ret = new Object[finalLength];
 
     if (argumentLength > 0) {
-      System.arraycopy(arguments, 1, ret, 1, argumentLength - 1);
+      System.arraycopy(arguments, 0, ret, 0, Math.min(argumentLength, finalLength));
     }
 
     for (int i = argumentLength; i < finalLength; i++) {
@@ -122,21 +116,19 @@ public abstract class NDefCallNode extends Node {
 
   // Specially used for variadic functions
   @ExplodeLoop
-  private static Object[] expandLessVarArguments(Object[] arguments, int functionArity, int argumentsLength, Shape listShape, BladeClass listClass) {
-    int argumentLength = arguments.length;
-
-    int finalLength = functionArity + 1;
-    Object[] ret = new Object[finalLength];
+  private static Object[] expandLessVarArguments(Object[] arguments, int functionArity, int argumentLength, Shape listShape, BladeClass listClass) {
+    int nonVariadicLength = functionArity - 1;
+    Object[] ret = new Object[functionArity];
 
     if (argumentLength > 0) {
-      System.arraycopy(arguments, 1, ret, 1, argumentLength - 1);
+      System.arraycopy(arguments, 0, ret, 0, argumentLength);
     }
 
-    for (int i = argumentLength; i < functionArity; i++) {
+    for (int i = argumentLength; i < nonVariadicLength; i++) {
       ret[i] = BladeNil.SINGLETON;
     }
 
-    ret[functionArity] = new ListObject(
+    ret[nonVariadicLength] = new ListObject(
       listShape,
       listClass,
       new Object[0]
@@ -148,16 +140,16 @@ public abstract class NDefCallNode extends Node {
   // Specially used for variadic functions
   @ExplodeLoop
   private static Object[] expandMoreVarArguments(Object[] arguments, int functionArity, int argumentsLength, Shape listShape, BladeClass listClass) {
-    int finalLength = functionArity + 1;
-    Object[] ret = new Object[finalLength];
+    int nonVariadicLength = functionArity - 1;
+    Object[] ret = new Object[functionArity];
 
-    System.arraycopy(arguments, 1, ret, 1, functionArity - 1);
+    System.arraycopy(arguments, 0, ret, 0, nonVariadicLength);
 
     int varLength = argumentsLength - functionArity;
     Object[] variadic = new Object[varLength];
-    System.arraycopy(arguments, functionArity, variadic, 0, varLength);
+    System.arraycopy(arguments, nonVariadicLength, variadic, 0, varLength);
 
-    ret[functionArity] = new ListObject(
+    ret[nonVariadicLength] = new ListObject(
       listShape,
       listClass,
       variadic
@@ -169,12 +161,12 @@ public abstract class NDefCallNode extends Node {
   // Specially used for variadic functions
   @ExplodeLoop
   private static Object[] expandNoVarArguments(Object[] arguments, int argumentsLength, Shape listShape, BladeClass listClass) {
-    Object[] ret = new Object[2];
+    Object[] ret = new Object[1];
 
-    Object[] variadic = new Object[argumentsLength - 1];
-    System.arraycopy(arguments, 1, variadic, 0, argumentsLength - 1);
+    Object[] variadic = new Object[argumentsLength];
+    System.arraycopy(arguments, 0, variadic, 0, argumentsLength);
 
-    ret[1] = new ListObject(
+    ret[0] = new ListObject(
       listShape,
       listClass,
       variadic

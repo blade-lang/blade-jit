@@ -17,10 +17,6 @@ import org.blade.language.runtime.ListObject;
 @ImportStatic(BString.class)
 public abstract class NWriteIndexNode extends Node {
 
-  public static NWriteIndexNode getUncached() {
-    return NWriteIndexNodeGen.getUncached();
-  }
-
   @NeverDefault
   public static NWriteIndexNode create() {
     return NWriteIndexNodeGen.create();

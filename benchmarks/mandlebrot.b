@@ -47,5 +47,4 @@ def mandlebrot(h, w) {
 
 var start = microtime()
 mandlebrot(16_000)
-
-echo '\nTotal time taken: ${(microtime() - start)/1_000_000}s'
+echo '\nTotal time taken = ${(microtime() - start) / 1_000_000}'

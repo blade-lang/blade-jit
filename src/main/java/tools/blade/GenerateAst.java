@@ -61,7 +61,7 @@ public class GenerateAst {
     "Echo       : Expr value",
     "Expression : Expr expression",
     "If         : Expr condition, Stmt thenBranch, Stmt elseBranch",
-    "Iter       : Stmt declaration, Expr condition, Expression interation, Block body",
+    "Iter       : Stmt declaration, Expr condition, Expression iteration, Block body",
     "While      : Expr condition, Stmt body",
     "DoWhile    : Stmt body, Expr condition",
     "Continue   :",

@@ -32,7 +32,7 @@ public abstract class NLessThanNode extends NBinaryNode {
 
   @Specialization
   public static boolean doBigInts(BigIntObject left, BigIntObject right) {
-    return compareBigInts(left.get(), right.get()) < 0;
+    return left.compareTo(right) < 0;
   }
 
   @Specialization
@@ -55,10 +55,5 @@ public abstract class NLessThanNode extends NBinaryNode {
   @Fallback
   public static boolean doUnsupported(Object left, Object right) {
     return false;
-  }
-
-  @CompilerDirectives.TruffleBoundary
-  public static int compareBigInts(BigInteger left, BigInteger right) {
-    return left.compareTo(right);
   }
 }

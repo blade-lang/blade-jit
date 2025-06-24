@@ -77,13 +77,13 @@ public abstract class Stmt extends AST {
   public static class Iter extends Stmt {
     public final Stmt declaration;
     public final Expr condition;
-    public final Expression interation;
+    public final Expression iteration;
     public final Block body;
 
-    public Iter(Stmt declaration, Expr condition, Expression interation, Block body) {
+    public Iter(Stmt declaration, Expr condition, Expression iteration, Block body) {
       this.declaration = declaration;
       this.condition = condition;
-      this.interation = interation;
+      this.iteration = iteration;
       this.body = body;
     }
 
