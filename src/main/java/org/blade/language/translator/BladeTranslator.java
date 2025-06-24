@@ -1240,9 +1240,13 @@ public class BladeTranslator extends BaseVisitor<Void> {
       throw new BladeRuntimeError("Closures are not yet supported");
     }
 
-    b.beginNSetGlobal(name, false);
-    b.emitLoadConstant(new FunctionObj(name, node.getCallTarget(), finalParamCount, isVariadic));
-    b.endNSetGlobal();
+    if(!(source instanceof Stmt.Method)) {
+      b.beginNSetGlobal(name, false);
+      b.emitLoadConstant(new FunctionObj(name, node.getCallTarget(), finalParamCount, isVariadic));
+      b.endNSetGlobal();
+    } else {
+      b.emitLoadConstant(new BoundFunctionObj(name, node.getCallTarget(), finalParamCount, isVariadic));
+    }
   }
 
   private void translateFunction(Stmt source, String name, List<Expr.Identifier> parameters, Stmt.Block body, boolean isVariadic) {

@@ -11,6 +11,10 @@ public final class BoundFunctionObj extends FunctionObj {
     this.instance = instance;
   }
 
+  public BoundFunctionObj(TruffleString name, RootCallTarget target, int argumentsCount, boolean variadic) {
+    this(name, null, target, argumentsCount, variadic);
+  }
+
   public void setInstance(Object instance) {
     this.instance = instance;
   }

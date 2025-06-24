@@ -20,6 +20,10 @@ import java.math.BigInteger;
 @OperationProxy.Proxyable(allowUncached = true)
 public abstract class NToBooleanNode extends NNode {
 
+  public static NToBooleanNode create() {
+    return NToBooleanNodeGen.create();
+  }
+
   public abstract boolean executeBoolean(Object object);
 
   @Specialization
