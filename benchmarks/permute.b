@@ -25,7 +25,7 @@
 
 
 class Permute {
-  Permute() {
+  @new() {
     self.count = 0
     self.v = 0
   }
