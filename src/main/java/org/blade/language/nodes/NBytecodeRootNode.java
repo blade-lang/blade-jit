@@ -286,7 +286,6 @@ public abstract class NBytecodeRootNode extends RootNode implements BytecodeRoot
       return v == null;
     }
 
-    @ExplodeLoop
     static Object[] boundArguments(int length, Object value, Object[] arguments) {
       final int argumentsLength = length + 1;
       Object[] boundArguments = new Object[argumentsLength];
@@ -317,7 +316,6 @@ public abstract class NBytecodeRootNode extends RootNode implements BytecodeRoot
     }
 
     @Fallback
-    @ExplodeLoop
     @SuppressWarnings("unused")
     static Object doOutOfBounds(VirtualFrame frame,
                                 NodeFactory<?> factory,

@@ -73,7 +73,6 @@ public final class BuiltinFunctions implements BaseBuiltinDeclaration {
       return BladeNil.SINGLETON;
     }
 
-    @ExplodeLoop
     private void print(BladeContext context, InteropLibrary interopLibrary, Object[] arguments) {
       int length = arguments.length;
 

@@ -32,9 +32,13 @@ public final class ListObject extends BladeObject {
   @DynamicField
   private long length;
 
+  private static final TruffleString.FromJavaStringNode fromJavaStringNode = TruffleString.FromJavaStringNode.getUncached();
+  private static final DynamicObjectLibrary objectLibrary = DynamicObjectLibrary.getUncached();
+
+  @CompilerDirectives.TruffleBoundary
   public ListObject(Shape shape, BladeClass classObject, Object[] objects) {
     super(shape, classObject);
-    setArrayElements(objects, DynamicObjectLibrary.getUncached(), TruffleString.FromJavaStringNode.getUncached());
+    setArrayElements(objects);
   }
 
   @ExportMessage
@@ -135,7 +139,6 @@ public final class ListObject extends BladeObject {
     }
   }
 
-  @ExplodeLoop
   @Override
   public String toString() {
     List<String> builder = new ArrayList<>();
@@ -149,7 +152,7 @@ public final class ListObject extends BladeObject {
     return result;
   }
 
-  private void setArrayElements(Object[] items, DynamicObjectLibrary objectLibrary, TruffleString.FromJavaStringNode fromJavaStringNode) {
+  private void setArrayElements(Object[] items) {
     this.items = items;
     writeMember(LENGTH_PROP, (long) items.length, fromJavaStringNode, objectLibrary);
   }
@@ -162,7 +165,7 @@ public final class ListObject extends BladeObject {
         ? this.items[i]
         : BladeNil.SINGLETON;
     }
-    this.setArrayElements(newItems, objectLibrary, fromJavaStringNode);
+    this.setArrayElements(newItems);
   }
 
   private long effectiveIndex(Node node, InlinedConditionProfile profile, long index, long length) {

@@ -75,7 +75,6 @@ public abstract class NGetSliceNode extends Node {
     return new ListObject(listShape, listObject, new Object[0]);
   }
 
-  @ExplodeLoop
   @Specialization(guards = {"items.length > 0", "lower != upper"})
   protected static Object doList3(Node node, ListObject list, long lower, long upper,
                            @Cached(value = "list.items", dimensions = 1) Object[] items,

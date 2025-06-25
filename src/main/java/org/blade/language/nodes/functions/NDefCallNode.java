@@ -10,11 +10,8 @@ import com.oracle.truffle.api.interop.UnsupportedMessageException;
 import com.oracle.truffle.api.interop.UnsupportedTypeException;
 import com.oracle.truffle.api.library.CachedLibrary;
 import com.oracle.truffle.api.nodes.DirectCallNode;
-import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.object.Shape;
-import org.blade.language.nodes.list.NReadListIndexNode;
-import org.blade.language.nodes.list.NReadListIndexNodeGen;
 import org.blade.language.runtime.*;
 
 @GenerateInline
@@ -99,7 +96,6 @@ public abstract class NDefCallNode extends Node {
     }
   }
 
-  @ExplodeLoop
   private static Object[] extendArguments(Object[] arguments, int argumentLength, int finalLength) {
     Object[] ret = new Object[finalLength];
 
@@ -115,7 +111,6 @@ public abstract class NDefCallNode extends Node {
   }
 
   // Specially used for variadic functions
-  @ExplodeLoop
   private static Object[] expandLessVarArguments(Object[] arguments, int functionArity, int argumentLength, Shape listShape, BladeClass listClass) {
     int nonVariadicLength = functionArity - 1;
     Object[] ret = new Object[functionArity];
@@ -138,7 +133,6 @@ public abstract class NDefCallNode extends Node {
   }
 
   // Specially used for variadic functions
-  @ExplodeLoop
   private static Object[] expandMoreVarArguments(Object[] arguments, int functionArity, int argumentsLength, Shape listShape, BladeClass listClass) {
     int nonVariadicLength = functionArity - 1;
     Object[] ret = new Object[functionArity];
@@ -159,7 +153,6 @@ public abstract class NDefCallNode extends Node {
   }
 
   // Specially used for variadic functions
-  @ExplodeLoop
   private static Object[] expandNoVarArguments(Object[] arguments, int argumentsLength, Shape listShape, BladeClass listClass) {
     Object[] ret = new Object[1];
 

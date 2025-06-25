@@ -128,7 +128,6 @@ public final class BString {
   }
 
   @CompilerDirectives.TruffleBoundary
-  @ExplodeLoop
   public static String concatString(String original, Object... others) {
     StringBuilder builder = new StringBuilder();
     builder.append(original);

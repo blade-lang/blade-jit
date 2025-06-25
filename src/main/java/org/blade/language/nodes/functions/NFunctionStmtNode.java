@@ -119,7 +119,6 @@ public abstract class NFunctionStmtNode extends NStmtNode {
   }
 
   @NonIdempotent
-  @ExplodeLoop
   private void pushArgumentsToFrameSlots(VirtualFrame frame, MaterializedFrame materializedFrame) {
     Object[] arguments = frame.getArguments();
     int length = arguments.length;

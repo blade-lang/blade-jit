@@ -97,7 +97,6 @@ public abstract class NMultiplyNode extends NBinaryNode {
     );
   }
 
-  @ExplodeLoop
   private static Object[] repeatList(ListObject list, long count) {
     int size = (int) list.getArraySize();
     int finalSize = (int) (size * count);

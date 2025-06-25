@@ -4,7 +4,6 @@ import com.oracle.truffle.api.dsl.Fallback;
 import com.oracle.truffle.api.dsl.NodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.library.CachedLibrary;
-import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.object.DynamicObjectLibrary;
 import org.blade.language.BaseBuiltinDeclaration;
 import org.blade.language.nodes.functions.NBuiltinFunctionNode;
@@ -43,7 +42,6 @@ public final class DictionaryMethods implements BaseBuiltinDeclaration {
       return BladeNil.SINGLETON;
     }
 
-    @ExplodeLoop
     private Object getNextKey(Object[] keys, Object key, int keysLength) {
       int index = 0;
       for (int i = 0; i < keysLength; i++) {

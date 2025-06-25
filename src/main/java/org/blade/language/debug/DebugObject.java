@@ -146,7 +146,6 @@ public abstract class DebugObject implements TruffleObject {
     return this.findReference(member) != null;
   }
 
-  @ExplodeLoop
   RefObject findReference(String member) {
     RefObject[] refObjects = getRefs();
     for (var refObject : refObjects) {
