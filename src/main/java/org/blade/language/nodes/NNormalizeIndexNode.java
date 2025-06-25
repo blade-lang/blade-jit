@@ -10,10 +10,6 @@ import com.oracle.truffle.api.profiles.InlinedConditionProfile;
 @GenerateInline
 @GenerateCached(false)
 public abstract class NNormalizeIndexNode extends Node {
-  public abstract int execute(Node node, int index, int length);
-
-  public abstract int executeLong(Node node, long index, int length);
-
   @Specialization
   static int normalizeIndex(Node node, int index, int length,
                             @Cached @Cached.Shared("negativeIndexProfile") InlinedConditionProfile negativeIndexProfile,
@@ -39,4 +35,8 @@ public abstract class NNormalizeIndexNode extends Node {
 
     return (int) index;
   }
+
+  public abstract int execute(Node node, int index, int length);
+
+  public abstract int executeLong(Node node, long index, int length);
 }

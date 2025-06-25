@@ -5,7 +5,6 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.instrumentation.StandardTags;
 import com.oracle.truffle.api.instrumentation.Tag;
 import com.oracle.truffle.api.nodes.BlockNode;
-import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.NodeUtil;
 import org.blade.language.debug.LocalVarNodeVisitor;
@@ -19,13 +18,12 @@ import java.util.List;
 
 public final class NBlockStmtNode extends NStmtNode implements BlockNode.ElementExecutor<NNode> {
 
+  private final boolean isProgram;
   @SuppressWarnings("FieldMayBeFinal")
-  @Child private BlockNode<NNode> block;
-
+  @Child
+  private BlockNode<NNode> block;
   @CompilerDirectives.CompilationFinal(dimensions = 1)
   private RefObject[] refCache;
-
-  private final boolean isProgram;
 
   public NBlockStmtNode(List<NNode> nodes) {
     this(nodes, false);

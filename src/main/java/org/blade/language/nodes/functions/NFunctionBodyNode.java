@@ -4,7 +4,6 @@ import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.instrumentation.StandardTags;
 import com.oracle.truffle.api.instrumentation.Tag;
-import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.NodeUtil;
 import com.oracle.truffle.api.nodes.NodeVisitor;
@@ -12,24 +11,20 @@ import com.oracle.truffle.api.profiles.BranchProfile;
 import org.blade.language.debug.FunctionArgRefObject;
 import org.blade.language.debug.LocalVarNodeVisitor;
 import org.blade.language.debug.RefObject;
-import org.blade.language.nodes.NNode;
 import org.blade.language.nodes.NStmtNode;
 import org.blade.language.nodes.statements.NBlockStmtNode;
 import org.blade.language.nodes.statements.NReturnException;
-import org.blade.language.runtime.BladeNil;
 
 import java.util.HashSet;
 import java.util.Set;
 
 public final class NFunctionBodyNode extends NStmtNode {
-  @Child
-  private NBlockStmtNode node;
-
-  @CompilerDirectives.CompilationFinal(dimensions = 1)
-  private RefObject[] argsRefCache;
-
   private final BranchProfile exceptionTaken = BranchProfile.create();
   private final BranchProfile nullTaken = BranchProfile.create();
+  @Child
+  private NBlockStmtNode node;
+  @CompilerDirectives.CompilationFinal(dimensions = 1)
+  private RefObject[] argsRefCache;
 
   public NFunctionBodyNode(NBlockStmtNode node) {
     this.node = node;

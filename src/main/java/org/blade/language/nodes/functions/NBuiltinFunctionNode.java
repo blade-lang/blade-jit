@@ -17,23 +17,6 @@ import org.blade.language.runtime.FunctionObject;
 @NodeChild(value = "arguments", type = NReadFunctionArgsExprNode[].class)
 @GenerateNodeFactory
 public abstract class NBuiltinFunctionNode extends NNode {
-  protected boolean isDouble(Object object) {
-    return object instanceof Double;
-  }
-
-  protected boolean isLong(Object object) {
-    return object instanceof Long;
-  }
-
-  protected boolean isString(Object object) {
-    return object instanceof TruffleString;
-  }
-
-  @CompilerDirectives.TruffleBoundary
-  protected boolean objectEquals(Object first, Object second) {
-    return first.equals(second);
-  }
-
   protected static Object methodOverride(Node node, String def, BladeObject object, InteropLibrary interopLibrary, Object defaultValue) {
     Object overrideFunction = null;
     try {
@@ -58,5 +41,22 @@ public abstract class NBuiltinFunctionNode extends NNode {
   @CompilerDirectives.TruffleBoundary
   private static NMethodDispatchNode getDispatchNode() {
     return NMethodDispatchNodeGen.create();
+  }
+
+  protected boolean isDouble(Object object) {
+    return object instanceof Double;
+  }
+
+  protected boolean isLong(Object object) {
+    return object instanceof Long;
+  }
+
+  protected boolean isString(Object object) {
+    return object instanceof TruffleString;
+  }
+
+  @CompilerDirectives.TruffleBoundary
+  protected boolean objectEquals(Object first, Object second) {
+    return first.equals(second);
   }
 }

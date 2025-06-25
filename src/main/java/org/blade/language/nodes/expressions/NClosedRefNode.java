@@ -7,9 +7,9 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import org.blade.language.nodes.NNode;
 
 public final class NClosedRefNode extends NNode {
-  private MaterializedFrame parentFrame;
   private final int slot;
   private final int depth;
+  private MaterializedFrame parentFrame;
 
   public NClosedRefNode(int slot, int depth) {
     this.slot = slot;

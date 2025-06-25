@@ -8,13 +8,11 @@ import org.blade.language.nodes.NStmtNode;
 import org.blade.language.runtime.BladeRuntimeError;
 
 public final class NTryCatchStmtNode extends NStmtNode {
+  // NOTE: Intentionally not compilation final!
+  private final int slot;
   @SuppressWarnings("FieldMayBeFinal")
   @Child
   private NNode body;
-
-  // NOTE: Intentionally not compilation final!
-  private final int slot;
-
   @SuppressWarnings("FieldMayBeFinal")
   @Child
   private NNode catchBody;

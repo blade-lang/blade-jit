@@ -10,22 +10,20 @@ import com.oracle.truffle.api.interop.TruffleObject;
 import com.oracle.truffle.api.interop.UnknownIdentifierException;
 import com.oracle.truffle.api.library.ExportLibrary;
 import com.oracle.truffle.api.library.ExportMessage;
-import com.oracle.truffle.api.nodes.ExplodeLoop;
 import org.blade.language.BladeLanguage;
 
 import java.util.Objects;
 
 @ExportLibrary(InteropLibrary.class)
 public abstract class DebugObject implements TruffleObject {
-  protected abstract RefObject[] getRefs();
-
   static int CACHE_LIMIT = 4;
-
   protected final Frame frame;
 
   public DebugObject(Frame frame) {
     this.frame = frame;
   }
+
+  protected abstract RefObject[] getRefs();
 
   @ExportMessage
   boolean isScope() {
@@ -62,6 +60,25 @@ public abstract class DebugObject implements TruffleObject {
   Object getMembers(boolean includeInternal) {
     RefObject[] references = getRefs();
     return new RefObjectList(references);
+  }
+
+  private boolean referenceCalled(String member) {
+    return this.findReference(member) != null;
+  }
+
+  RefObject findReference(String member) {
+    RefObject[] refObjects = getRefs();
+    for (var refObject : refObjects) {
+      if (objectEquals(refObject.name, member)) {
+        return refObject;
+      }
+    }
+    return null;
+  }
+
+  @CompilerDirectives.TruffleBoundary
+  private boolean objectEquals(Object a, Object b) {
+    return Objects.equals(a, b);
   }
 
   @ExportMessage(name = "isMemberReadable")
@@ -140,24 +157,5 @@ public abstract class DebugObject implements TruffleObject {
       }
       refObject.write(receiver.frame, value);
     }
-  }
-
-  private boolean referenceCalled(String member) {
-    return this.findReference(member) != null;
-  }
-
-  RefObject findReference(String member) {
-    RefObject[] refObjects = getRefs();
-    for (var refObject : refObjects) {
-      if (objectEquals(refObject.name, member)) {
-        return refObject;
-      }
-    }
-    return null;
-  }
-
-  @CompilerDirectives.TruffleBoundary
-  private boolean objectEquals(Object a, Object b) {
-    return Objects.equals(a, b);
   }
 }

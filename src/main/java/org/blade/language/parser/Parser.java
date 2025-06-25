@@ -878,7 +878,7 @@ public class Parser {
 
       // range can only exist at the beginning of import path and
       // nowhere else within it
-      if(match(RANGE)) {
+      if (match(RANGE)) {
         paths.add(previous().literal());
       }
 
@@ -905,7 +905,7 @@ public class Parser {
 
             importsAll = true;
             break;
-          } else if(element.literal().startsWith("_")) {
+          } else if (element.literal().startsWith("_")) {
             throw new ParserException(
               lexer.getSource(),
               element, false, "Cannot import module private items"

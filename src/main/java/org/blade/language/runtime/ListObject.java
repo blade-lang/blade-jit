@@ -23,15 +23,12 @@ import java.util.List;
 @ExportLibrary(InteropLibrary.class)
 public final class ListObject extends BladeObject {
   static final String LENGTH_PROP = "length";
-
+  private static final DynamicObjectLibrary UNCACHED_LIB = DynamicObjectLibrary.getUncached();
   @CompilerDirectives.CompilationFinal(dimensions = 1)
   public Object[] items;
-
   // List properties...
   @DynamicField
   private long length;
-
-  private static final DynamicObjectLibrary UNCACHED_LIB = DynamicObjectLibrary.getUncached();
 
   public ListObject(Shape shape, BladeClass classObject, Object[] objects) {
     super(shape, classObject);
@@ -91,49 +88,6 @@ public final class ListObject extends BladeObject {
     items[(int) index] = value;
   }
 
-  @ExportMessage
-  static class WriteArrayElement {
-    @Specialization(guards = {"index < length", "index >= 0"})
-    static void doWithinLength(ListObject list, long index, Object value,
-                               @Cached(value = "list.items.length", neverDefault = true) @Cached.Shared("length") int length) {
-      list.writeArrayElement(index, value);
-    }
-
-    @Specialization(guards = {"index > 0", "index < list.items.length"})
-    static void doWithinLengthUncached(ListObject list, long index, Object value) {
-      list.writeArrayElement(index, value);
-    }
-
-    @Specialization(guards = {"index < 0"})
-    static void doIndexLessThanZero(ListObject list, long index, Object value,
-                                    @Cached(value = "list.items.length", neverDefault = true) @Cached.Shared("length") int length) {
-      list.writeArrayElement(index + list.items.length, value);
-    }
-
-    @Fallback
-    static void doInvalid(ListObject list, long index, Object value,
-                          @Bind Node node) {
-      throw BladeRuntimeError.error(node, "List index ", index, " out of range");
-    }
-  }
-
-  @ExportMessage
-  static class WriteMember {
-    @Specialization(guards = "LENGTH_PROP.equals(member)")
-    static void writeLength(ListObject list, String member, Object value,
-                            @Bind Node node) {
-      throw BladeRuntimeError.error(node, "Direct modification of list.length prohibited");
-    }
-
-    @Fallback
-    static void writeNonLength(
-      ListObject list, String member, Object value,
-      @CachedLibrary(limit = "3") DynamicObjectLibrary objectLibrary
-    ) {
-      list.writeMember(member, value, objectLibrary);
-    }
-  }
-
   @Override
   public String toString() {
     List<String> builder = new ArrayList<>();
@@ -168,5 +122,46 @@ public final class ListObject extends BladeObject {
       return index + length;
     }
     return index;
+  }
+
+  @ExportMessage
+  static class WriteArrayElement {
+    @Specialization(guards = {"index < length", "index >= 0"})
+    static void doWithinLength(ListObject list, long index, Object value,
+                               @Cached(value = "list.items.length", neverDefault = true) @Cached.Shared("length") int length) {
+      list.writeArrayElement(index, value);
+    }
+
+    @Specialization(guards = {"index > 0", "index < list.items.length"})
+    static void doWithinLengthUncached(ListObject list, long index, Object value) {
+      list.writeArrayElement(index, value);
+    }
+
+    @Specialization(guards = {"index < 0"})
+    static void doIndexLessThanZero(ListObject list, long index, Object value,
+                                    @Cached(value = "list.items.length", neverDefault = true) @Cached.Shared("length") int length) {
+      list.writeArrayElement(index + list.items.length, value);
+    }
+
+    @Fallback
+    static void doInvalid(ListObject list, long index, Object value, @Bind Node node) {
+      throw BladeRuntimeError.error(node, "List index ", index, " out of range");
+    }
+  }
+
+  @ExportMessage
+  static class WriteMember {
+    @Specialization(guards = "LENGTH_PROP.equals(member)")
+    static void writeLength(ListObject list, String member, Object value, @Bind Node node) {
+      throw BladeRuntimeError.error(node, "Direct modification of list.length prohibited");
+    }
+
+    @Fallback
+    static void writeNonLength(
+      ListObject list, String member, Object value,
+      @CachedLibrary(limit = "3") DynamicObjectLibrary objectLibrary
+    ) {
+      list.writeMember(member, value, objectLibrary);
+    }
   }
 }

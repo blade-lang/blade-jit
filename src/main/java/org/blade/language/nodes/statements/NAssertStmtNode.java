@@ -7,15 +7,13 @@ import org.blade.language.nodes.NStmtNode;
 import org.blade.language.runtime.BladeNil;
 
 public final class NAssertStmtNode extends NStmtNode {
+  private final CountingConditionProfile profile = CountingConditionProfile.create();
   @SuppressWarnings("FieldMayBeFinal")
   @Child
   private NNode assertion;
-
   @SuppressWarnings("FieldMayBeFinal")
   @Child
   private NNode message;
-
-  private final CountingConditionProfile profile = CountingConditionProfile.create();
 
   public NAssertStmtNode(NNode assertion, NNode message) {
     this.assertion = assertion;

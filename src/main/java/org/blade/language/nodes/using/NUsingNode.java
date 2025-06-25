@@ -5,10 +5,10 @@ import org.blade.language.nodes.NNode;
 import org.blade.language.nodes.NStmtNode;
 
 public final class NUsingNode extends NStmtNode {
-  @SuppressWarnings({"FieldMayBeFinal", "unused"})
-  @Child private NNode valueNode; // intentional: Fields must be adopted by a root node before they can be executed.
-
   private final NUsingDispatchNode dispatchNode;
+  @SuppressWarnings({"FieldMayBeFinal", "unused"})
+  @Child
+  private NNode valueNode; // intentional: Fields must be adopted by a root node before they can be executed.
 
   public NUsingNode(NNode valueNode, NWhenNode[] caseNodes, NNode defaultNode) {
     this.valueNode = valueNode;

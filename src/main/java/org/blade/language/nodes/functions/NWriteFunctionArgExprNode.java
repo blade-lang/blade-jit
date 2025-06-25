@@ -5,11 +5,10 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import org.blade.language.nodes.NNode;
 
 public final class NWriteFunctionArgExprNode extends NNode {
-  @Child
-  NNode value;
-
   @CompilerDirectives.CompilationFinal
   private final int index;
+  @Child
+  NNode value;
 
   public NWriteFunctionArgExprNode(NNode value, int index) {
     this.value = value;

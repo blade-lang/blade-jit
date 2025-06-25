@@ -7,12 +7,11 @@ import org.blade.language.nodes.NStmtNode;
 import org.blade.language.runtime.BladeNil;
 
 public final class NExprStmtNode extends NStmtNode {
+  @CompilerDirectives.CompilationFinal
+  public final boolean discardValue;
   @SuppressWarnings("FieldMayBeFinal")
   @Child
   private NNode expr;
-
-  @CompilerDirectives.CompilationFinal
-  public final boolean discardValue;
 
   public NExprStmtNode(NNode expr) {
     this(expr, false);

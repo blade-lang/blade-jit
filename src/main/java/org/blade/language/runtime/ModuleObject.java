@@ -60,6 +60,6 @@ public final class ModuleObject extends GlobalScopeObject {
   @CompilerDirectives.TruffleBoundary
   @Override
   public String toString() {
-    return "<module "+path+">";
+    return "<module " + path + ">";
   }
 }

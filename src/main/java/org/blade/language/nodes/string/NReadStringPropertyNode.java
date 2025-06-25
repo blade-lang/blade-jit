@@ -20,6 +20,10 @@ import org.blade.language.runtime.BladeRuntimeError;
 public abstract class NReadStringPropertyNode extends NBaseNode {
   public static final String LENGTH_PROP = "length";
 
+  public static NReadStringPropertyNode create() {
+    return NReadStringPropertyNodeGen.create();
+  }
+
   public abstract Object executeProperty(TruffleString self, Object property);
 
   @Specialization

@@ -8,7 +8,6 @@ import org.blade.language.runtime.BladeClass;
 import org.blade.language.runtime.BladeContext;
 import org.blade.language.runtime.BladeRuntimeError;
 import org.blade.language.runtime.RangeObject;
-import org.blade.language.shared.BuiltinClassesModel;
 
 @NodeChild("lower")
 @NodeChild("upper")
@@ -17,9 +16,9 @@ public abstract class NRangeLiteralNode extends NNode {
 
   @Specialization
   protected static Object doValid(long lower, long upper, @Bind Node node,
-                           @Cached(value = "get(node)", neverDefault = true) BladeContext context,
-                           @Cached(value = "context.objectsModel.rootShape", neverDefault = true) Shape rootShape,
-                           @Cached(value = "context.objectsModel.rangeObject", neverDefault = true) BladeClass rangeClass) {
+                                  @Cached(value = "get(node)", neverDefault = true) BladeContext context,
+                                  @Cached(value = "context.objectsModel.rootShape", neverDefault = true) Shape rootShape,
+                                  @Cached(value = "context.objectsModel.rangeObject", neverDefault = true) BladeClass rangeClass) {
     return new RangeObject(rootShape, rangeClass, lower, upper);
   }
 

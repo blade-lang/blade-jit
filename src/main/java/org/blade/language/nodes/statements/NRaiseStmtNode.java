@@ -6,7 +6,6 @@ import com.oracle.truffle.api.TruffleStackTraceElement;
 import com.oracle.truffle.api.dsl.Executed;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.library.CachedLibrary;
-import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.RootNode;
 import com.oracle.truffle.api.object.DynamicObjectLibrary;
@@ -20,12 +19,11 @@ import org.blade.language.runtime.*;
 import java.util.List;
 
 public abstract class NRaiseStmtNode extends NStmtNode {
+  private final boolean isAssert;
   @SuppressWarnings("FieldMayBeFinal")
   @Executed
   @Child
   protected NNode error;
-
-  private final boolean isAssert;
 
   public NRaiseStmtNode(NNode error, boolean isAssert) {
     this.error = error;

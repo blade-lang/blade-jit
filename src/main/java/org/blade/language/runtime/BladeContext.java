@@ -27,21 +27,16 @@ import static com.oracle.truffle.api.CompilerDirectives.shouldNotReachHere;
 public class BladeContext {
   private static final TruffleLanguage.ContextReference<BladeContext> REFERENCE = TruffleLanguage.ContextReference.create(
     BladeLanguage.class);
-
-  private final List<FunctionObject> shutdownHooks = new ArrayList<>();
-
-  public DynamicObject globalScope;
   public final BuiltinClassesModel objectsModel;
   public final FunctionObject emptyFunction;
-
   public final BufferedReader input;
   public final PrintWriter output;
   public final PrintWriter error;
-
-  public TruffleLanguage.Env env;
-
   public final BladeLanguage language;
+  private final List<FunctionObject> shutdownHooks = new ArrayList<>();
   private final Map<String, ModuleObject> loadedModules = new ConcurrentHashMap<>();
+  public DynamicObject globalScope;
+  public TruffleLanguage.Env env;
 
   public BladeContext(BladeLanguage language, TruffleLanguage.Env env, DynamicObject globalScope, BuiltinClassesModel objectsModel, FunctionObject emptyFunction) {
     this.language = language;

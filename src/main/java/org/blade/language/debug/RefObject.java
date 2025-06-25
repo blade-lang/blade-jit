@@ -9,10 +9,6 @@ import com.oracle.truffle.api.source.SourceSection;
 
 @ExportLibrary(InteropLibrary.class)
 public abstract class RefObject implements TruffleObject {
-  public abstract Object read(Frame frame);
-
-  public abstract void write(Frame frame, Object value);
-
   protected final String name;
   private final SourceSection sourceSection;
 
@@ -20,6 +16,10 @@ public abstract class RefObject implements TruffleObject {
     this.name = name;
     this.sourceSection = sourceSection;
   }
+
+  public abstract Object read(Frame frame);
+
+  public abstract void write(Frame frame, Object value);
 
   @ExportMessage
   boolean isString() {

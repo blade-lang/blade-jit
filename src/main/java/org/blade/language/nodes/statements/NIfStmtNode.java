@@ -7,19 +7,16 @@ import org.blade.language.nodes.NStmtNode;
 import org.blade.language.runtime.BladeNil;
 
 public final class NIfStmtNode extends NStmtNode {
+  private final CountingConditionProfile profile = CountingConditionProfile.create();
   @SuppressWarnings("FieldMayBeFinal")
   @Child
   private NNode condition;
-
   @SuppressWarnings("FieldMayBeFinal")
   @Child
   private NNode thenBranch;
-
   @SuppressWarnings("FieldMayBeFinal")
   @Child
   private NNode elseBranch;
-
-  private final CountingConditionProfile profile = CountingConditionProfile.create();
 
   public NIfStmtNode(NNode condition, NNode thenBranch, NNode elseBranch) {
     this.condition = condition;

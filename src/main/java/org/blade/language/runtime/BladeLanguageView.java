@@ -23,6 +23,47 @@ public final class BladeLanguageView implements TruffleObject {
     this.delegate = delegate;
   }
 
+  @CompilerDirectives.TruffleBoundary
+  private static String numberToString(long l) {
+    return Long.toString(l);
+  }
+
+  @CompilerDirectives.TruffleBoundary
+  private static String numberToString(double l) {
+    return Double.toString(l);
+  }
+
+  public static Object create(Object value) {
+    assert isPrimitiveOrFromOtherLanguage(value);
+    return new BladeLanguageView(value);
+  }
+
+  private static boolean isPrimitiveOrFromOtherLanguage(Object value) {
+    InteropLibrary interop = InteropLibrary.getFactory().getUncached(value);
+    try {
+      return !interop.hasLanguage(value) || interop.getLanguage(value) != BladeLanguage.class;
+    } catch (UnsupportedMessageException e) {
+      throw shouldNotReachHere(e);
+    }
+  }
+
+  @CompilerDirectives.TruffleBoundary
+  public static Object forValue(Object value) {
+    if (value == null) {
+      return null;
+    }
+    InteropLibrary lib = InteropLibrary.getFactory().getUncached(value);
+    try {
+      if (lib.hasLanguage(value) && lib.getLanguage(value) == BladeLanguage.class) {
+        return value;
+      } else {
+        return create(value);
+      }
+    } catch (UnsupportedMessageException e) {
+      throw shouldNotReachHere(e);
+    }
+  }
+
   @ExportMessage
   boolean hasLanguage() {
     return true;
@@ -77,46 +118,5 @@ public final class BladeLanguageView implements TruffleObject {
     }
 
     return "Unknown";
-  }
-
-  @CompilerDirectives.TruffleBoundary
-  private static String numberToString(long l) {
-    return Long.toString(l);
-  }
-
-  @CompilerDirectives.TruffleBoundary
-  private static String numberToString(double l) {
-    return Double.toString(l);
-  }
-
-  public static Object create(Object value) {
-    assert isPrimitiveOrFromOtherLanguage(value);
-    return new BladeLanguageView(value);
-  }
-
-  private static boolean isPrimitiveOrFromOtherLanguage(Object value) {
-    InteropLibrary interop = InteropLibrary.getFactory().getUncached(value);
-    try {
-      return !interop.hasLanguage(value) || interop.getLanguage(value) != BladeLanguage.class;
-    } catch (UnsupportedMessageException e) {
-      throw shouldNotReachHere(e);
-    }
-  }
-
-  @CompilerDirectives.TruffleBoundary
-  public static Object forValue(Object value) {
-    if (value == null) {
-      return null;
-    }
-    InteropLibrary lib = InteropLibrary.getFactory().getUncached(value);
-    try {
-      if (lib.hasLanguage(value) && lib.getLanguage(value) == BladeLanguage.class) {
-        return value;
-      } else {
-        return create(value);
-      }
-    } catch (UnsupportedMessageException e) {
-      throw shouldNotReachHere(e);
-    }
   }
 }

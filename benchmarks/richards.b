@@ -368,7 +368,7 @@ class IdleTask < Task {
 
   fn(pkt,r) {
     var i = r
-    assert instance_of(i, IdleTaskRec)
+    assert i.get_class() == IdleTaskRec
     i.count -= 1
     if i.count == 0 return self.hold()
     else if i.control & 1 == 0 {

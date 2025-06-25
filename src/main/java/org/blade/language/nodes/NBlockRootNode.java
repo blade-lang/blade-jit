@@ -8,13 +8,11 @@ import org.blade.language.BladeLanguage;
 import org.blade.language.nodes.statements.NBlockStmtNode;
 
 public final class NBlockRootNode extends RootNode {
+  private final String name;
+  private final SourceSection sourceSection;
   @SuppressWarnings("FieldMayBeFinal")
   @Child
   private NBlockStmtNode block;
-
-  private final String name;
-
-  private final SourceSection sourceSection;
 
   public NBlockRootNode(BladeLanguage language, NBlockStmtNode block, String name) {
     this(language, FrameDescriptor.newBuilder().build(), block, name);

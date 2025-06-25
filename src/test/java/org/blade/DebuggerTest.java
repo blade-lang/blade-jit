@@ -40,6 +40,39 @@ public class DebuggerTest {
 
   private DebuggerTester debuggerTester;
 
+  private static void assertState(
+    SuspendedEvent suspendedEvent, int expectedLineNumber,
+    SuspendAnchor suspendAnchor, String expectedCode) {
+    assertState(suspendedEvent, "@.script", expectedLineNumber, suspendAnchor, expectedCode, List.of(Map.of()));
+  }
+
+  private static void assertState(
+    SuspendedEvent suspendedEvent, String frameName, int expectedLineNumber,
+    SuspendAnchor suspendAnchor, String expectedCode, List<Map<String, String>> expectedFrameValues) {
+    DebugStackFrame frame = suspendedEvent.getTopStackFrame();
+    assertEquals(frameName, frame.getName());
+
+    assertEquals(expectedLineNumber, suspendedEvent.getSourceSection().getStartLine());
+    assertEquals(suspendAnchor, suspendedEvent.getSuspendAnchor());
+    assertEquals(expectedCode, suspendedEvent.getSourceSection().getCharacters().toString());
+
+    assertEquals(expectedFrameValues, scopeValues(frame.getScope()));
+  }
+
+  private static List<Map<String, String>> scopeValues(DebugScope scope) {
+    List<Map<String, String>> ret = new LinkedList<>();
+    DebugScope currentScope = scope;
+    while (currentScope != null) {
+      Map<String, String> values = new HashMap<>();
+      ret.addFirst(values);
+      for (DebugValue value : currentScope.getDeclaredValues()) {
+        values.put(value.getName(), value.toDisplayString());
+      }
+      currentScope = currentScope.getParent();
+    }
+    return ret;
+  }
+
   @Before
   public void setUp() {
     this.debuggerTester = new DebuggerTester();
@@ -222,38 +255,5 @@ public class DebuggerTest {
 
       this.debuggerTester.expectDone();
     }
-  }
-
-  private static void assertState(
-    SuspendedEvent suspendedEvent, int expectedLineNumber,
-    SuspendAnchor suspendAnchor, String expectedCode) {
-    assertState(suspendedEvent, "@.script", expectedLineNumber, suspendAnchor, expectedCode, List.of(Map.of()));
-  }
-
-  private static void assertState(
-    SuspendedEvent suspendedEvent, String frameName, int expectedLineNumber,
-    SuspendAnchor suspendAnchor, String expectedCode, List<Map<String, String>> expectedFrameValues) {
-    DebugStackFrame frame = suspendedEvent.getTopStackFrame();
-    assertEquals(frameName, frame.getName());
-
-    assertEquals(expectedLineNumber, suspendedEvent.getSourceSection().getStartLine());
-    assertEquals(suspendAnchor, suspendedEvent.getSuspendAnchor());
-    assertEquals(expectedCode, suspendedEvent.getSourceSection().getCharacters().toString());
-
-    assertEquals(expectedFrameValues, scopeValues(frame.getScope()));
-  }
-
-  private static List<Map<String, String>> scopeValues(DebugScope scope) {
-    List<Map<String, String>> ret = new LinkedList<>();
-    DebugScope currentScope = scope;
-    while (currentScope != null) {
-      Map<String, String> values = new HashMap<>();
-      ret.addFirst(values);
-      for (DebugValue value : currentScope.getDeclaredValues()) {
-        values.put(value.getName(), value.toDisplayString());
-      }
-      currentScope = currentScope.getParent();
-    }
-    return ret;
   }
 }

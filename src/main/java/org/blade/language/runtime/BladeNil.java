@@ -18,11 +18,6 @@ public class BladeNil implements TruffleObject {
   }
 
   @ExportMessage
-  boolean isNull() {
-    return true;
-  }
-
-  @ExportMessage
   static TriState isIdenticalOrUndefined(@SuppressWarnings("unused") BladeNil receiver, Object other) {
     return TriState.valueOf(SINGLETON == other);
   }
@@ -30,6 +25,11 @@ public class BladeNil implements TruffleObject {
   @ExportMessage
   static int identityHashCode(@SuppressWarnings("unused") BladeNil receiver) {
     return IDENTITY_HASH;
+  }
+
+  @ExportMessage
+  boolean isNull() {
+    return true;
   }
 
   @ExportMessage

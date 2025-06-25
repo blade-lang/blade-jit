@@ -6,8 +6,8 @@ import com.oracle.truffle.api.object.DynamicObjectLibrary;
 import com.oracle.truffle.api.object.Shape;
 
 public final class ErrorObject extends BladeObject {
-  public final String type, message;
   private static final DynamicObjectLibrary UNCACHED_OBJ = DynamicObjectLibrary.getUncached();
+  public final String type, message;
 
   public ErrorObject(String message, Shape shape, BladeClass prototype) {
     super(shape, prototype);

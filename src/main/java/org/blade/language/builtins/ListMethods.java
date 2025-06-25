@@ -9,7 +9,6 @@ import com.oracle.truffle.api.interop.UnsupportedMessageException;
 import com.oracle.truffle.api.interop.UnsupportedTypeException;
 import com.oracle.truffle.api.library.CachedLibrary;
 import com.oracle.truffle.api.object.DynamicObject;
-import com.oracle.truffle.api.object.DynamicObjectLibrary;
 import org.blade.language.BaseBuiltinDeclaration;
 import org.blade.language.nodes.functions.NBuiltinFunctionNode;
 import org.blade.language.runtime.BladeNil;

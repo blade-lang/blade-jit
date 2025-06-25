@@ -41,30 +41,7 @@ public class BladeTestRunner extends ParentRunner<BladeTestRunner.TestCase> {
   private static final String OUTPUT_SUFFIX = ".out";
 
   private static final String LF = System.getProperty("line.separator");
-
-  static class TestCase {
-    protected final Description name;
-    protected final Path path;
-    protected final String sourceName;
-    protected final String testInput;
-    protected final String expectedOutput;
-    protected final Map<String, String> options;
-    protected String actualOutput;
-    protected boolean expectStackTrace;
-    protected boolean expectRegex;
-
-    protected TestCase(Class<?> testClass, String baseName, String sourceName, Path path, String testInput, String expectedOutput, boolean expectStackTrace, boolean expectRegex, Map<String, String> options) {
-      this.name = Description.createTestDescription(testClass, baseName);
-      this.sourceName = sourceName;
-      this.path = path;
-      this.testInput = testInput;
-      this.expectedOutput = expectedOutput;
-      this.options = options;
-      this.expectStackTrace = expectStackTrace;
-      this.expectRegex = expectRegex;
-    }
-  }
-
+  private static final List<NodeFactory<? extends NBuiltinFunctionNode>> builtins = new ArrayList<>();
   private final List<TestCase> testCases;
 
   public BladeTestRunner(Class<?> runningClass) throws InitializationError {
@@ -74,16 +51,6 @@ public class BladeTestRunner extends ParentRunner<BladeTestRunner.TestCase> {
     } catch (IOException e) {
       throw new InitializationError(e);
     }
-  }
-
-  @Override
-  protected Description describeChild(TestCase child) {
-    return child.name;
-  }
-
-  @Override
-  protected List<TestCase> getChildren() {
-    return testCases;
   }
 
   protected static List<TestCase> createTests(final Class<?> c) throws IOException, InitializationError {
@@ -269,10 +236,48 @@ public class BladeTestRunner extends ParentRunner<BladeTestRunner.TestCase> {
     return outFile.toString();
   }
 
-  private static final List<NodeFactory<? extends NBuiltinFunctionNode>> builtins = new ArrayList<>();
-
   public static void installBuiltin(NodeFactory<? extends NBuiltinFunctionNode> builtin) {
     builtins.add(builtin);
+  }
+
+  private static void run(Context context, Path path, PrintWriter out) throws IOException {
+    try {
+      /* Parse the Nim source file. */
+      Source source = Source.newBuilder(BladeLanguage.ID, path.toFile()).build();
+
+      /* Call the main entry point, without any arguments. */
+      context.eval(source);
+    } catch (PolyglotException ex) {
+      if (!ex.isInternalError()) {
+        ex.printStackTrace(out);
+      } else {
+//        ex.printStackTrace(out);
+        throw ex;
+      }
+    }
+  }
+
+  public static void runInMain(Class<?> testClass, String[] args) throws InitializationError, NoTestsRemainException {
+    JUnitCore core = new JUnitCore();
+    core.addListener(new TextListener(System.out));
+    BladeTestRunner suite = new BladeTestRunner(testClass);
+    if (args.length > 0) {
+      suite.filter(new NameFilter(args[0]));
+    }
+    Result r = core.run(suite);
+    if (!r.wasSuccessful()) {
+      System.exit(1);
+    }
+  }
+
+  @Override
+  protected Description describeChild(TestCase child) {
+    return child.name;
+  }
+
+  @Override
+  protected List<TestCase> getChildren() {
+    return testCases;
   }
 
   @Override
@@ -326,33 +331,26 @@ public class BladeTestRunner extends ParentRunner<BladeTestRunner.TestCase> {
     }
   }
 
-  private static void run(Context context, Path path, PrintWriter out) throws IOException {
-    try {
-      /* Parse the Nim source file. */
-      Source source = Source.newBuilder(BladeLanguage.ID, path.toFile()).build();
+  static class TestCase {
+    protected final Description name;
+    protected final Path path;
+    protected final String sourceName;
+    protected final String testInput;
+    protected final String expectedOutput;
+    protected final Map<String, String> options;
+    protected String actualOutput;
+    protected boolean expectStackTrace;
+    protected boolean expectRegex;
 
-      /* Call the main entry point, without any arguments. */
-      context.eval(source);
-    } catch (PolyglotException ex) {
-      if (!ex.isInternalError()) {
-        ex.printStackTrace(out);
-      } else {
-//        ex.printStackTrace(out);
-        throw ex;
-      }
-    }
-  }
-
-  public static void runInMain(Class<?> testClass, String[] args) throws InitializationError, NoTestsRemainException {
-    JUnitCore core = new JUnitCore();
-    core.addListener(new TextListener(System.out));
-    BladeTestRunner suite = new BladeTestRunner(testClass);
-    if (args.length > 0) {
-      suite.filter(new NameFilter(args[0]));
-    }
-    Result r = core.run(suite);
-    if (!r.wasSuccessful()) {
-      System.exit(1);
+    protected TestCase(Class<?> testClass, String baseName, String sourceName, Path path, String testInput, String expectedOutput, boolean expectStackTrace, boolean expectRegex, Map<String, String> options) {
+      this.name = Description.createTestDescription(testClass, baseName);
+      this.sourceName = sourceName;
+      this.path = path;
+      this.testInput = testInput;
+      this.expectedOutput = expectedOutput;
+      this.options = options;
+      this.expectStackTrace = expectStackTrace;
+      this.expectRegex = expectRegex;
     }
   }
 

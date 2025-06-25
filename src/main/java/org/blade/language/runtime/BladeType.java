@@ -79,6 +79,11 @@ public final class BladeType implements TruffleObject {
     return "RemType[" + name + "]";
   }
 
+  @FunctionalInterface
+  interface TypeCheck {
+    boolean check(InteropLibrary lib, Object value);
+  }
+
   @ExportMessage
   static class IsMetaInstance {
 
@@ -94,10 +99,5 @@ public final class BladeType implements TruffleObject {
     static boolean doGeneric(BladeType type, Object value) {
       return type.isInstance.check(InteropLibrary.getFactory().getUncached(), value);
     }
-  }
-
-  @FunctionalInterface
-  interface TypeCheck {
-    boolean check(InteropLibrary lib, Object value);
   }
 }

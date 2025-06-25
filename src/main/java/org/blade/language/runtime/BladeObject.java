@@ -2,7 +2,6 @@ package org.blade.language.runtime;
 
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.TruffleLanguage;
-import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.Fallback;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.interop.InteropLibrary;
@@ -116,20 +115,6 @@ public class BladeObject extends DynamicObject {
     objectLibrary.put(this, member, value);
   }
 
-  @ExportMessage
-  @SuppressWarnings("unused")
-  static final class IsIdenticalOrUndefined {
-    @Specialization
-    static TriState doSLObject(BladeObject receiver, BladeObject other) {
-      return TriState.valueOf(receiver == other);
-    }
-
-    @Fallback
-    static TriState doOther(BladeObject receiver, Object other) {
-      return TriState.UNDEFINED;
-    }
-  }
-
   @CompilerDirectives.TruffleBoundary
   public String getClassName() {
     return ((BladeClass) classObject).name;
@@ -144,5 +129,19 @@ public class BladeObject extends DynamicObject {
   @CompilerDirectives.TruffleBoundary
   int identityHashCode() {
     return System.identityHashCode(this);
+  }
+
+  @ExportMessage
+  @SuppressWarnings("unused")
+  static final class IsIdenticalOrUndefined {
+    @Specialization
+    static TriState doSLObject(BladeObject receiver, BladeObject other) {
+      return TriState.valueOf(receiver == other);
+    }
+
+    @Fallback
+    static TriState doOther(BladeObject receiver, Object other) {
+      return TriState.UNDEFINED;
+    }
   }
 }

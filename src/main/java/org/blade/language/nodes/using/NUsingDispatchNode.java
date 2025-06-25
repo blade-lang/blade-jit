@@ -103,7 +103,7 @@ public abstract class NUsingDispatchNode extends NStmtNode {
   protected Object doString(VirtualFrame frame, TruffleString switchValue,
                             @Cached TruffleString.EqualNode equalNode) {
     for (NWhenNode caseNode : caseNodes) {
-      if(caseNode.execute(frame) instanceof TruffleString string) {
+      if (caseNode.execute(frame) instanceof TruffleString string) {
         if (BString.equals(switchValue, string, equalNode)) {
           return caseNode.bodyNode.execute(frame);
         }
@@ -127,7 +127,7 @@ public abstract class NUsingDispatchNode extends NStmtNode {
         Object caseValue = caseNode.execute(frame);
 
         if (!nilProfile.profile(this, caseValue == null)) {
-          if(equals(caseValue, switchValue)) {
+          if (equals(caseValue, switchValue)) {
             return caseNode.bodyNode.execute(frame);
           }
         }

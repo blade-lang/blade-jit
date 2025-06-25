@@ -6,22 +6,19 @@ import com.oracle.truffle.api.profiles.CountingConditionProfile;
 import org.blade.language.nodes.NNode;
 
 public final class NConditionalNode extends NNode {
+  private final CountingConditionProfile profile = CountingConditionProfile.create();
   @CompilerDirectives.CompilationFinal
   @SuppressWarnings("FieldMayBeFinal")
   @Child
   private NNode condition;
-
   @CompilerDirectives.CompilationFinal
   @SuppressWarnings("FieldMayBeFinal")
   @Child
   private NNode leftNode;
-
   @CompilerDirectives.CompilationFinal
   @SuppressWarnings("FieldMayBeFinal")
   @Child
   private NNode rightNode;
-
-  private final CountingConditionProfile profile = CountingConditionProfile.create();
 
   public NConditionalNode(NNode condition, NNode leftNode, NNode rightNode) {
     this.condition = condition;

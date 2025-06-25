@@ -1,7 +1,6 @@
 package org.blade.language.nodes.expressions;
 
 import com.oracle.truffle.api.dsl.*;
-import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.object.Shape;
 import com.oracle.truffle.api.strings.TruffleString;

@@ -14,28 +14,6 @@ import org.blade.language.runtime.ListObject;
 public abstract class NNode extends NBaseNode {
   private SourceSection sourceSection = null;
 
-  public abstract Object execute(VirtualFrame frame);
-
-  public boolean executeBoolean(VirtualFrame frame) {
-    return evaluateBoolean(execute(frame));
-  }
-
-  public long executeLong(VirtualFrame frame) throws UnexpectedResultException {
-    return BladeTypesGen.expectLong(execute(frame));
-  }
-
-  public double executeDouble(VirtualFrame frame) throws UnexpectedResultException {
-    return BladeTypesGen.expectDouble(execute(frame));
-  }
-
-  public Object evaluateReceiver(VirtualFrame frame) {
-    return BladeNil.SINGLETON;
-  }
-
-  public Object evaluateFunction(VirtualFrame frame, Object receiver) {
-    return execute(frame);
-  }
-
   public static boolean evaluateBoolean(Object value) {
     if (value == BladeNil.SINGLETON) {
       return false;
@@ -60,16 +38,6 @@ public abstract class NNode extends NBaseNode {
     return true;
   }
 
-  public NNode setSourceSection(SourceSection sourceSection) {
-    this.sourceSection = sourceSection;
-    return this;
-  }
-
-  @Override
-  public SourceSection getSourceSection() {
-    return sourceSection;
-  }
-
   @ExplodeLoop
   public static MaterializedFrame getParentFrame(VirtualFrame frame, int depth) {
     MaterializedFrame parentFrame = (MaterializedFrame) frame.getValue(0);
@@ -77,5 +45,37 @@ public abstract class NNode extends NBaseNode {
       parentFrame = (MaterializedFrame) parentFrame.getValue(0);
     }
     return parentFrame;
+  }
+
+  public abstract Object execute(VirtualFrame frame);
+
+  public boolean executeBoolean(VirtualFrame frame) {
+    return evaluateBoolean(execute(frame));
+  }
+
+  public long executeLong(VirtualFrame frame) throws UnexpectedResultException {
+    return BladeTypesGen.expectLong(execute(frame));
+  }
+
+  public double executeDouble(VirtualFrame frame) throws UnexpectedResultException {
+    return BladeTypesGen.expectDouble(execute(frame));
+  }
+
+  public Object evaluateReceiver(VirtualFrame frame) {
+    return BladeNil.SINGLETON;
+  }
+
+  public Object evaluateFunction(VirtualFrame frame, Object receiver) {
+    return execute(frame);
+  }
+
+  @Override
+  public SourceSection getSourceSection() {
+    return sourceSection;
+  }
+
+  public NNode setSourceSection(SourceSection sourceSection) {
+    this.sourceSection = sourceSection;
+    return this;
   }
 }

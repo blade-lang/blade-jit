@@ -732,7 +732,7 @@ public class BladeTranslator extends BaseVisitor<NNode> {
     String moduleName = stmt.name.token.literal();
 
     String currentSourcePath;
-    if(parser.lexer.source.getPath() != null) {
+    if (parser.lexer.source.getPath() != null) {
       currentSourcePath = parser.lexer.source.getPath();
     } else {
       // We're in the REPL.
@@ -746,7 +746,7 @@ public class BladeTranslator extends BaseVisitor<NNode> {
 
     // TODO: Handle importing built-in modules.
 
-    if(stmt.path.startsWith(".")) {
+    if (stmt.path.startsWith(".")) {
       moduleFile = new File(currentDir, stmt.path + ".b");
       if (!moduleFile.exists()) {
         moduleFile = new File(currentDir, String.join(sep, stmt.path, "index.b"));
@@ -770,7 +770,8 @@ public class BladeTranslator extends BaseVisitor<NNode> {
               .getLocation()
               .toURI()
           ).getParent().toFile();
-        } catch (URISyntaxException ignored) {}
+        } catch (URISyntaxException ignored) {
+        }
       }
 
       // Non-relative imports start from the `.blade/libs` directory in the current directory

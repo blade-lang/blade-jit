@@ -18,12 +18,12 @@ import org.blade.language.runtime.BladeRuntimeError;
 @NodeField(name = "name", type = String.class)
 @NodeField(name = "isConst", type = Boolean.class)
 public abstract class NGlobalDeclNode extends NStmtNode {
+  @CompilerDirectives.CompilationFinal
+  private boolean exists = true;
+
   protected abstract String getName();
 
   protected abstract boolean getIsConst();
-
-  @CompilerDirectives.CompilationFinal
-  private boolean exists = true;
 
   @Specialization(limit = "3")
   protected Object create(DynamicObject globalScope, Object value,

@@ -17,14 +17,12 @@ public abstract class NFunctionCallExprNode extends NNode {
 
   @CompilerDirectives.CompilationFinal
   protected final int argsMinus1;
-
+  @Children
+  protected final NNode[] arguments;
   @SuppressWarnings("FieldMayBeFinal")
   @Executed
   @Child
   protected NNode target;
-
-  @Children
-  protected final NNode[] arguments;
 
   public NFunctionCallExprNode(NNode target, List<NNode> arguments) {
     this.target = target;
@@ -101,7 +99,7 @@ public abstract class NFunctionCallExprNode extends NNode {
     return values;
   }
 
-//  @ExplodeLoop
+  //  @ExplodeLoop
   private Object[] extendArguments(FunctionObject function, Object[] arguments) {
     int finalLength = function.argumentsCount + 1;
     int argumentLength = arguments.length;

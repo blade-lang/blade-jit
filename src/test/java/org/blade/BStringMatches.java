@@ -14,18 +14,6 @@ public class BStringMatches extends SubstringMatcher {
     super(substring);
   }
 
-  @Override
-  protected boolean evalSubstringOf(String s) {
-    return Pattern.compile(substring, Pattern.MULTILINE | Pattern.DOTALL)
-      .matcher(s)
-      .find();
-  }
-
-  @Override
-  protected String relationship() {
-    return "that matches";
-  }
-
   /**
    * Creates a matcher that matches if the examined {@link String} matches the regex specified
    * {@link String}.
@@ -38,6 +26,18 @@ public class BStringMatches extends SubstringMatcher {
   @Factory
   public static Matcher<String> matchesAs(String regex) {
     return new BStringMatches(regex);
+  }
+
+  @Override
+  protected boolean evalSubstringOf(String s) {
+    return Pattern.compile(substring, Pattern.MULTILINE | Pattern.DOTALL)
+      .matcher(s)
+      .find();
+  }
+
+  @Override
+  protected String relationship() {
+    return "that matches";
   }
 
 }

@@ -8,28 +8,6 @@ import java.util.List;
 
 public class GenerateAst {
 
-  public static void main(String[] args) throws IOException {
-    if (args.length < 1) {
-      System.err.println("Usage: generate_ast <output_dir> [type?]");
-      System.exit(1);
-    }
-
-    String outputDir = args[0].trim();
-    String type = "all";
-    if (args.length == 2) {
-      type = args[1].trim();
-    }
-
-    if (type.equalsIgnoreCase("expr")) {
-      defineAst(outputDir, "Expr", EXPR_DEFINITION);
-    } else if (type.equalsIgnoreCase("stmt")) {
-      defineAst(outputDir, "Stmt", STMT_DEFINITION);
-    } else {
-      defineAst(outputDir, "Expr", EXPR_DEFINITION);
-      defineAst(outputDir, "Stmt", STMT_DEFINITION);
-    }
-  }
-
   private static final List<String> EXPR_DEFINITION = Arrays.asList(
     "Nil                :",
     "Boolean            : boolean value",
@@ -56,7 +34,6 @@ public class GenerateAst {
     "Assign             : Expr expression, Expr value",
     "Anonymous          : Stmt.Function function"
   );
-
   private static final List<String> STMT_DEFINITION = Arrays.asList(
     "Echo       : Expr value",
     "Expression : Expr expression",
@@ -80,6 +57,28 @@ public class GenerateAst {
     "Class      : Token name, Expr.Identifier superclass, List<Property> properties, List<Method> methods, List<Method> operators",
     "VarList    : List<Stmt> declarations"
   );
+
+  public static void main(String[] args) throws IOException {
+    if (args.length < 1) {
+      System.err.println("Usage: generate_ast <output_dir> [type?]");
+      System.exit(1);
+    }
+
+    String outputDir = args[0].trim();
+    String type = "all";
+    if (args.length == 2) {
+      type = args[1].trim();
+    }
+
+    if (type.equalsIgnoreCase("expr")) {
+      defineAst(outputDir, "Expr", EXPR_DEFINITION);
+    } else if (type.equalsIgnoreCase("stmt")) {
+      defineAst(outputDir, "Stmt", STMT_DEFINITION);
+    } else {
+      defineAst(outputDir, "Expr", EXPR_DEFINITION);
+      defineAst(outputDir, "Stmt", STMT_DEFINITION);
+    }
+  }
 
   private static void defineAst(String outputDir, String baseName, List<String> types) throws IOException {
 

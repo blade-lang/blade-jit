@@ -1,5 +1,6 @@
 package org.blade.language.nodes.expressions;
 
+import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.NodeChild;
 import com.oracle.truffle.api.dsl.NodeField;
 import com.oracle.truffle.api.dsl.Specialization;
@@ -11,16 +12,14 @@ import org.blade.language.nodes.NSharedPropertyReaderNodeGen;
 @NodeChild("targetExpr")
 @NodeField(name = "name", type = String.class)
 public abstract class NGetPropertyNode extends NNode {
+  public abstract Object executeRead(Object object);
+
   public abstract NNode getTargetExpr();
 
   protected abstract String getName();
 
-  @SuppressWarnings("FieldMayBeFinal")
-  @Child
-  private NSharedPropertyReaderNode propertyReader = NSharedPropertyReaderNodeGen.create();
-
   @Specialization
-  protected Object readProperty(Object target) {
+  protected Object readProperty(Object target, @Cached NSharedPropertyReaderNode propertyReader) {
     return propertyReader.executeRead(target, getName());
   }
 
@@ -32,7 +31,7 @@ public abstract class NGetPropertyNode extends NNode {
       ? parentNode.getParentClass()
       : receiver;
 
-    return readProperty(target);
+    return executeRead(target);
   }
 
   @Override

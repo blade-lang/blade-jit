@@ -10,22 +10,19 @@ import static org.blade.language.parser.TokenType.*;
 
 public class Lexer {
   private final static int MAX_INTERPOLATION_NESTING = 8;
-
+  public final Source source;
+  private final Stack<Character> interpolating = new Stack<>();
+  private final CharSequence sourceCharacters;
+  private final List<Token> tokens = new ArrayList<>();
+  private final Dictionary<String, TokenType> keywords = createKeywords();
   private int line = 1;
   private int current = 0;
   private int start = 0;
-  private final Stack<Character> interpolating = new Stack<>();
-  private final CharSequence sourceCharacters;
-
-  public final Source source;
-  private final List<Token> tokens = new ArrayList<>();
 
   public Lexer(Source source) {
     this.source = source;
     this.sourceCharacters = source.getCharacters();
   }
-
-  private final Dictionary<String, TokenType> keywords = createKeywords();
 
   private Dictionary<String, TokenType> createKeywords() {
     return new Hashtable<>() {

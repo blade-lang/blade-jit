@@ -7,16 +7,14 @@ import com.oracle.truffle.api.profiles.BranchProfile;
 import org.blade.language.nodes.NNode;
 
 public final class NDoWhileRepeatingNode extends Node implements RepeatingNode {
+  private final BranchProfile continueTaken = BranchProfile.create();
+  private final BranchProfile breakTaken = BranchProfile.create();
   @SuppressWarnings("FieldMayBeFinal")
   @Child
   private NNode condition;
-
   @SuppressWarnings("FieldMayBeFinal")
   @Child
   private NNode body;
-
-  private final BranchProfile continueTaken = BranchProfile.create();
-  private final BranchProfile breakTaken = BranchProfile.create();
 
   public NDoWhileRepeatingNode(NNode condition, NNode body) {
     this.condition = condition;

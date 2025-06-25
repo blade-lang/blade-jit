@@ -139,7 +139,7 @@ public class Main {
     }
 
 //    if (group.equals("blade") || key.equals("inspect")) {
-      options.put(key, value);
+    options.put(key, value);
 //    }
     return true;
   }

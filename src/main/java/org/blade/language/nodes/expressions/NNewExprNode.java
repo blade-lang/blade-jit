@@ -9,22 +9,20 @@ import com.oracle.truffle.api.library.CachedLibrary;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.object.Shape;
-import com.oracle.truffle.api.profiles.*;
+import com.oracle.truffle.api.profiles.InlinedCountingConditionProfile;
 import org.blade.language.nodes.NNode;
 import org.blade.language.nodes.functions.NMethodDispatchNode;
-import org.blade.language.nodes.functions.NMethodDispatchNodeGen;
 import org.blade.language.runtime.*;
 
 import java.util.List;
 
 @ImportStatic(BladeContext.class)
 public abstract class NNewExprNode extends NNode {
+  @Children
+  private final NNode[] arguments;
   @Child
   @Executed
   protected NNode constructor;
-
-  @Children
-  private final NNode[] arguments;
 
   public NNewExprNode(NNode constructor, List<NNode> arguments) {
     this.constructor = constructor;
