@@ -22,8 +22,8 @@ import java.util.HashSet;
 import java.util.Set;
 
 public final class NFunctionBodyNode extends NStmtNode {
-  @Children
-  private final NNode[] nodes;
+  @Child
+  private NBlockStmtNode node;
 
   @CompilerDirectives.CompilationFinal(dimensions = 1)
   private RefObject[] argsRefCache;
@@ -32,23 +32,20 @@ public final class NFunctionBodyNode extends NStmtNode {
   private final BranchProfile nullTaken = BranchProfile.create();
 
   public NFunctionBodyNode(NBlockStmtNode node) {
-    this.nodes = node.nodes;
+    this.node = node;
   }
 
   @Override
-  @ExplodeLoop
   public Object execute(VirtualFrame frame) {
-    for (NNode node : nodes) {
-      try {
-        node.execute(frame);
-      } catch (NReturnException e) {
-        exceptionTaken.enter();
-        return e.value;
-      }
+    try {
+      node.execute(frame);
+    } catch (NReturnException e) {
+      exceptionTaken.enter();
+      return e.value;
     }
 
     nullTaken.enter();
-    return BladeNil.SINGLETON;
+    return node;
   }
 
   public RefObject[] getArgAndLocalVarRefs() {

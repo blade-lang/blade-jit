@@ -4,6 +4,7 @@ import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.instrumentation.StandardTags;
 import com.oracle.truffle.api.instrumentation.Tag;
+import com.oracle.truffle.api.nodes.BlockNode;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.NodeUtil;
@@ -16,10 +17,9 @@ import org.blade.language.runtime.BladeNil;
 
 import java.util.List;
 
-public final class NBlockStmtNode extends NStmtNode {
+public final class NBlockStmtNode extends NStmtNode implements BlockNode.ElementExecutor<NNode> {
 
-  @Children
-  public final NNode[] nodes;
+  @Child private BlockNode<NNode> block;
 
   @CompilerDirectives.CompilationFinal(dimensions = 1)
   private RefObject[] refCache;
@@ -31,25 +31,17 @@ public final class NBlockStmtNode extends NStmtNode {
   }
 
   public NBlockStmtNode(List<NNode> nodes, boolean isProgram) {
-    this.nodes = nodes.toArray(new NNode[0]);
+    this.block = !nodes.isEmpty() ? BlockNode.create(nodes.toArray(new NNode[0]), this) : null;
     this.isProgram = isProgram;
   }
 
-  @ExplodeLoop
   @Override
   public Object execute(VirtualFrame frame) {
-    /*Object result = BladeNil.SINGLETON;
-    for(NNode node : nodes) {
-      result = node.execute(frame);
-    }
-    return result;*/
-
-    int preLength = nodes.length - 1;
-    for (int i = 0; i < preLength; i++) {
-      nodes[i].execute(frame);
+    if (this.block != null) {
+      this.block.executeVoid(frame, BlockNode.NO_ARGUMENT);
     }
 
-    return preLength < 0 ? BladeNil.SINGLETON : nodes[preLength].execute(frame);
+    return BladeNil.SINGLETON;
   }
 
   @Override
@@ -88,5 +80,10 @@ public final class NBlockStmtNode extends NStmtNode {
     System.arraycopy(parentVars, 0, allVariables, variables.length, parentVars.length);
 
     return allVariables;
+  }
+
+  @Override
+  public void executeVoid(VirtualFrame frame, NNode node, int index, int argument) {
+    node.execute(frame);
   }
 }

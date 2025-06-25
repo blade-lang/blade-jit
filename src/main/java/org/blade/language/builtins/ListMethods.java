@@ -75,12 +75,11 @@ public final class ListMethods implements BaseBuiltinDeclaration {
   public abstract static class NAppendMethodNode extends NBuiltinFunctionNode {
     @Specialization
     protected Object doAny(DynamicObject self, Object item,
-                           @CachedLibrary(limit = "3") DynamicObjectLibrary objectLibrary,
                            @CachedLibrary(limit = "3") InteropLibrary interopLibrary) {
       try {
         ListObject list = (ListObject) self;
         long size = list.getArraySize();
-        list.resize(size + 1, objectLibrary);
+        list.resize(size + 1);
         interopLibrary.writeArrayElement(self, size, item);
       } catch (UnsupportedMessageException | UnsupportedTypeException | InvalidArrayIndexException e) {
         throw BladeRuntimeError.error(this, e.getMessage());

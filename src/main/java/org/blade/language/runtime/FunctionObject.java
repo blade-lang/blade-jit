@@ -66,7 +66,6 @@ public final class FunctionObject extends BladeObject {
     return BString.format(format, name, argumentsCount, callTarget.hashCode());
   }
 
-  @ExplodeLoop
   @ExportMessage
   Object execute(Object[] arguments, @Bind Node node) {
     for (Object argument : arguments) {

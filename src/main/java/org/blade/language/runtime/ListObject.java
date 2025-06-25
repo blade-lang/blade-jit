@@ -31,9 +31,11 @@ public final class ListObject extends BladeObject {
   @DynamicField
   private long length;
 
+  private static final DynamicObjectLibrary UNCACHED_LIB = DynamicObjectLibrary.getUncached();
+
   public ListObject(Shape shape, BladeClass classObject, Object[] objects) {
     super(shape, classObject);
-    setArrayElements(objects, DynamicObjectLibrary.getUncached());
+    setArrayElements(objects);
   }
 
   @ExportMessage
@@ -146,20 +148,20 @@ public final class ListObject extends BladeObject {
     return result;
   }
 
-  private void setArrayElements(Object[] items, DynamicObjectLibrary objectLibrary) {
+  private void setArrayElements(Object[] items) {
     this.items = items;
-    writeMember(LENGTH_PROP, (long) items.length, objectLibrary);
+    writeMember(LENGTH_PROP, (long) items.length, UNCACHED_LIB);
   }
 
   @ExplodeLoop
-  public void resize(long length, DynamicObjectLibrary objectLibrary) {
+  public void resize(long length) {
     Object[] newItems = new Object[(int) length];
     for (int i = 0; i < length; i++) {
       newItems[i] = i < this.items.length
         ? this.items[i]
         : BladeNil.SINGLETON;
     }
-    this.setArrayElements(newItems, objectLibrary);
+    this.setArrayElements(newItems);
   }
 
   private long effectiveIndex(Node node, InlinedConditionProfile profile, long index, long length) {
