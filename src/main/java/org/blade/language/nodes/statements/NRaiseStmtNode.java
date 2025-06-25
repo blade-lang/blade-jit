@@ -59,7 +59,6 @@ public abstract class NRaiseStmtNode extends NStmtNode {
     throw BladeRuntimeError.create(value, this);
   }
 
-  @ExplodeLoop
   @CompilerDirectives.TruffleBoundary
   private TruffleString formStackTrace(Object type, Object message, BladeRuntimeError easyScriptException) {
     TruffleStringBuilder sb = BString.builder();

@@ -5,7 +5,7 @@ import org.openjdk.jmh.annotations.Benchmark;
 public class ExceptionBenchmark extends TruffleBenchmark {
   private static final int INPUT = 1_000_000;
 
-  private static final String NIM_SOURCE = """
+  private static final String BLADE_SOURCE = """
     class Countdown {
         @new(start) {
             self.count = start
@@ -21,10 +21,10 @@ public class ExceptionBenchmark extends TruffleBenchmark {
         const countdown = new Countdown(n)
         var ret = 0
         iter ;; {
-            catch {
+            try {
                 countdown.decrement()
                 ret = ret + 1
-            } as e {
+            } catch e {
                 break
             }
         }
@@ -63,7 +63,7 @@ public class ExceptionBenchmark extends TruffleBenchmark {
   public void setup() {
     super.setup();
 
-    context.eval("blade", NIM_SOURCE);
+    context.eval("blade", BLADE_SOURCE);
 
     context.eval("js", JS_SOURCE);
   }

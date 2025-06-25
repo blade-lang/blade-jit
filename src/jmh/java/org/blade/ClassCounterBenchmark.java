@@ -97,11 +97,13 @@ public class ClassCounterBenchmark extends TruffleBenchmark {
 
   @Benchmark
   public int blade_eval() {
-    return context.eval("blade", "countWithSelfInIterDirect(" + INPUT + ");").asInt();
+    context.eval("blade", "countWithSelfInIterDirect(" + INPUT + ");");
+    return 1;
   }
 
   @Benchmark
   public int js_eval() {
-    return context.eval("js", "countWithSelfInIterDirect(" + INPUT + ");").asInt();
+    context.eval("js", "countWithSelfInIterDirect(" + INPUT + ");");
+    return 1;
   }
 }

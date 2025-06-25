@@ -56,7 +56,6 @@ public final class NFunctionBodyNode extends NStmtNode {
     return argsRefCache;
   }
 
-  @ExplodeLoop
   private RefObject[] findArgAndLocalVarRefs() {
     Set<FunctionArgRefObject> funcArgs = new HashSet<>();
 

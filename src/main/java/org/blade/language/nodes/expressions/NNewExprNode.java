@@ -1,26 +1,23 @@
 package org.blade.language.nodes.expressions;
 
-import com.oracle.truffle.api.dsl.Cached;
-import com.oracle.truffle.api.dsl.Executed;
-import com.oracle.truffle.api.dsl.Fallback;
-import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.dsl.*;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.interop.InteropLibrary;
 import com.oracle.truffle.api.interop.UnknownIdentifierException;
 import com.oracle.truffle.api.interop.UnsupportedMessageException;
 import com.oracle.truffle.api.library.CachedLibrary;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
+import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.object.Shape;
+import com.oracle.truffle.api.profiles.*;
 import org.blade.language.nodes.NNode;
 import org.blade.language.nodes.functions.NMethodDispatchNode;
 import org.blade.language.nodes.functions.NMethodDispatchNodeGen;
-import org.blade.language.runtime.BladeClass;
-import org.blade.language.runtime.BladeObject;
-import org.blade.language.runtime.BladeRuntimeError;
-import org.blade.language.runtime.FunctionObject;
+import org.blade.language.runtime.*;
 
 import java.util.List;
 
+@ImportStatic(BladeContext.class)
 public abstract class NNewExprNode extends NNode {
   @Child
   @Executed
@@ -29,32 +26,32 @@ public abstract class NNewExprNode extends NNode {
   @Children
   private final NNode[] arguments;
 
-  @Child
-  @SuppressWarnings("FieldMayBeFinal")
-  private NMethodDispatchNode constructorDispatch = NMethodDispatchNodeGen.create();
-
   public NNewExprNode(NNode constructor, List<NNode> arguments) {
     this.constructor = constructor;
     this.arguments = arguments.toArray(new NNode[0]);
   }
 
-  @SuppressWarnings("truffle-neverdefault")
+  @SuppressWarnings({"truffle-neverdefault", "truffle-static-method"})
   @Specialization(limit = "3")
   protected Object doObject(VirtualFrame frame, BladeClass classObject,
-                            @Cached(value = "languageContext().objectsModel.rootShape") Shape rootShape,
+                            @Bind Node node,
+                            @Cached InlinedCountingConditionProfile isMethodProfile,
+                            @Cached("get(node)") BladeContext context,
+                            @Cached NMethodDispatchNode methodDispatchNode,
+                            @Cached(value = "context.objectsModel.rootShape") Shape rootShape,
                             @CachedLibrary("classObject") InteropLibrary interopLibrary) {
     BladeObject object = new BladeObject(rootShape, classObject);
     Object constructor = null;
     try {
       constructor = interopLibrary.readMember(classObject, "@new");
     } catch (UnsupportedMessageException e) {
-      throw BladeRuntimeError.error(this, e.getMessage());
+      throw BladeRuntimeError.error(node, e.getMessage());
     } catch (UnknownIdentifierException e) {
       // fallthrough
     }
 
-    if (constructor instanceof FunctionObject constructorFunction) {
-      constructorDispatch.executeDispatch(constructorFunction, object, executeArguments(frame));
+    if (isMethodProfile.profile(node, constructor instanceof FunctionObject)) {
+      methodDispatchNode.executeDispatch(constructor, object, executeArguments(frame));
     } else {
       consumeArguments(frame);
     }

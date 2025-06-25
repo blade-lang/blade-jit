@@ -1,9 +1,10 @@
 package org.blade.language.nodes.literals;
 
-import com.oracle.truffle.api.dsl.Fallback;
-import com.oracle.truffle.api.dsl.NodeChild;
-import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.dsl.*;
+import com.oracle.truffle.api.nodes.Node;
+import com.oracle.truffle.api.object.Shape;
 import org.blade.language.nodes.NNode;
+import org.blade.language.runtime.BladeClass;
 import org.blade.language.runtime.BladeContext;
 import org.blade.language.runtime.BladeRuntimeError;
 import org.blade.language.runtime.RangeObject;
@@ -11,16 +12,19 @@ import org.blade.language.shared.BuiltinClassesModel;
 
 @NodeChild("lower")
 @NodeChild("upper")
+@ImportStatic(BladeContext.class)
 public abstract class NRangeLiteralNode extends NNode {
 
   @Specialization
-  protected Object doValid(long lower, long upper) {
-    BuiltinClassesModel classesModel = BladeContext.get(this).objectsModel;
-    return new RangeObject(classesModel.rootShape, classesModel.rangeObject, lower, upper);
+  protected static Object doValid(long lower, long upper, @Bind Node node,
+                           @Cached(value = "get(node)", neverDefault = true) BladeContext context,
+                           @Cached(value = "context.objectsModel.rootShape", neverDefault = true) Shape rootShape,
+                           @Cached(value = "context.objectsModel.rangeObject", neverDefault = true) BladeClass rangeClass) {
+    return new RangeObject(rootShape, rangeClass, lower, upper);
   }
 
   @Fallback
-  protected Object doUnsupported(Object lower, Object upper) {
-    throw BladeRuntimeError.argumentError(this, "..", lower, upper);
+  protected static Object doUnsupported(Object lower, Object upper, @Bind Node node) {
+    throw BladeRuntimeError.argumentError(node, "..", lower, upper);
   }
 }

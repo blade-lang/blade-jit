@@ -26,10 +26,6 @@ public abstract class NFunctionCallExprNode extends NNode {
   @Children
   protected final NNode[] arguments;
 
-  @SuppressWarnings("FieldMayBeFinal")
-  @Child
-  private NFunctionDispatchNode dispatchNode = NFunctionDispatchNodeGen.create();
-
   public NFunctionCallExprNode(NNode target, List<NNode> arguments) {
     this.target = target;
     this.arguments = arguments.toArray(new NNode[0]);
@@ -38,12 +34,14 @@ public abstract class NFunctionCallExprNode extends NNode {
 
   @Specialization(guards = {"function.argumentsCount == argsMinus1", "!function.variadic"})
   protected Object doSameSize(VirtualFrame frame, FunctionObject function,
+                              @Cached @Cached.Shared("dispatchNode") NFunctionDispatchNode dispatchNode,
                               @Cached("function") FunctionObject cachedFunction) {
     return dispatchNode.executeDispatch(cachedFunction, consumeArguments(frame));
   }
 
   @Specialization(guards = {"function.variadic", "arguments.length < function.argumentsCount"})
   protected Object doVariableLessSize(VirtualFrame frame, FunctionObject function,
+                                      @Cached @Cached.Shared("dispatchNode") NFunctionDispatchNode dispatchNode,
                                       @Cached("function") FunctionObject cachedFunction,
                                       @Cached(value = "languageContext()", neverDefault = false) @Cached.Shared("group") BladeContext context,
                                       @Cached("context.objectsModel.listShape") Shape listShape,
@@ -56,6 +54,7 @@ public abstract class NFunctionCallExprNode extends NNode {
 
   @Specialization(guards = {"function.variadic", "arguments.length >= function.argumentsCount", "function.argumentsCount > 1"})
   protected Object doVariableMoreSize(VirtualFrame frame, FunctionObject function,
+                                      @Cached @Cached.Shared("dispatchNode") NFunctionDispatchNode dispatchNode,
                                       @Cached("function") FunctionObject cachedFunction,
                                       @Cached(value = "languageContext()", neverDefault = false) @Cached.Shared("group") BladeContext context,
                                       @Cached("context.objectsModel.listShape") Shape listShape,
@@ -68,6 +67,7 @@ public abstract class NFunctionCallExprNode extends NNode {
 
   @Specialization(guards = {"function.variadic", "arguments.length >= function.argumentsCount", "function.argumentsCount == 1"})
   protected Object doVariableNoSize(VirtualFrame frame, FunctionObject function,
+                                    @Cached @Cached.Shared("dispatchNode") NFunctionDispatchNode dispatchNode,
                                     @Cached("function") FunctionObject cachedFunction,
                                     @Cached(value = "languageContext()", neverDefault = false) @Cached.Shared("group") BladeContext context,
                                     @Cached("context.objectsModel.listShape") Shape listShape,
@@ -80,6 +80,7 @@ public abstract class NFunctionCallExprNode extends NNode {
 
   @Specialization(replaces = "doSameSize")
   protected Object doNotSameSize(VirtualFrame frame, FunctionObject function,
+                                 @Cached @Cached.Shared("dispatchNode") NFunctionDispatchNode dispatchNode,
                                  @Cached("function") FunctionObject cachedFunction) {
     return dispatchNode.executeDispatch(cachedFunction, extendArguments(cachedFunction, consumeArguments(frame)));
   }

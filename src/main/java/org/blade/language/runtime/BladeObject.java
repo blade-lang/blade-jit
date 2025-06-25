@@ -2,6 +2,9 @@ package org.blade.language.runtime;
 
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.TruffleLanguage;
+import com.oracle.truffle.api.dsl.Cached;
+import com.oracle.truffle.api.dsl.Fallback;
+import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.interop.InteropLibrary;
 import com.oracle.truffle.api.interop.UnknownIdentifierException;
 import com.oracle.truffle.api.interop.UnsupportedMessageException;
@@ -11,6 +14,7 @@ import com.oracle.truffle.api.library.ExportMessage;
 import com.oracle.truffle.api.object.DynamicObject;
 import com.oracle.truffle.api.object.DynamicObjectLibrary;
 import com.oracle.truffle.api.object.Shape;
+import com.oracle.truffle.api.utilities.TriState;
 import org.blade.language.BladeLanguage;
 
 @ExportLibrary(InteropLibrary.class)
@@ -59,7 +63,9 @@ public class BladeObject extends DynamicObject {
     return BladeType.OBJECT;
   }
 
-  @ExportMessage
+  @ExportMessage(name = "isMemberReadable")
+  @ExportMessage(name = "isMemberModifiable")
+  @ExportMessage(name = "isMemberRemovable")
   boolean isMemberReadable(String member,
                            @CachedLibrary("this") DynamicObjectLibrary instanceObjectLibrary,
                            @CachedLibrary("this.classObject") InteropLibrary classInteropLibrary) {
@@ -68,17 +74,21 @@ public class BladeObject extends DynamicObject {
   }
 
   @ExportMessage
-  boolean isMemberModifiable(String member,
+  boolean isMemberInsertable(String member,
+                             @CachedLibrary("this") InteropLibrary interopLibrary,
                              @CachedLibrary("this") DynamicObjectLibrary instanceObjectLibrary,
                              @CachedLibrary("this.classObject") InteropLibrary classInteropLibrary) {
-    return isMemberReadable(member, instanceObjectLibrary, classInteropLibrary);
+    return !interopLibrary.isMemberExisting(this, member) && !classInteropLibrary.isMemberExisting(classObject, member);
   }
 
   @ExportMessage
-  boolean isMemberInsertable(String member,
-                             @CachedLibrary("this") DynamicObjectLibrary instanceObjectLibrary,
-                             @CachedLibrary("this.classObject") InteropLibrary classInteropLibrary) {
-    return !isMemberModifiable(member, instanceObjectLibrary, classInteropLibrary);
+  void removeMember(String member,
+                    @CachedLibrary("this") DynamicObjectLibrary objectLibrary) throws UnknownIdentifierException {
+    if (objectLibrary.containsKey(this, member)) {
+      objectLibrary.removeKey(this, member);
+    } else {
+      throw UnknownIdentifierException.create(member);
+    }
   }
 
   @ExportMessage
@@ -106,6 +116,20 @@ public class BladeObject extends DynamicObject {
     objectLibrary.put(this, member, value);
   }
 
+  @ExportMessage
+  @SuppressWarnings("unused")
+  static final class IsIdenticalOrUndefined {
+    @Specialization
+    static TriState doSLObject(BladeObject receiver, BladeObject other) {
+      return TriState.valueOf(receiver == other);
+    }
+
+    @Fallback
+    static TriState doOther(BladeObject receiver, Object other) {
+      return TriState.UNDEFINED;
+    }
+  }
+
   @CompilerDirectives.TruffleBoundary
   public String getClassName() {
     return ((BladeClass) classObject).name;
@@ -114,5 +138,11 @@ public class BladeObject extends DynamicObject {
   @CompilerDirectives.TruffleBoundary
   public long hash() {
     return hashCode();
+  }
+
+  @ExportMessage
+  @CompilerDirectives.TruffleBoundary
+  int identityHashCode() {
+    return System.identityHashCode(this);
   }
 }

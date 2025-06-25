@@ -64,7 +64,8 @@ public class SelfCounterBenchmark extends TruffleBenchmark {
 
   @Benchmark
   public int blade_eval() {
-    return context.eval("blade", "countWithSelfInIterDirect(" + INPUT + ")").asInt();
+    context.eval("blade", "countWithSelfInIterDirect(" + INPUT + ")");
+    return 0;
   }
 
   @Benchmark

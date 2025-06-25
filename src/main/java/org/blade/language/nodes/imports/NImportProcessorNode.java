@@ -72,7 +72,6 @@ public abstract class NImportProcessorNode extends NNode {
     return BladeNil.SINGLETON;
   }
 
-  @ExplodeLoop
   private void bindImportedSymbols(ModuleObject module, String moduleName, DynamicObject globalScope, InteropLibrary objectLibrary) throws UnsupportedMessageException, UnknownIdentifierException, UnsupportedTypeException {
     if (!importsAll && importedSymbols.length == 0) {
       objectLibrary.writeMember(globalScope, moduleName, module);

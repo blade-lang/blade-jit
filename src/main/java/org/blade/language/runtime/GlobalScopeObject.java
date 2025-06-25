@@ -99,7 +99,6 @@ public class GlobalScopeObject extends DynamicObject {
     return "global";
   }
 
-  @ExplodeLoop
   public GlobalScopeObject duplicate(DynamicObjectLibrary objectLibrary) {
     GlobalScopeObject globalScope = new GlobalScopeObject(this.getShape());
     Object[] keys = objectLibrary.getKeyArray(this);

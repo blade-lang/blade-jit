@@ -138,9 +138,9 @@ public class Main {
       group = group.substring(0, index);
     }
 
-    if (group.equals("blade") || key.equals("inspect")) {
+//    if (group.equals("blade") || key.equals("inspect")) {
       options.put(key, value);
-    }
+//    }
     return true;
   }
 

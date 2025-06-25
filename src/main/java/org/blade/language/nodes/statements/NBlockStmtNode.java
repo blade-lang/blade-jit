@@ -19,6 +19,7 @@ import java.util.List;
 
 public final class NBlockStmtNode extends NStmtNode implements BlockNode.ElementExecutor<NNode> {
 
+  @SuppressWarnings("FieldMayBeFinal")
   @Child private BlockNode<NNode> block;
 
   @CompilerDirectives.CompilationFinal(dimensions = 1)

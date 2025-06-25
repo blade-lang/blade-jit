@@ -134,7 +134,6 @@ public final class ListObject extends BladeObject {
     }
   }
 
-  @ExplodeLoop
   @Override
   public String toString() {
     List<String> builder = new ArrayList<>();

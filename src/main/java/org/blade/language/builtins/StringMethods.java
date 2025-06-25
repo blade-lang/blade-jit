@@ -122,7 +122,6 @@ public class StringMethods implements BaseBuiltinDeclaration {
   }
 
   public abstract static class NUpperMethodNode extends NBuiltinFunctionNode {
-    @ExplodeLoop
     @Specialization
     protected TruffleString doValid(TruffleString self,
                                     @Cached TruffleString.FromJavaStringNode fromJavaStringNode) {
@@ -143,7 +142,6 @@ public class StringMethods implements BaseBuiltinDeclaration {
   }
 
   public abstract static class NLowerMethodNode extends NBuiltinFunctionNode {
-    @ExplodeLoop
     @Specialization
     protected TruffleString doValid(TruffleString self,
                                     @Cached TruffleString.FromJavaStringNode fromJavaStringNode) {
@@ -161,7 +159,6 @@ public class StringMethods implements BaseBuiltinDeclaration {
   }
 
   public abstract static class NIsAlphaMethodNode extends NBuiltinFunctionNode {
-    @ExplodeLoop
     @Specialization
     protected boolean doValid(TruffleString self,
                               @Cached TruffleString.ToJavaStringNode toJavaStringNode,
@@ -187,7 +184,6 @@ public class StringMethods implements BaseBuiltinDeclaration {
       throw BladeRuntimeError.argumentError(this, "string.is_alpha", self);
     }
 
-    @ExplodeLoop
     @CompilerDirectives.TruffleBoundary
     private boolean isAlpha(int c) {
       return Character.isLetter(c);
@@ -195,7 +191,6 @@ public class StringMethods implements BaseBuiltinDeclaration {
   }
 
   public abstract static class NIsAlNumMethodNode extends NBuiltinFunctionNode {
-    @ExplodeLoop
     @Specialization
     protected boolean doValid(TruffleString self,
                               @Cached TruffleString.CodePointLengthNode lengthNode,
@@ -220,7 +215,6 @@ public class StringMethods implements BaseBuiltinDeclaration {
       throw BladeRuntimeError.argumentError(this, "string.is_alnum", self);
     }
 
-    @ExplodeLoop
     @CompilerDirectives.TruffleBoundary
     private boolean isAlphaNumeric(int c) {
       return Character.isLetterOrDigit(c);
@@ -228,7 +222,6 @@ public class StringMethods implements BaseBuiltinDeclaration {
   }
 
   public abstract static class NIsNumberMethodNode extends NBuiltinFunctionNode {
-    @ExplodeLoop
     @Specialization
     protected boolean doValid(TruffleString self,
                               @Cached TruffleString.CodePointLengthNode lengthNode,
@@ -253,7 +246,6 @@ public class StringMethods implements BaseBuiltinDeclaration {
       throw BladeRuntimeError.argumentError(this, "string.is_number", self);
     }
 
-    @ExplodeLoop
     @CompilerDirectives.TruffleBoundary
     private boolean isDigit(int c) {
       return Character.isDigit(c);
@@ -261,7 +253,6 @@ public class StringMethods implements BaseBuiltinDeclaration {
   }
 
   public abstract static class NIsLowerMethodNode extends NBuiltinFunctionNode {
-    @ExplodeLoop
     @Specialization
     protected boolean doValid(TruffleString self,
                               @Cached TruffleString.CodePointLengthNode lengthNode,
@@ -286,7 +277,6 @@ public class StringMethods implements BaseBuiltinDeclaration {
       throw BladeRuntimeError.argumentError(this, "string.is_lower", self);
     }
 
-    @ExplodeLoop
     @CompilerDirectives.TruffleBoundary
     private boolean isLower(int c) {
       return Character.isLowerCase(c);
@@ -294,7 +284,6 @@ public class StringMethods implements BaseBuiltinDeclaration {
   }
 
   public abstract static class NIsUpperMethodNode extends NBuiltinFunctionNode {
-    @ExplodeLoop
     @Specialization
     protected boolean doValid(TruffleString self,
                               @Cached TruffleString.CodePointLengthNode lengthNode,
@@ -319,7 +308,6 @@ public class StringMethods implements BaseBuiltinDeclaration {
       throw BladeRuntimeError.argumentError(this, "string.is_upper", self);
     }
 
-    @ExplodeLoop
     @CompilerDirectives.TruffleBoundary
     private boolean isUpper(int c) {
       return Character.isUpperCase(c);
@@ -327,8 +315,6 @@ public class StringMethods implements BaseBuiltinDeclaration {
   }
 
   public abstract static class NIsSpaceMethodNode extends NBuiltinFunctionNode {
-
-    @ExplodeLoop
     @Specialization
     protected boolean doValid(TruffleString self,
                               @Cached TruffleString.CodePointLengthNode lengthNode,
@@ -360,8 +346,6 @@ public class StringMethods implements BaseBuiltinDeclaration {
   }
 
   public abstract static class NStartsWithMethodNode extends NBuiltinFunctionNode {
-
-    @ExplodeLoop
     @Specialization
     protected boolean doValid(TruffleString self, TruffleString other,
                               @Cached TruffleString.CodePointLengthNode lengthNode,
@@ -380,8 +364,6 @@ public class StringMethods implements BaseBuiltinDeclaration {
   }
 
   public abstract static class NEndsWithMethodNode extends NBuiltinFunctionNode {
-
-    @ExplodeLoop
     @Specialization
     protected boolean doValid(TruffleString self, TruffleString other,
                               @Cached TruffleString.CodePointLengthNode lengthNode,

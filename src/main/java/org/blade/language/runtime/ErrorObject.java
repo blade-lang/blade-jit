@@ -9,17 +9,13 @@ public final class ErrorObject extends BladeObject {
   public final String type, message;
   private static final DynamicObjectLibrary UNCACHED_OBJ = DynamicObjectLibrary.getUncached();
 
-  public ErrorObject(String message, DynamicObjectLibrary objectLibrary, Shape shape, BladeClass prototype) {
+  public ErrorObject(String message, Shape shape, BladeClass prototype) {
     super(shape, prototype);
 
     this.type = prototype.name;
     this.message = message;
-    objectLibrary.put(this, "type", prototype.name);
-    objectLibrary.put(this, "message", BString.fromJavaString(message));
-  }
-
-  public ErrorObject(String message, Shape shape, BladeClass prototype) {
-    this(message, UNCACHED_OBJ, shape, prototype);
+    UNCACHED_OBJ.put(this, "type", prototype.name);
+    UNCACHED_OBJ.put(this, "message", BString.fromJavaString(message));
   }
 
   @CompilerDirectives.TruffleBoundary

@@ -41,8 +41,13 @@ public class FibonacciBenchmark extends TruffleBenchmark {
 //    "-Dgraal.PrintGraph=File"
 //  })
   @Benchmark
+  @Fork(value = 1, jvmArgsAppend = {
+    "--add-exports",
+    "org.graalvm.truffle/com.oracle.truffle.api.staticobject=ALL-UNNAMED",
+  })
   public int blade_eval() {
-    return context.eval("blade", "fib(20)").asInt();
+    context.eval("blade", "fib(20)");
+    return 0;
   }
 
   @Benchmark
@@ -56,11 +61,12 @@ public class FibonacciBenchmark extends TruffleBenchmark {
   })
   @Benchmark
   public int sl_eval() {
-    return context.eval(
+    context.eval(
       "sl", "function main() { " +
         "    return fib(20); " +
         "}"
-    ).asInt();
+    );
+    return 0;
   }
 
   @Fork(value = 1, jvmArgsAppend = {
@@ -69,6 +75,7 @@ public class FibonacciBenchmark extends TruffleBenchmark {
   })
   @Benchmark
   public int js_eval() {
-    return context.eval("js", "fib(20)").asInt();
+    context.eval("js", "fib(20)");
+    return 0;
   }
 }

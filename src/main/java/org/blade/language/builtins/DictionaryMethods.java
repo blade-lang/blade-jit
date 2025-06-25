@@ -43,7 +43,7 @@ public final class DictionaryMethods implements BaseBuiltinDeclaration {
       return BladeNil.SINGLETON;
     }
 
-    @ExplodeLoop
+//    @ExplodeLoop
     private Object getNextKey(Object[] keys, Object key, int keysLength) {
       int index = 0;
       for (int i = 0; i < keysLength; i++) {

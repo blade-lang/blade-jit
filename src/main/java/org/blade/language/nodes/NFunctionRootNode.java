@@ -33,7 +33,7 @@ public final class NFunctionRootNode extends RootNode {
 
   @Override
   public String toString() {
-    return "NRootFunctionNode";
+    return name;
   }
 
   @Override

@@ -25,7 +25,6 @@ public final class DictionaryObject extends BladeObject {
     return BladeType.DICTIONARY;
   }
 
-  @ExplodeLoop
   @Override
   public String toString() {
     Object[] keys = getMembers(false, UNCACHED_OBJ).getNames();

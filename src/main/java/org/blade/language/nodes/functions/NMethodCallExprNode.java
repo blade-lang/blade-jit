@@ -16,12 +16,15 @@ public final class NMethodCallExprNode extends NNode {
   private final NNode[] arguments;
   private final CountingConditionProfile branchProfile = CountingConditionProfile.create();
   private final int length;
+
   @SuppressWarnings("FieldMayBeFinal")
   @Child
   private NNode target;
+
   @SuppressWarnings("FieldMayBeFinal")
   @Child
   private NMethodDispatchNode dispatchNode;
+
   @SuppressWarnings("FieldMayBeFinal")
   @Child
   private NFunctionCallExprNode functionCallNode;
