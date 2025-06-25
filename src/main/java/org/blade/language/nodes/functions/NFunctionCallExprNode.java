@@ -101,7 +101,7 @@ public abstract class NFunctionCallExprNode extends NNode {
     return values;
   }
 
-  @ExplodeLoop
+//  @ExplodeLoop
   private Object[] extendArguments(FunctionObject function, Object[] arguments) {
     int finalLength = function.argumentsCount + 1;
     int argumentLength = arguments.length;
@@ -122,7 +122,7 @@ public abstract class NFunctionCallExprNode extends NNode {
   /**
    * Specially used for variadic functions
    */
-  @ExplodeLoop
+//  @ExplodeLoop
   private Object[] expandLessVarArguments(FunctionObject function, Object[] arguments, Shape listShape, BladeClass listClass) {
     int functionArity = function.argumentsCount;
     int argumentLength = arguments.length;
@@ -150,7 +150,7 @@ public abstract class NFunctionCallExprNode extends NNode {
   /**
    * Specially used for variadic functions
    */
-  @ExplodeLoop
+//  @ExplodeLoop
   private Object[] expandMoreVarArguments(FunctionObject function, Object[] arguments, Shape listShape, BladeClass listClass) {
     int functionArity = function.argumentsCount;
     int finalLength = functionArity + 1;
@@ -174,7 +174,7 @@ public abstract class NFunctionCallExprNode extends NNode {
   /**
    * Specially used for variadic functions
    */
-  @ExplodeLoop
+//  @ExplodeLoop
   private Object[] expandNoVarArguments(FunctionObject function, Object[] arguments, Shape listShape, BladeClass listClass) {
     Object[] ret = new Object[2];
     int argumentLength = arguments.length;
