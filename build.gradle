@@ -35,24 +35,27 @@ test {
     jvmArgs = ['--enable-native-access=ALL-UNNAMED', '--sun-misc-unsafe-memory-access=allow']
 }
 
-tasks.named('build').configure {
-    copy {
-        from configurations.runtimeClasspath
-        from project.layout.buildDirectory.dir("libs/${project.name}-${project.version}.jar")
-        into project.layout.buildDirectory.dir('modules')
-    }
-    copy {
-        from project.layout.projectDirectory.dir('libs')
-        into project.layout.buildDirectory.dir('modules/libs')
-    }
-}
+tasks.register('copyFiles', Copy) {
+    into project.layout.buildDirectory
 
-tasks.named('nativeCompile').configure {
-    copy {
+    into('modules') {
+        from configurations.runtimeClasspath
+        from  "libs/${project.name}-${project.version}.jar"
+    }
+    into('modules/libs') {
         from project.layout.projectDirectory.dir('libs')
-        into project.layout.buildDirectory.dir('native/nativeCompile/libs')
     }
 }
+tasks.assemble.dependsOn('copyFiles')
+
+tasks.register('copyNativeFiles', Copy) {
+    into project.layout.buildDirectory
+
+    into('native/nativeCompile/libs') {
+        from project.layout.projectDirectory.dir('libs')
+    }
+}
+tasks.nativeCompile.dependsOn('copyNativeFiles')
 
 graalvmNative {
     binaries.configureEach {
