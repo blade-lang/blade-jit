@@ -12,6 +12,8 @@ import com.oracle.truffle.api.library.CachedLibrary;
 import com.oracle.truffle.api.object.DynamicObject;
 import com.oracle.truffle.api.strings.TruffleString;
 import org.blade.language.nodes.NNode;
+import org.blade.language.nodes.NSharedPropertyWriterNode;
+import org.blade.language.nodes.NSharedPropertyWriterNodeGen;
 import org.blade.language.runtime.*;
 
 @NodeChild("path")
@@ -23,24 +25,32 @@ public abstract class NImportProcessorNode extends NNode {
   private final String[] importedSymbols;
   private final boolean importsAll;
 
+  @SuppressWarnings("FieldMayBeFinal")
+  @Child
+  private NSharedPropertyWriterNode writerNode = NSharedPropertyWriterNodeGen.create();
+
+  private static final InteropLibrary UNCACHED_LIB = InteropLibrary.getUncached();
+
   public NImportProcessorNode(String[] importedSymbols, boolean importsAll) {
     this.importedSymbols = importedSymbols;
     this.importsAll = importsAll;
   }
 
-  @Specialization
-  protected Object doUncached(TruffleString modulePath, TruffleString name,
-                              @Cached(value = "languageContext().globalScope", neverDefault = true) @Cached.Shared("globalScope") DynamicObject globalScope,
-                              @Cached @Cached.Shared("pathToStringNode") TruffleString.ToJavaStringNode pathToStringNode,
-                              @Cached @Cached.Shared("nameToStringNode") TruffleString.ToJavaStringNode nameToStringNode,
-                              @CachedLibrary(limit = "3") @Cached.Shared("objectLibrary") InteropLibrary objectLibrary) {
-    final BladeContext context = languageContext();
-
-    String nameString = nameToStringNode.execute(name);
-    ModuleObject module = context.loadModule(this, nameString, pathToStringNode.execute(modulePath));
+  @Specialization(guards = "isBuiltin(modulePath, codePointNode)")
+  protected Object doBuiltin(TruffleString modulePath, TruffleString name,
+                             @Cached @Cached.Shared("codePointNode") TruffleString.CodePointAtIndexNode codePointNode,
+                             @Cached(value = "languageContext()", neverDefault = true) @Cached.Shared("context") BladeContext context,
+                             @Cached(value = "context.globalScope", neverDefault = true) DynamicObject globalScope,
+                             @Cached @Cached.Shared("nameToStringNode") TruffleString.ToJavaStringNode nameToStringNode) {
+    ModuleObject module = context.getBuiltinModule(modulePath);
+    if (module == null) {
+      throw BladeRuntimeError.error(this, "Cannot find builtin module ", modulePath);
+    }
 
     try {
-      bindImportedSymbols(module, nameString, globalScope, objectLibrary);
+      String nameString = nameToStringNode.execute(name);
+
+      bindImportedSymbols(module, nameString, globalScope);
     } catch (UnsupportedMessageException | UnknownIdentifierException | UnsupportedTypeException e) {
       throw BladeRuntimeError.error(this, "Failed to bind module objects");
     }
@@ -48,22 +58,22 @@ public abstract class NImportProcessorNode extends NNode {
     return BladeNil.SINGLETON;
   }
 
-  @Specialization(replaces = "doUncached", guards = "equals(modulePath, cachedModulePath, equalNode)", limit = "3")
+  @Specialization(guards = {"equals(modulePath, cachedModulePath, equalNode)", "!isBuiltin(modulePath, codePointNode)"}, limit = "3")
   protected Object doCached(TruffleString modulePath, TruffleString name,
                             @Cached("modulePath") TruffleString cachedModulePath,
                             @Cached("name") TruffleString cachedName,
                             @Cached TruffleString.EqualNode equalNode,
+                            @Cached @Cached.Shared("codePointNode") TruffleString.CodePointAtIndexNode codePointNode,
                             @Cached @Cached.Shared("pathToStringNode") TruffleString.ToJavaStringNode pathToStringNode,
                             @Cached @Cached.Shared("nameToStringNode") TruffleString.ToJavaStringNode nameToStringNode,
                             @Cached @Cached.Exclusive TruffleString.ToJavaStringNode cachedPathToStringNode,
                             @Cached @Cached.Exclusive TruffleString.ToJavaStringNode loadCachedPathToStringNode,
                             @Cached("toString(cachedPathToStringNode, cachedName)") String cachedNameString,
                             @Cached("loadModule(cachedName, cachedModulePath, nameToStringNode, pathToStringNode)") ModuleObject cachedModule,
-                            @Cached(value = "languageContext().globalScope", neverDefault = true) @Cached.Shared("globalScope") DynamicObject globalScope,
-                            @CachedLibrary(limit = "3") @Cached.Shared("objectLibrary") InteropLibrary objectLibrary
+                            @Cached(value = "languageContext().globalScope") DynamicObject globalScope
   ) {
     try {
-      bindImportedSymbols(cachedModule, cachedNameString, globalScope, objectLibrary);
+      bindImportedSymbols(cachedModule, cachedNameString, globalScope);
     } catch (UnsupportedMessageException | UnknownIdentifierException | UnsupportedTypeException e) {
       throw BladeRuntimeError.error(this, "Failed to bind module objects");
     }
@@ -71,28 +81,47 @@ public abstract class NImportProcessorNode extends NNode {
     return BladeNil.SINGLETON;
   }
 
-  private void bindImportedSymbols(ModuleObject module, String moduleName, DynamicObject globalScope, InteropLibrary objectLibrary) throws UnsupportedMessageException, UnknownIdentifierException, UnsupportedTypeException {
+  @Specialization(replaces = "doCached")
+  protected Object doUncached(TruffleString modulePath, TruffleString name,
+                              @Cached @Cached.Shared("pathToStringNode") TruffleString.ToJavaStringNode pathToStringNode,
+                              @Cached @Cached.Shared("nameToStringNode") TruffleString.ToJavaStringNode nameToStringNode,
+                              @Cached(value = "languageContext()", neverDefault = true) @Cached.Shared("context") BladeContext context,
+                              @Cached(value = "context.globalScope", neverDefault = true) DynamicObject globalScope) {
+    String nameString = nameToStringNode.execute(name);
+    ModuleObject module = context.loadModule(this, nameString, pathToStringNode.execute(modulePath));
+
+    try {
+      bindImportedSymbols(module, nameString, globalScope);
+    } catch (UnsupportedMessageException | UnknownIdentifierException | UnsupportedTypeException e) {
+      throw BladeRuntimeError.error(this, "Failed to bind module objects");
+    }
+
+    return BladeNil.SINGLETON;
+  }
+
+  private void bindImportedSymbols(ModuleObject module, String moduleName, DynamicObject globalScope) throws UnsupportedMessageException, UnknownIdentifierException, UnsupportedTypeException {
     if (!importsAll && importedSymbols.length == 0) {
-      objectLibrary.writeMember(globalScope, moduleName, module);
+      writerNode.executeWrite(globalScope, moduleName, module);
+      return;
     }
 
     for (String symbol : importedSymbols) {
       try {
         Object exportedValue = module.getExport(symbol);
-        objectLibrary.writeMember(globalScope, symbol, exportedValue);
+        writerNode.executeWrite(globalScope, symbol, exportedValue);
       } catch (UnknownIdentifierException e) {
         throw BladeRuntimeError.error(this, "Symbol '", symbol, "' not found in module '", module.path, "'");
       }
     }
 
     if (importsAll) {
-      MemberNamesObject moduleMembers = (MemberNamesObject) objectLibrary.getMembers(module, false);
+      MemberNamesObject moduleMembers = (MemberNamesObject) UNCACHED_LIB.getMembers(module, false);
       for (Object name : moduleMembers.getNames()) {
         String originalName = BString.toString(name);
 
         try {
           Object exportedValue = module.getExport(originalName);
-          objectLibrary.writeMember(globalScope, originalName, exportedValue);
+          writerNode.executeWrite(globalScope, originalName, exportedValue);
         } catch (UnknownIdentifierException e) {
           throw BladeRuntimeError.error(this, "Unknown error");
         }
@@ -106,5 +135,9 @@ public abstract class NImportProcessorNode extends NNode {
       BString.toString(nameToStringNode, name),
       BString.toString(pathToStringNode, path)
     );
+  }
+
+  protected boolean isBuiltin(TruffleString path, TruffleString.CodePointAtIndexNode codePointNode) {
+    return BString.toCodePoint(path, codePointNode, 0) == 95; // 95 == `_`
   }
 }

@@ -221,19 +221,12 @@ public class BladeLanguage extends TruffleLanguage<BladeContext> {
         rootShape,
         functionClass,
         name,
-        createCallTarget(factory, true),
+        BladeContext.createCallTarget(this, factory, true),
         factory.getExecutionSignature().size(),
         variadic
       ),
       0
     );
-  }
-
-  private void defineBuiltinFunction(
-    DynamicObjectLibrary objectLibrary, GlobalScopeObject globalScope, String name,
-    NodeFactory<? extends NBuiltinFunctionNode> factory
-  ) {
-    defineBuiltinFunction(objectLibrary, globalScope, name, factory, false);
   }
 
   private void defineBuiltinMethod(
@@ -247,23 +240,11 @@ public class BladeLanguage extends TruffleLanguage<BladeContext> {
         rootShape,
         functionClass,
         name,
-        createCallTarget(factory, false),
+        BladeContext.createCallTarget(this, factory, false),
         factory.getExecutionSignature().size() - 1
       ),
       0
     );
-  }
-
-  private CallTarget createCallTarget(NodeFactory<? extends NBuiltinFunctionNode> factory, boolean offset) {
-    int argumentCount = factory.getExecutionSignature().size();
-
-    NReadFunctionArgsExprNode[] arguments = IntStream.range(0, argumentCount)
-      .mapToObj(i -> new NReadFunctionArgsExprNode(offset ? i + 1 : i, "arg" + i))
-      .toArray(NReadFunctionArgsExprNode[]::new);
-
-    NRootFunctionNode rootNode = new NRootFunctionNode(this, factory.createNode((Object) arguments));
-
-    return rootNode.getCallTarget();
   }
 
   @Override

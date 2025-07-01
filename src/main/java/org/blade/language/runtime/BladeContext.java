@@ -4,22 +4,29 @@ import com.oracle.truffle.api.CallTarget;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.TruffleLanguage;
 import com.oracle.truffle.api.dsl.Bind;
+import com.oracle.truffle.api.dsl.NodeFactory;
 import com.oracle.truffle.api.interop.*;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.object.DynamicObject;
 import com.oracle.truffle.api.object.DynamicObjectLibrary;
 import com.oracle.truffle.api.source.Source;
+import com.oracle.truffle.api.strings.TruffleString;
+import org.blade.language.BaseBuiltinDeclaration;
 import org.blade.language.BladeLanguage;
+import org.blade.language.BuiltinDeclarationAccessor;
+import org.blade.language.builtins.std.MathStdModule;
+import org.blade.language.nodes.functions.NBuiltinFunctionNode;
+import org.blade.language.nodes.functions.NReadFunctionArgsExprNode;
+import org.blade.language.nodes.functions.NRootFunctionNode;
 import org.blade.language.shared.BuiltinClassesModel;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.IntStream;
 
 import static com.oracle.truffle.api.CompilerDirectives.shouldNotReachHere;
 
@@ -35,6 +42,10 @@ public class BladeContext {
   public final BladeLanguage language;
   private final List<FunctionObject> shutdownHooks = new ArrayList<>();
   private final Map<String, ModuleObject> loadedModules = new ConcurrentHashMap<>();
+  private final Map<TruffleString, ModuleObject> builtinModules = new ConcurrentHashMap<>();
+  private final List<Class<? extends BaseBuiltinDeclaration>> BUILTIN_MODULES_REGISTRY = List.of(
+    MathStdModule.class
+  );
   public DynamicObject globalScope;
   public TruffleLanguage.Env env;
 
@@ -48,10 +59,24 @@ public class BladeContext {
     input = new BufferedReader(new InputStreamReader(env.in()));
     output = new PrintWriter(env.out(), true);
     error = new PrintWriter(env.err(), true);
+
+    createBuiltinModules();
   }
 
   public static BladeContext get(Node node) {
     return REFERENCE.get(node);
+  }
+
+  public static CallTarget createCallTarget(BladeLanguage language, NodeFactory<? extends NBuiltinFunctionNode> factory, boolean offset) {
+    int argumentCount = factory.getExecutionSignature().size();
+
+    NReadFunctionArgsExprNode[] arguments = IntStream.range(0, argumentCount)
+      .mapToObj(i -> new NReadFunctionArgsExprNode(offset ? i + 1 : i, "arg" + i))
+      .toArray(NReadFunctionArgsExprNode[]::new);
+
+    NRootFunctionNode rootNode = new NRootFunctionNode(language, factory.createNode((Object) arguments));
+
+    return rootNode.getCallTarget();
   }
 
   @CompilerDirectives.TruffleBoundary
@@ -155,5 +180,42 @@ public class BladeContext {
 
   public TruffleObject getBindings() {
     return (TruffleObject) env.getPolyglotBindings();
+  }
+
+  private void createBuiltinModules() {
+    final DynamicObjectLibrary objectLibrary = DynamicObjectLibrary.getUncached();
+
+    BUILTIN_MODULES_REGISTRY.forEach(m -> {
+      String moduleName = "_" + Arrays.stream(m.getName().split("[.]"))
+        .toList()
+        .getLast()
+        .toLowerCase(Locale.ROOT)
+        .replaceAll("stdmodule$", "");
+
+      var module = new ModuleObject(objectsModel.rootShape, "<native>", moduleName);
+
+      BuiltinDeclarationAccessor.get(m).forEach((factory) -> {
+        objectLibrary.putConstant(
+          module,
+          factory.key(),
+          new FunctionObject(
+            objectsModel.rootShape,
+            objectsModel.functionObject,
+            factory.key(),
+            createCallTarget(language, factory.value(), true),
+            factory.value().getExecutionSignature().size(),
+            factory.regulator()
+          ),
+          0
+        );
+      });
+
+      System.out.println("Registering module " + moduleName);
+      builtinModules.putIfAbsent(BString.fromJavaString(moduleName), module);
+    });
+  }
+
+  public ModuleObject getBuiltinModule(TruffleString name) {
+    return builtinModules.getOrDefault(name, null);
   }
 }

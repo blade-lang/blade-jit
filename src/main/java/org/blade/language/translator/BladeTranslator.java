@@ -744,91 +744,98 @@ public class BladeTranslator extends BaseVisitor<NNode> {
 
     File moduleFile;
 
+    NStringLiteralNode modulePathNode = null;
+
     // TODO: Handle importing built-in modules.
-
-    if (stmt.path.startsWith(".")) {
-      moduleFile = new File(currentDir, stmt.path + ".b");
-      if (!moduleFile.exists()) {
-        moduleFile = new File(currentDir, String.join(sep, stmt.path, "index.b"));
-        if (!moduleFile.exists()) {
-          // That's all for relative import
-          throw BladeRuntimeError.error(
-            name,
-            "Module '" + moduleName + "' not found"
-          );
-        }
-      }
+    if(stmt.path.startsWith("_")) {
+      modulePathNode = new NStringLiteralNode(stmt.path);
     } else {
-      File baseRootDirectory = null;
-      if (TruffleOptions.AOT) {
-        baseRootDirectory = new File(ProcessProperties.getExecutableName()).getParentFile();
-      } else {
-        try {
-          baseRootDirectory = Path.of(
-            Main.class.getProtectionDomain()
-              .getCodeSource()
-              .getLocation()
-              .toURI()
-          ).getParent().toFile();
-        } catch (URISyntaxException ignored) {
-        }
-      }
-
-      // Non-relative imports start from the `.blade/libs` directory in the current directory
-      // and progress to the application root directory.
-      moduleFile = new File(currentDir, String.join(sep, ".blade", "libs", stmt.path + ".b"));
-      if (!moduleFile.exists()) {
-        moduleFile = new File(currentDir, String.join(sep, ".blade", "libs", stmt.path, "index.b"));
+      if (stmt.path.startsWith(".")) {
+        moduleFile = new File(currentDir, stmt.path + ".b");
         if (!moduleFile.exists()) {
-
-          if (baseRootDirectory == null || !baseRootDirectory.exists()) {
+          moduleFile = new File(currentDir, String.join(sep, stmt.path, "index.b"));
+          if (!moduleFile.exists()) {
+            // That's all for relative import
             throw BladeRuntimeError.error(
               name,
               "Module '" + moduleName + "' not found"
             );
           }
-
-          // Next progress to the `apps` directory of the Blade installation.
-          // This is where the user's global libraries live, and they can be used
-          // to override the built-in libraries. So we're starting here...
-          File rootDirectory = new File(baseRootDirectory, "apps");
-
-          moduleFile = new File(rootDirectory, stmt.path + ".b");
-          if (!moduleFile.exists()) {
-            moduleFile = new File(rootDirectory, String.join(sep, stmt.path, "index.b"));
+        }
+      } else {
+        File baseRootDirectory = null;
+        if (TruffleOptions.AOT) {
+          baseRootDirectory = new File(ProcessProperties.getExecutableName()).getParentFile();
+        } else {
+          try {
+            baseRootDirectory = Path.of(
+              Main.class.getProtectionDomain()
+                .getCodeSource()
+                .getLocation()
+                .toURI()
+            ).getParent().toFile();
+          } catch (URISyntaxException ignored) {
           }
+        }
 
-
+        // Non-relative imports start from the `.blade/libs` directory in the current directory
+        // and progress to the application root directory.
+        moduleFile = new File(currentDir, String.join(sep, ".blade", "libs", stmt.path + ".b"));
+        if (!moduleFile.exists()) {
+          moduleFile = new File(currentDir, String.join(sep, ".blade", "libs", stmt.path, "index.b"));
           if (!moduleFile.exists()) {
-            // If we still haven't found the module,
-            // We can start checking the Blade's standard library directory.
-            rootDirectory = new File(baseRootDirectory, "libs");
+
+            if (baseRootDirectory == null || !baseRootDirectory.exists()) {
+              throw BladeRuntimeError.error(
+                name,
+                "Module '" + moduleName + "' not found"
+              );
+            }
+
+            // Next progress to the `apps` directory of the Blade installation.
+            // This is where the user's global libraries live, and they can be used
+            // to override the built-in libraries. So we're starting here...
+            File rootDirectory = new File(baseRootDirectory, "apps");
 
             moduleFile = new File(rootDirectory, stmt.path + ".b");
             if (!moduleFile.exists()) {
               moduleFile = new File(rootDirectory, String.join(sep, stmt.path, "index.b"));
-              if (!moduleFile.exists()) {
+            }
 
-                // We've checked everywhere and still can't find it.
-                throw BladeRuntimeError.error(
-                  name,
-                  "Module '" + moduleName + "' not found"
-                );
+
+            if (!moduleFile.exists()) {
+              // If we still haven't found the module,
+              // We can start checking the Blade's standard library directory.
+              rootDirectory = new File(baseRootDirectory, "libs");
+
+              moduleFile = new File(rootDirectory, stmt.path + ".b");
+              if (!moduleFile.exists()) {
+                moduleFile = new File(rootDirectory, String.join(sep, stmt.path, "index.b"));
+                if (!moduleFile.exists()) {
+
+                  // We've checked everywhere and still can't find it.
+                  throw BladeRuntimeError.error(
+                    name,
+                    "Module '" + moduleName + "' not found"
+                  );
+                }
               }
             }
           }
         }
       }
+
+      modulePathNode = new NStringLiteralNode(moduleFile.getAbsolutePath());
     }
 
     String[] elements = new String[stmt.elements.size()];
     for (int i = 0; i < stmt.elements.size(); i++) {
       elements[i] = stmt.elements.get(i).token.literal();
     }
-
+    
     // module file exists
     return new NImportNode(
-      new NStringLiteralNode(moduleFile.getAbsolutePath()),
+      modulePathNode,
       new NStringLiteralNode(moduleName),
       elements,
       stmt.all
