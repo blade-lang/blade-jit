@@ -744,16 +744,16 @@ public class BladeTranslator extends BaseVisitor<NNode> {
 
     File moduleFile;
 
-    NStringLiteralNode modulePathNode = null;
+    NStringLiteralNode modulePathNode;
 
-    // TODO: Handle importing built-in modules.
     if(stmt.path.startsWith("_")) {
       modulePathNode = new NStringLiteralNode(stmt.path);
     } else {
       if (stmt.path.startsWith(".")) {
-        moduleFile = new File(currentDir, stmt.path + ".b");
+        String path = stmt.path.substring(2);
+        moduleFile = new File(currentDir, path + ".b");
         if (!moduleFile.exists()) {
-          moduleFile = new File(currentDir, String.join(sep, stmt.path, "index.b"));
+          moduleFile = new File(currentDir, String.join(sep, path, "index.b"));
           if (!moduleFile.exists()) {
             // That's all for relative import
             throw BladeRuntimeError.error(

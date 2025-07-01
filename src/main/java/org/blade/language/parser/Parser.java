@@ -297,7 +297,7 @@ public class Parser {
       if (match(LBRACKET)) return list();
       if (match(AT)) return anonymous();
 
-      return null;
+      throw new ParserException(lexer.getSource(), peek(), true, "Unexpected token at '" + peek().literal() + "'");
     });
   }
 
@@ -883,7 +883,9 @@ public class Parser {
       }
 
       while (match(IDENTIFIER, DOT)) {
-        paths.add(previous().literal());
+        if(previous().type() != DOT || paths.isEmpty()) {
+          paths.add(previous().literal());
+        }
       }
 
       boolean importsAll = false;
@@ -929,7 +931,6 @@ public class Parser {
       }
 
       String finalPath = String.join(sep, paths);
-
       if (name == null) {
         name = new Expr.Identifier(previous().copyToType(
           LITERAL,

@@ -537,7 +537,7 @@ public class Lexer {
       scan();
     }
 
-    addToken(EOF, "");
+    addToken(EOF, "end of file");
     return tokens;
   }
 

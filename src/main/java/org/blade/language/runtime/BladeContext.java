@@ -210,7 +210,6 @@ public class BladeContext {
         );
       });
 
-      System.out.println("Registering module " + moduleName);
       builtinModules.putIfAbsent(BString.fromJavaString(moduleName), module);
     });
   }

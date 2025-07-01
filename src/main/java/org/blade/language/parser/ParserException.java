@@ -19,7 +19,13 @@ public class ParserException extends AbstractTruffleException {
   private final boolean incompleteSource;
 
   public ParserException(Source source, Token token, boolean incomplete, String message) {
-    super(message);
+    super(
+      message + "\n    "
+      + (source.getPath() == null ? "<repl>" : source.getPath())
+      + ":" + token.line() + ":"
+      + Math.abs(source.getLineStartOffset(token.line()) - token.offset() + 1)
+    );
+
     this.source = source;
     this.line = token.line();
     this.offset = token.offset();
