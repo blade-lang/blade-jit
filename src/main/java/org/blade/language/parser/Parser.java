@@ -1045,11 +1045,11 @@ public class Parser {
       } else if (match(BREAK)) {
         result = new Stmt.Break();
       } else if (match(RETURN)) {
-        result = new Stmt.Return(expression());
+        result = new Stmt.Return(isAtEnd() ? new Expr.Nil() : expression());
       } else if (match(ASSERT)) {
         result = assertStatement();
       } else if (match(RAISE)) {
-        result = new Stmt.Raise(expression());
+        result = new Stmt.Raise(isAtEnd() ? new Expr.Nil() : expression());
       } else if (match(LBRACE)) {
         result = block();
       } else if (match(IMPORT)) {

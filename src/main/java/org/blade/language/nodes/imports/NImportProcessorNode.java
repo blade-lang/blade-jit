@@ -34,15 +34,14 @@ public abstract class NImportProcessorNode extends NNode {
                              @Cached(value = "languageContext()", neverDefault = true) @Cached.Shared("context") BladeContext context,
                              @Cached(value = "context.globalScope", neverDefault = true) DynamicObject globalScope,
                              @Cached @Cached.Shared("nameToStringNode") TruffleString.ToJavaStringNode nameToStringNode,
-                             @CachedLibrary(limit = "3") @Cached.Shared("objectLibrary") InteropLibrary objectLibrary) {
+                             @Cached(value = "nameToStringNode.execute(name)", neverDefault = true) String nameString,
+                             @CachedLibrary("globalScope") InteropLibrary objectLibrary) {
     ModuleObject module = context.getBuiltinModule(modulePath);
     if (module == null) {
       throw BladeRuntimeError.error(this, "Cannot find builtin module ", modulePath);
     }
 
     try {
-      String nameString = nameToStringNode.execute(name);
-
       bindImportedSymbols(module, nameString, globalScope, objectLibrary);
     } catch (UnsupportedMessageException | UnknownIdentifierException | UnsupportedTypeException e) {
       throw BladeRuntimeError.error(this, "Failed to bind module objects");
@@ -64,7 +63,7 @@ public abstract class NImportProcessorNode extends NNode {
                             @Cached("toString(cachedPathToStringNode, cachedName)") String cachedNameString,
                             @Cached("loadModule(cachedName, cachedModulePath, nameToStringNode, pathToStringNode)") ModuleObject cachedModule,
                             @Cached(value = "languageContext().globalScope") DynamicObject globalScope,
-                            @CachedLibrary(limit = "3") @Cached.Shared("objectLibrary") InteropLibrary objectLibrary
+                            @CachedLibrary("globalScope") InteropLibrary objectLibrary
   ) {
     try {
       bindImportedSymbols(cachedModule, cachedNameString, globalScope, objectLibrary);
@@ -79,10 +78,10 @@ public abstract class NImportProcessorNode extends NNode {
   protected Object doUncached(TruffleString modulePath, TruffleString name,
                               @Cached @Cached.Shared("pathToStringNode") TruffleString.ToJavaStringNode pathToStringNode,
                               @Cached @Cached.Shared("nameToStringNode") TruffleString.ToJavaStringNode nameToStringNode,
+                              @Cached("nameToStringNode.execute(name)") String nameString,
                               @Cached(value = "languageContext()", neverDefault = true) @Cached.Shared("context") BladeContext context,
-                              @Cached(value = "context.globalScope", neverDefault = true) DynamicObject globalScope,
-                              @CachedLibrary(limit = "3") @Cached.Shared("objectLibrary") InteropLibrary objectLibrary) {
-    String nameString = nameToStringNode.execute(name);
+                              @Cached(value = "context.globalScope") DynamicObject globalScope,
+                              @CachedLibrary("globalScope") InteropLibrary objectLibrary) {
     ModuleObject module = context.loadModule(this, nameString, pathToStringNode.execute(modulePath));
 
     try {

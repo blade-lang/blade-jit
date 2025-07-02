@@ -130,7 +130,6 @@ public class BladeLanguage extends TruffleLanguage<BladeContext> {
 
   private DynamicObject createGlobalScope(DynamicObjectLibrary objectLibrary) {
 
-
     GlobalScopeObject globalScope = new GlobalScopeObject(rootShape);
 
     // register built-in functions

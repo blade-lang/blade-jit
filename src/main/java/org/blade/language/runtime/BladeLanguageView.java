@@ -102,12 +102,18 @@ public final class BladeLanguageView implements TruffleObject {
     for (BladeType type : BladeType.PRECEDENCE) {
       if (type.isInstance(this.delegate, interop)) {
         try {
-          if (type == BladeType.NUMBER) {
+          if (type == BladeType.NUMBER && interop.fitsInLong(delegate)) {
             return numberToString(interop.asLong(delegate));
+          } else if (type == BladeType.NUMBER && interop.fitsInDouble(delegate)) {
+            return numberToString(interop.asDouble(delegate));
           } else if (type == BladeType.BOOLEAN) {
             return Boolean.toString(interop.asBoolean(delegate));
-          } else if (type == BladeType.STRING || type == BladeType.LIST) {
+          } else if (type == BladeType.BIGINT) {
+            return interop.asBigInteger(((BigIntObject)delegate).asBigInteger());
+          } else if (type == BladeType.STRING) {
             return interop.asString(delegate);
+          } else if (type == BladeType.LIST) {
+            return interop.asString(delegate.toString());
           } else {
             return type.getName();
           }

@@ -121,7 +121,6 @@ public class BladeContext {
     globalScope = module = new ModuleObject(objectsModel.rootShape, path, name);
 
     CallTarget moduleCallTarget = parse(source);
-
     moduleCallTarget.call();
 
     registerModule(path, module);
@@ -192,7 +191,7 @@ public class BladeContext {
         .toLowerCase(Locale.ROOT)
         .replaceAll("stdmodule$", "");
 
-      var module = new ModuleObject(objectsModel.rootShape, "<native>", moduleName);
+      var module = new ModuleObject(objectsModel.rootShape, BString.concatString("<native-module ", moduleName, ">"), moduleName);
 
       BuiltinDeclarationAccessor.get(m).forEach((factory) -> {
         objectLibrary.putConstant(
