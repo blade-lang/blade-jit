@@ -14,6 +14,7 @@ import org.blade.language.debug.RefObject;
 import org.blade.language.nodes.NStmtNode;
 import org.blade.language.nodes.statements.NBlockStmtNode;
 import org.blade.language.nodes.statements.NReturnException;
+import org.blade.language.runtime.BladeNil;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -40,7 +41,7 @@ public final class NFunctionBodyNode extends NStmtNode {
     }
 
     nullTaken.enter();
-    return node;
+    return BladeNil.SINGLETON;
   }
 
   public RefObject[] getArgAndLocalVarRefs() {

@@ -5,8 +5,11 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.instrumentation.StandardTags;
 import com.oracle.truffle.api.instrumentation.Tag;
 import com.oracle.truffle.api.nodes.BlockNode;
+import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.NodeUtil;
+import com.oracle.truffle.api.profiles.BranchProfile;
+import com.oracle.truffle.api.profiles.CountingConditionProfile;
 import org.blade.language.debug.LocalVarNodeVisitor;
 import org.blade.language.debug.RefObject;
 import org.blade.language.nodes.NNode;
@@ -16,31 +19,40 @@ import org.blade.language.runtime.BladeNil;
 
 import java.util.List;
 
-public final class NBlockStmtNode extends NStmtNode implements BlockNode.ElementExecutor<NNode> {
+public final class NBlockStmtNode extends NStmtNode {
+  @Children
+  public final NNode[] nodes;
 
-  private final boolean isProgram;
-  @SuppressWarnings("FieldMayBeFinal")
-  @Child
-  private BlockNode<NNode> block;
   @CompilerDirectives.CompilationFinal(dimensions = 1)
   private RefObject[] refCache;
+
+  private final boolean isProgram;
+  private final int preLength;
+
+  private final CountingConditionProfile branchProfile = CountingConditionProfile.create();
 
   public NBlockStmtNode(List<NNode> nodes) {
     this(nodes, false);
   }
 
   public NBlockStmtNode(List<NNode> nodes, boolean isProgram) {
-    this.block = !nodes.isEmpty() ? BlockNode.create(nodes.toArray(new NNode[0]), this) : null;
+    this.nodes = nodes.toArray(new NNode[0]);
+    preLength = this.nodes.length - 1;
     this.isProgram = isProgram;
   }
 
+  @ExplodeLoop
   @Override
   public Object execute(VirtualFrame frame) {
-    if (this.block != null) {
-      this.block.executeVoid(frame, BlockNode.NO_ARGUMENT);
+    if(branchProfile.profile(preLength == -1)) {
+      return BladeNil.SINGLETON;
     }
 
-    return BladeNil.SINGLETON;
+    for (int i = 0; i < preLength; i++) {
+      nodes[i].execute(frame);
+    }
+
+    return nodes[preLength].execute(frame);
   }
 
   @Override
@@ -79,10 +91,5 @@ public final class NBlockStmtNode extends NStmtNode implements BlockNode.Element
     System.arraycopy(parentVars, 0, allVariables, variables.length, parentVars.length);
 
     return allVariables;
-  }
-
-  @Override
-  public void executeVoid(VirtualFrame frame, NNode node, int index, int argument) {
-    node.execute(frame);
   }
 }
