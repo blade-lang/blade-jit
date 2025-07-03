@@ -13,7 +13,7 @@ import com.oracle.truffle.api.object.DynamicObjectLibrary;
 import com.oracle.truffle.api.strings.TruffleString;
 import org.blade.language.BaseBuiltinDeclaration;
 import org.blade.language.nodes.functions.NBuiltinFunctionNode;
-import org.blade.language.nodes.string.NReadStringPropertyNode;
+import org.blade.language.nodes.string.NStringPropertyReaderNode;
 import org.blade.language.runtime.*;
 import org.blade.language.shared.BuiltinClassesModel;
 import org.blade.utility.RegulatedMap;
@@ -56,7 +56,7 @@ public class ObjectMethods implements BaseBuiltinDeclaration {
     @Specialization
     protected boolean doString(TruffleString self, Object property) {
       // strings only have the 'length' property
-      return NReadStringPropertyNode.LENGTH_PROP.equals(BString.toString(property));
+      return NStringPropertyReaderNode.LENGTH_PROP.equals(BString.toString(property));
     }
 
     @Fallback

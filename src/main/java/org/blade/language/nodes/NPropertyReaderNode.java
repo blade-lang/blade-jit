@@ -11,19 +11,19 @@ import com.oracle.truffle.api.library.CachedLibrary;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.object.DynamicObjectLibrary;
 import com.oracle.truffle.api.strings.TruffleString;
-import org.blade.language.nodes.string.NReadStringPropertyNode;
+import org.blade.language.nodes.string.NStringPropertyReaderNode;
 import org.blade.language.runtime.BObject;
 import org.blade.language.runtime.BString;
 import org.blade.language.runtime.BladeNil;
 import org.blade.language.runtime.BladeRuntimeError;
 
 @SuppressWarnings({"truffle-inlining", "truffle-unused"})
-public abstract class NSharedPropertyReaderNode extends NBaseNode {
+public abstract class NPropertyReaderNode extends NBaseNode {
   public abstract Object executeRead(Object object, Object property);
 
   @Specialization
   protected static Object doString(TruffleString string, Object property,
-                            @Cached(neverDefault = true) NReadStringPropertyNode stringPropertyReader) {
+                            @Cached(neverDefault = true) NStringPropertyReaderNode stringPropertyReader) {
     return stringPropertyReader.executeProperty(string, property);
   }
 

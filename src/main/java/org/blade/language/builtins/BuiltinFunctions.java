@@ -61,7 +61,7 @@ public final class BuiltinFunctions implements BaseBuiltinDeclaration {
     public Object doList(ListObject object,
                          @CachedLibrary(limit = "3") InteropLibrary interopLibrary,
                          @Cached(value = "languageContext()", neverDefault = false) BladeContext context) {
-      print(context, interopLibrary, object.items);
+      print(context, interopLibrary, object.getItems());
       return BladeNil.SINGLETON;
     }
 
@@ -73,7 +73,7 @@ public final class BuiltinFunctions implements BaseBuiltinDeclaration {
 
     @ExplodeLoop
     private void print(BladeContext context, InteropLibrary interopLibrary, Object[] arguments) {
-      int length = arguments.length;
+      final int length = arguments.length;
 
       if (length > 0) {
         for (int i = 0; i < length - 1; i++) {
@@ -83,8 +83,9 @@ public final class BuiltinFunctions implements BaseBuiltinDeclaration {
           }
         }
 
-        if (arguments[length - 1] != BladeNil.SINGLETON) {
-          context.print(BString.fromObject(interopLibrary, arguments[length - 1]));
+        final int lengthMinusOne = length - 1;
+        if (arguments[lengthMinusOne] != BladeNil.SINGLETON) {
+          context.print(BString.fromObject(interopLibrary, arguments[lengthMinusOne]));
         }
 
         context.flushOutput();

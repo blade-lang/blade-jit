@@ -10,7 +10,7 @@ import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.strings.TruffleString;
 import org.blade.language.nodes.BladeTypesGen;
 import org.blade.language.nodes.NNode;
-import org.blade.language.nodes.NSharedPropertyReaderNode;
+import org.blade.language.nodes.NPropertyReaderNode;
 import org.blade.language.nodes.expressions.NParentExprNode;
 import org.blade.language.runtime.BString;
 import org.blade.language.runtime.BladeRuntimeError;
@@ -20,7 +20,7 @@ import org.blade.language.runtime.ListObject;
 @NodeChild("listExpr")
 @NodeChild("indexExpr")
 @ImportStatic(BString.class)
-public abstract class NListIndexReadNode extends NNode {
+public abstract class NReadListIndexNode extends NNode {
   abstract Object executeRead(Object list, Object index);
 
   protected abstract NNode getListExpr();
@@ -43,7 +43,7 @@ public abstract class NListIndexReadNode extends NNode {
     @Cached("property") TruffleString cachedProperty,
     @Cached @Cached.Shared("toJavaStringNode") TruffleString.ToJavaStringNode toJavaStringNode,
     @Cached("toJavaStringNode.execute(cachedProperty)") String cachedJavaString,
-    @Cached @Cached.Shared("propertyReaderNode") NSharedPropertyReaderNode propertyReaderNode,
+    @Cached @Cached.Shared("propertyReaderNode") NPropertyReaderNode propertyReaderNode,
     @Cached TruffleString.EqualNode equalNode
   ) {
     return propertyReaderNode.executeRead(list, cachedJavaString);
@@ -53,7 +53,7 @@ public abstract class NListIndexReadNode extends NNode {
   static protected Object doListString(
     Object list, TruffleString property,
     @Cached @Cached.Shared("toJavaStringNode") TruffleString.ToJavaStringNode toJavaStringNode,
-    @Cached @Cached.Shared("propertyReaderNode") NSharedPropertyReaderNode propertyReaderNode
+    @Cached @Cached.Shared("propertyReaderNode") NPropertyReaderNode propertyReaderNode
   ) {
     return propertyReaderNode.executeRead(list, toJavaStringNode.execute(property));
   }
@@ -68,7 +68,7 @@ public abstract class NListIndexReadNode extends NNode {
   static protected Object doNonString(
     Object list, Object property,
     @CachedLibrary("list") InteropLibrary interopLibrary,
-    @Cached @Cached.Shared("propertyReaderNode") NSharedPropertyReaderNode propertyReaderNode
+    @Cached @Cached.Shared("propertyReaderNode") NPropertyReaderNode propertyReaderNode
   ) {
     return propertyReaderNode.executeRead(list, BString.toString(property));
   }
@@ -76,7 +76,7 @@ public abstract class NListIndexReadNode extends NNode {
   @Fallback
   static protected Object doUnsupported(
     Object list, Object index, @Bind Node node,
-    @Cached @Cached.Shared("propertyReaderNode") NSharedPropertyReaderNode propertyReaderNode
+    @Cached @Cached.Shared("propertyReaderNode") NPropertyReaderNode propertyReaderNode
   ) {
     if (list instanceof ListObject && BladeTypesGen.isImplicitDouble(index)) {
       throw BladeRuntimeError.error(node, "List index ", index, " out of range");

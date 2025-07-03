@@ -23,16 +23,29 @@ import java.util.List;
 @ExportLibrary(InteropLibrary.class)
 public final class ListObject extends BladeObject {
   static final String LENGTH_PROP = "length";
-  private static final DynamicObjectLibrary UNCACHED_LIB = DynamicObjectLibrary.getUncached();
+
+  private final DynamicObjectLibrary UNCACHED_LIB = DynamicObjectLibrary.getUncached();
+
   @CompilerDirectives.CompilationFinal(dimensions = 1)
-  public Object[] items;
+  private Object[] items;
+
   // List properties...
-  @DynamicField
-  private long length;
+  @DynamicField private long length;
 
   public ListObject(Shape shape, BladeClass classObject, Object[] objects) {
     super(shape, classObject);
     setArrayElements(objects);
+  }
+
+  public Object[] getItems() {
+    return items;
+  }
+
+  public ListObject getSlice(int start, int end) {
+    int effectiveLength = end - start;
+    Object[] objects = new Object[effectiveLength];
+    System.arraycopy(items, start, objects, 0, effectiveLength);
+    return new ListObject(getShape(), (BladeClass) classObject, objects);
   }
 
   @ExportMessage
@@ -45,18 +58,12 @@ public final class ListObject extends BladeObject {
     return items.length;
   }
 
-  @ExportMessage
-  public boolean isArrayElementReadable(long index,
-                                        @Bind Node node,
-                                        @Cached @Cached.Shared("profile") InlinedConditionProfile profile) {
-    long length = items.length;
-    index = effectiveIndex(node, profile, index, length);
+  @ExportMessage(name = "isArrayElementReadable")
+  @ExportMessage(name = "isArrayElementModifiable")
+  public boolean isArrayElementReadable(long index) {
+    final long length = items.length;
+    index = effectiveIndex(index, length);
     return index < length && index >= 0;
-  }
-
-  @ExportMessage
-  boolean isArrayElementModifiable(long index, @Bind Node node, @Cached @Cached.Shared("profile") InlinedConditionProfile profile) {
-    return isArrayElementReadable(index, node, profile);
   }
 
   @ExportMessage
@@ -65,10 +72,10 @@ public final class ListObject extends BladeObject {
   }
 
   @ExportMessage
-  Object readArrayElement(long index, @Bind Node node, @Cached @Cached.Shared("profile") InlinedConditionProfile profile) {
-    index = effectiveIndex(node, profile, index, items.length);
+  Object readArrayElement(long index) {
+    index = effectiveIndex(index, items.length);
 
-    return isArrayElementReadable(index, node, profile)
+    return isArrayElementReadable(index)
       ? items[(int) index]
       : BladeNil.SINGLETON;
   }
@@ -108,17 +115,18 @@ public final class ListObject extends BladeObject {
 
   @ExplodeLoop
   public void resize(long length) {
+    final int itemsLength = items.length;
     Object[] newItems = new Object[(int) length];
     for (int i = 0; i < length; i++) {
-      newItems[i] = i < this.items.length
+      newItems[i] = i < itemsLength
         ? this.items[i]
         : BladeNil.SINGLETON;
     }
     this.setArrayElements(newItems);
   }
 
-  private long effectiveIndex(Node node, InlinedConditionProfile profile, long index, long length) {
-    if (profile.profile(node, index < 0)) {
+  private long effectiveIndex(long index, long length) {
+    if (index < 0) {
       return index + length;
     }
     return index;
@@ -128,19 +136,19 @@ public final class ListObject extends BladeObject {
   static class WriteArrayElement {
     @Specialization(guards = {"index < length", "index >= 0"})
     static void doWithinLength(ListObject list, long index, Object value,
-                               @Cached(value = "list.items.length", neverDefault = true) @Cached.Shared("length") int length) {
+                               @Cached(value = "list.getArraySize()", allowUncached = true, neverDefault = true) @Cached.Shared("length") long length) {
       list.writeArrayElement(index, value);
     }
 
-    @Specialization(guards = {"index > 0", "index < list.items.length"})
+    @Specialization(guards = {"index > 0", "index < list.getArraySize()"})
     static void doWithinLengthUncached(ListObject list, long index, Object value) {
       list.writeArrayElement(index, value);
     }
 
     @Specialization(guards = {"index < 0"})
     static void doIndexLessThanZero(ListObject list, long index, Object value,
-                                    @Cached(value = "list.items.length", neverDefault = true) @Cached.Shared("length") int length) {
-      list.writeArrayElement(index + list.items.length, value);
+                                    @Cached(value = "list.getArraySize()", allowUncached = true, neverDefault = true) @Cached.Shared("length") long length) {
+      list.writeArrayElement(index + list.getArraySize(), value);
     }
 
     @Fallback

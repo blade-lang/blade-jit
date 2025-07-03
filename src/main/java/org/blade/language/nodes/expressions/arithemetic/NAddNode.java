@@ -103,10 +103,10 @@ public abstract class NAddNode extends NBinaryNode {
                                   @Cached("get(node)") BladeContext context,
                                   @Cached("context.objectsModel.listShape") Shape listShape,
                                   @Cached("context.objectsModel.listObject") BladeClass listClass) {
-    Object[] leftItems = left.items;
-    Object[] rightItems = right.items;
-    int leftLength = leftItems.length;
-    int rightLength = rightItems.length;
+    Object[] leftItems = left.getItems();
+    Object[] rightItems = right.getItems();
+    final int leftLength = leftItems.length;
+    final int rightLength = rightItems.length;
 
     Object[] items = new Object[leftLength + rightLength];
     System.arraycopy(leftItems, 0, items, 0, leftLength);

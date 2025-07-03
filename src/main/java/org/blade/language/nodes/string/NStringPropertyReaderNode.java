@@ -17,11 +17,11 @@ import org.blade.language.runtime.BladeRuntimeError;
 
 @ImportStatic(BString.class)
 @SuppressWarnings("truffle-inlining")
-public abstract class NReadStringPropertyNode extends NBaseNode {
+public abstract class NStringPropertyReaderNode extends NBaseNode {
   public static final String LENGTH_PROP = "length";
 
-  public static NReadStringPropertyNode create() {
-    return NReadStringPropertyNodeGen.create();
+  public static NStringPropertyReaderNode create() {
+    return NStringPropertyReaderNodeGen.create();
   }
 
   public abstract Object executeProperty(TruffleString self, Object property);

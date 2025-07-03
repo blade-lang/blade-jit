@@ -5,7 +5,7 @@ import com.oracle.truffle.api.dsl.NodeChild;
 import com.oracle.truffle.api.dsl.NodeField;
 import com.oracle.truffle.api.dsl.Specialization;
 import org.blade.language.nodes.NNode;
-import org.blade.language.nodes.NSharedPropertyWriterNode;
+import org.blade.language.nodes.NPropertyWriterNode;
 
 @NodeChild("target")
 @NodeChild("value")
@@ -15,7 +15,7 @@ public abstract class NSetPropertyNode extends NNode {
 
   @Specialization
   protected Object writeProperty(Object target, Object value,
-                                 @Cached NSharedPropertyWriterNode writerNode) {
+                                 @Cached NPropertyWriterNode writerNode) {
     return writerNode.executeWrite(target, getName(), value);
   }
 }

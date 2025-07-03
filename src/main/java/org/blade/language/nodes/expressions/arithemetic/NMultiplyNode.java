@@ -103,7 +103,7 @@ public abstract class NMultiplyNode extends NBinaryNode {
     Object[] objects = new Object[finalSize];
 
     for (int i = 0; i < count; i++) {
-      System.arraycopy(list.items, 0, objects, i * size, size);
+      System.arraycopy(list.getItems(), 0, objects, i * size, size);
     }
 
     return objects;

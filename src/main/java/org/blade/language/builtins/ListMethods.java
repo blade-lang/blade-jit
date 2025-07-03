@@ -29,8 +29,8 @@ public final class ListMethods implements BaseBuiltinDeclaration {
   public abstract static class NKeyDecoratorNode extends NBuiltinFunctionNode {
     @Specialization
     protected Object doAny(ListObject list, Object item) {
-      Object[] items = list.items;
-      int length = items.length;
+      Object[] items = list.getItems();
+      int length = (int)list.getArraySize();
       if (length == 0) {
         return BladeNil.SINGLETON;
       } else if (item == BladeNil.SINGLETON) {
@@ -57,8 +57,8 @@ public final class ListMethods implements BaseBuiltinDeclaration {
   public abstract static class NValueDecoratorNode extends NBuiltinFunctionNode {
     @Specialization
     protected Object doAny(ListObject list, long index) {
-      Object[] items = list.items;
-      if (index > -1 && index < items.length) {
+      Object[] items = list.getItems();
+      if (index > -1 && index < list.getArraySize()) {
         return items[(int) index];
       }
 

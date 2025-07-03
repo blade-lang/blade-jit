@@ -9,7 +9,7 @@ import com.oracle.truffle.api.library.CachedLibrary;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.strings.TruffleString;
 import org.blade.language.nodes.NNode;
-import org.blade.language.nodes.NSharedPropertyWriterNode;
+import org.blade.language.nodes.NPropertyWriterNode;
 import org.blade.language.runtime.BString;
 import org.blade.language.runtime.BladeRuntimeError;
 import org.blade.language.runtime.ListObject;
@@ -18,7 +18,7 @@ import org.blade.language.runtime.ListObject;
 @NodeChild("indexExpr")
 @NodeChild("valueExpr")
 @ImportStatic(BString.class)
-public abstract class NListIndexWriteNode extends NNode {
+public abstract class NWriteListIndexNode extends NNode {
   @Specialization(guards = "listLibrary.isArrayElementWritable(list, index)", limit = "3")
   protected static Object doLong(Object list, long index, Object value, @Bind Node node,
                           @CachedLibrary("list") InteropLibrary listLibrary) {
@@ -38,7 +38,7 @@ public abstract class NListIndexWriteNode extends NNode {
     @Cached TruffleString.EqualNode equalNode,
     @Cached @Cached.Shared("toJavaStringNode") TruffleString.ToJavaStringNode toJavaStringNode,
     @Cached("toJavaStringNode.execute(name)") String javaPropertyName,
-    @Cached @Cached.Shared("sharedPropertyWriterNode") NSharedPropertyWriterNode sharedPropertyWriterNode
+    @Cached @Cached.Shared("sharedPropertyWriterNode") NPropertyWriterNode sharedPropertyWriterNode
   ) {
     return sharedPropertyWriterNode.executeWrite(target, javaPropertyName, value);
   }
@@ -47,7 +47,7 @@ public abstract class NListIndexWriteNode extends NNode {
   protected static Object doString(
     Object target, TruffleString name, Object value,
     @Cached @Cached.Shared("toJavaStringNode") TruffleString.ToJavaStringNode toJavaStringNode,
-    @Cached @Cached.Shared("sharedPropertyWriterNode") NSharedPropertyWriterNode sharedPropertyWriterNode
+    @Cached @Cached.Shared("sharedPropertyWriterNode") NPropertyWriterNode sharedPropertyWriterNode
   ) {
     return sharedPropertyWriterNode.executeWrite(target, toJavaStringNode.execute(name), value);
   }
@@ -71,7 +71,7 @@ public abstract class NListIndexWriteNode extends NNode {
   @Fallback
   protected static Object doNonStringProperty(
     Object target, Object index, Object value, @Bind Node node,
-    @Cached @Cached.Shared("sharedPropertyWriterNode") NSharedPropertyWriterNode sharedPropertyWriterNode
+    @Cached @Cached.Shared("sharedPropertyWriterNode") NPropertyWriterNode sharedPropertyWriterNode
   ) {
     if (target instanceof ListObject && (index instanceof Long || index instanceof Double)) {
       throw BladeRuntimeError.error(node, "List index ", index, " out of range");

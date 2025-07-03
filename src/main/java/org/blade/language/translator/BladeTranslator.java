@@ -16,8 +16,8 @@ import org.blade.language.nodes.expressions.bitwise.*;
 import org.blade.language.nodes.expressions.logical.*;
 import org.blade.language.nodes.functions.*;
 import org.blade.language.nodes.imports.NImportNode;
-import org.blade.language.nodes.list.NListIndexReadNodeGen;
-import org.blade.language.nodes.list.NListIndexWriteNodeGen;
+import org.blade.language.nodes.list.NReadListIndexNodeGen;
+import org.blade.language.nodes.list.NWriteListIndexNodeGen;
 import org.blade.language.nodes.list.NListLiteralNode;
 import org.blade.language.nodes.literals.*;
 import org.blade.language.nodes.statements.*;
@@ -293,7 +293,7 @@ public class BladeTranslator extends BaseVisitor<NNode> {
       }
     } else if (expr.expression instanceof Expr.Index index) {
       return sourceSection(
-        NListIndexWriteNodeGen.create(
+        NWriteListIndexNodeGen.create(
           visitExpr(index.callee),
           visitExpr(index.argument),
           value
@@ -349,7 +349,7 @@ public class BladeTranslator extends BaseVisitor<NNode> {
 
   @Override
   public NNode visitIndexExpr(Expr.Index expr) {
-    return sourceSection(NListIndexReadNodeGen.create(visitExpr(expr.callee), visitExpr(expr.argument)), expr);
+    return sourceSection(NReadListIndexNodeGen.create(visitExpr(expr.callee), visitExpr(expr.argument)), expr);
   }
 
   @Override

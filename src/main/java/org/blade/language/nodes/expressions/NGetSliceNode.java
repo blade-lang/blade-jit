@@ -49,9 +49,8 @@ public abstract class NGetSliceNode extends NNode {
     return BString.substring(string, effectiveLower, effectiveUpper, substringNode);
   }
 
-  @Specialization(guards = {"items.length == 0"})
+  @Specialization(guards = {"list.getArraySize() == 0"})
   protected Object doList(ListObject list, long lower, long upper,
-                          @Cached(value = "list.items", dimensions = 1) Object[] items,
                           @Cached(value = "languageContext().objectsModel", neverDefault = true) @Cached.Shared("classesModel") BuiltinClassesModel classesModel,
                           @Cached("classesModel.listShape") Shape listShape,
                           @Cached("classesModel.listObject") BladeClass listObject) {
@@ -60,22 +59,20 @@ public abstract class NGetSliceNode extends NNode {
 
   @Specialization(guards = {"lower == upper"})
   protected Object doList2(ListObject list, long lower, long upper,
-                           @Cached(value = "list.items", dimensions = 1) Object[] items,
                            @Cached(value = "languageContext().objectsModel", neverDefault = true) @Cached.Shared("classesModel") BuiltinClassesModel classesModel,
                            @Cached("classesModel.listShape") Shape listShape,
                            @Cached("classesModel.listObject") BladeClass listObject) {
     return new ListObject(listShape, listObject, new Object[0]);
   }
 
-  @Specialization(guards = {"items.length > 0", "lower != upper"})
+  @Specialization(guards = {"list.getArraySize() > 0", "lower != upper"})
   protected Object doList3(ListObject list, long lower, long upper,
                            @Bind Node node,
-                           @Cached(value = "list.items", dimensions = 1) Object[] items,
                            @Cached(value = "languageContext().objectsModel", neverDefault = true) @Cached.Shared("classesModel") BuiltinClassesModel classesModel,
                            @Cached @Cached.Shared("normalizeIndexNode") NNormalizeIndexNode normalizeIndexNode,
                            @Cached("classesModel.listShape") Shape listShape,
                            @Cached("classesModel.listObject") BladeClass listObject) {
-    final int length = items.length;
+    final int length = (int)list.getArraySize();
     final int effectiveLower = normalizeIndexNode.executeLong(node, lower, length);
     final int effectiveUpper = normalizeIndexNode.executeLong(node, upper, length);
 
@@ -83,11 +80,7 @@ public abstract class NGetSliceNode extends NNode {
       return new ListObject(listShape, listObject, new Object[0]);
     }
 
-    int effectiveLength = effectiveUpper - effectiveLower;
-    Object[] objects = new Object[effectiveLength];
-    System.arraycopy(items, effectiveLower, objects, 0, effectiveLength);
-
-    return new ListObject(listShape, listObject, objects);
+    return list.getSlice(effectiveLower, effectiveUpper);
   }
 
   @Fallback

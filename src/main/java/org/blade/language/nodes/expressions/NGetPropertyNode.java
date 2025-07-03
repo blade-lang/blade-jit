@@ -6,8 +6,7 @@ import com.oracle.truffle.api.dsl.NodeField;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import org.blade.language.nodes.NNode;
-import org.blade.language.nodes.NSharedPropertyReaderNode;
-import org.blade.language.nodes.NSharedPropertyReaderNodeGen;
+import org.blade.language.nodes.NPropertyReaderNode;
 
 @NodeChild("targetExpr")
 @NodeField(name = "name", type = String.class)
@@ -19,7 +18,7 @@ public abstract class NGetPropertyNode extends NNode {
   protected abstract String getName();
 
   @Specialization
-  protected Object readProperty(Object target, @Cached NSharedPropertyReaderNode propertyReader) {
+  protected Object readProperty(Object target, @Cached NPropertyReaderNode propertyReader) {
     return propertyReader.executeRead(target, getName());
   }
 

@@ -12,7 +12,7 @@ import com.oracle.truffle.api.nodes.Node;
 import org.blade.language.runtime.BladeRuntimeError;
 
 @SuppressWarnings("truffle-inlining")
-public abstract class NSharedPropertyWriterNode extends NBaseNode {
+public abstract class NPropertyWriterNode extends NBaseNode {
   public abstract Object executeWrite(Object target, Object name, Object value);
 
   @Specialization(guards = "interopLibrary.isMemberWritable(target, name)", limit = "3")
