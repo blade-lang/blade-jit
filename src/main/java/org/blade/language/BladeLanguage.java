@@ -258,7 +258,7 @@ public class BladeLanguage extends TruffleLanguage<BladeContext> {
     return new NBlockRootNode(
       this, parseResult.frameDescriptor, parseResult.node,
       "@.script", visitor.getRootSourceSection()
-    ).getCallTarget();
+    ).getRootNode().getCallTarget();
   }
 
   @Override

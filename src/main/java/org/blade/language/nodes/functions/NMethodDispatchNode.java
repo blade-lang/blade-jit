@@ -15,7 +15,7 @@ import org.blade.language.runtime.FunctionObject;
 public abstract class NMethodDispatchNode extends Node {
   public abstract Object executeDispatch(Object function, Object receiver, Object[] values);
 
-  @Specialization(guards = "function.callTarget == callNode.getCallTarget()", limit = "3")
+  @Specialization(guards = "function.getCallTarget() == callNode.getCallTarget()", limit = "3")
   protected Object directDispatch(
     FunctionObject function, Object receiver, Object[] arguments,
     @Cached("function") FunctionObject cachedFunction,

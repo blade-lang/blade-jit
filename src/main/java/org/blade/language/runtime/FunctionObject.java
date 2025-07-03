@@ -30,13 +30,13 @@ public final class FunctionObject extends BladeObject {
   public final boolean variadic;
   private final CyclicAssumption callTargetStable;
 
-  public CallTarget callTarget;
+  public RootCallTarget callTarget;
 
-  public FunctionObject(Shape shape, BladeClass classObject, String name, CallTarget target, int argumentsCount) {
+  public FunctionObject(Shape shape, BladeClass classObject, String name, RootCallTarget target, int argumentsCount) {
     this(shape, classObject, name, target, argumentsCount, false);
   }
 
-  public FunctionObject(Shape shape, BladeClass classObject, String name, CallTarget target, int argumentsCount, boolean variadic) {
+  public FunctionObject(Shape shape, BladeClass classObject, String name, RootCallTarget target, int argumentsCount, boolean variadic) {
     super(shape, classObject);
     callTarget = target;
     this.name = name;
@@ -49,12 +49,16 @@ public final class FunctionObject extends BladeObject {
     return callTargetStable.getAssumption();
   }
 
-  public void setCallTarget(CallTarget callTarget) {
+  public void setCallTarget(RootCallTarget callTarget) {
     boolean wasNull = this.callTarget == null;
     this.callTarget = callTarget;
     if (!wasNull) {
       callTargetStable.invalidate();
     }
+  }
+
+  public CallTarget getCallTarget() {
+    return callTarget;
   }
 
   @ExportMessage
@@ -85,7 +89,7 @@ public final class FunctionObject extends BladeObject {
 
     @Specialization(
       limit = "INLINE_CACHE_SIZE",
-      guards = "function.callTarget == cachedTarget",
+      guards = "function.getCallTarget() == cachedTarget",
       assumptions = "callTargetStable"
     )
     @SuppressWarnings("unused")

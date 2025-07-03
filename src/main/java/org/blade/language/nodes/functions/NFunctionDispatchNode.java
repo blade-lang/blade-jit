@@ -13,7 +13,7 @@ import org.blade.language.runtime.FunctionObject;
 public abstract class NFunctionDispatchNode extends Node {
   public abstract Object executeDispatch(Object function, Object[] values);
 
-  @Specialization(guards = "function.callTarget == callNode.getCallTarget()", limit = "3")
+  @Specialization(guards = "function.getCallTarget() == callNode.getCallTarget()", limit = "3")
   protected Object directDispatch(
     FunctionObject function, Object[] arguments,
     @Cached("create(function.callTarget)") DirectCallNode callNode

@@ -2,6 +2,7 @@ package org.blade.language.runtime;
 
 import com.oracle.truffle.api.CallTarget;
 import com.oracle.truffle.api.CompilerDirectives;
+import com.oracle.truffle.api.RootCallTarget;
 import com.oracle.truffle.api.TruffleLanguage;
 import com.oracle.truffle.api.dsl.Bind;
 import com.oracle.truffle.api.dsl.NodeFactory;
@@ -67,7 +68,7 @@ public class BladeContext {
     return REFERENCE.get(node);
   }
 
-  public static CallTarget createCallTarget(BladeLanguage language, NodeFactory<? extends NBuiltinFunctionNode> factory, boolean offset) {
+  public static RootCallTarget createCallTarget(BladeLanguage language, NodeFactory<? extends NBuiltinFunctionNode> factory, boolean offset) {
     int argumentCount = factory.getExecutionSignature().size();
 
     NReadFunctionArgsExprNode[] arguments = IntStream.range(0, argumentCount)
@@ -76,7 +77,7 @@ public class BladeContext {
 
     NRootFunctionNode rootNode = new NRootFunctionNode(language, factory.createNode((Object) arguments));
 
-    return rootNode.getCallTarget();
+    return rootNode.getRootNode().getCallTarget();
   }
 
   @CompilerDirectives.TruffleBoundary
@@ -213,6 +214,7 @@ public class BladeContext {
     });
   }
 
+  @CompilerDirectives.TruffleBoundary
   public ModuleObject getBuiltinModule(TruffleString name) {
     return builtinModules.getOrDefault(name, null);
   }
