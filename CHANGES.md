@@ -18,8 +18,6 @@ and runtime in general.
 - All objects now automatically declare the `to_string()` instance method and all classes have an automatic
   `to_string()` function if they fail to declare an override. For this reason, the `to_string()` built-in function is no
   longer available.
-- String and List no longer have a `.length()` method but rather have a `.length` property. This property carries a
-  restriction that they cannot be overwritten.
 - Dictionary no longer exposes the `.length()` method. Instead, the `.size()` method has replaced it.
 - All builtin methods can now also be accessed via their class. This removes ambiguity between methods and functions
   when overwritten by a program. For example, before, should a dictionary contain an object `length`, it automatically

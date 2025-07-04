@@ -29,7 +29,7 @@ public abstract class NStringPropertyReaderNode extends NBaseNode {
   @Specialization
   protected Object readStringIndex(
     TruffleString string, long index,
-    @Cached @Cached.Shared("lengthNode") TruffleString.CodePointLengthNode lengthNode,
+    @Cached TruffleString.CodePointLengthNode lengthNode,
     @Cached TruffleString.SubstringNode substringNode
   ) {
     long stringLength = BString.length(string, lengthNode);
@@ -38,14 +38,6 @@ public abstract class NStringPropertyReaderNode extends NBaseNode {
     return index < 0 || index >= stringLength
       ? BString.EMPTY
       : BString.substring(string, (int) index, 1, substringNode);
-  }
-
-  @Specialization(guards = "LENGTH_PROP.equals(name)")
-  protected long readLengthProperty(
-    TruffleString string, String name,
-    @Cached @Cached.Shared("lengthNode") TruffleString.CodePointLengthNode lengthNode
-  ) {
-    return BString.length(string, lengthNode);
   }
 
   @Fallback

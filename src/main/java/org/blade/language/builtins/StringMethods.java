@@ -17,6 +17,7 @@ public class StringMethods implements BaseBuiltinDeclaration {
     return new RegulatedMap<>() {{
       add("@key", false, StringMethodsFactory.NKeyDecoratorNodeFactory.getInstance());
       add("@value", false, StringMethodsFactory.NValueDecoratorNodeFactory.getInstance());
+      add("length", false, StringMethodsFactory.NLengthMethodNodeFactory.getInstance());
       add("index_of", false, StringMethodsFactory.NIndexOfMethodNodeFactory.getInstance());
       add("upper", false, StringMethodsFactory.NUpperMethodNodeFactory.getInstance());
       add("lower", false, StringMethodsFactory.NLowerMethodNodeFactory.getInstance());
@@ -79,6 +80,15 @@ public class StringMethods implements BaseBuiltinDeclaration {
     @Fallback
     protected Object doFallback(Object object, Object index) {
       return BladeNil.SINGLETON;
+    }
+  }
+
+  @ImportStatic(BString.class)
+  public abstract static class NLengthMethodNode extends NBuiltinFunctionNode {
+    @Specialization
+    protected Object doAny(TruffleString string, @Cached TruffleString.CodePointLengthNode lengthNode,
+                           @Cached(value = "length(string, lengthNode)", neverDefault = false) long stringLength) {
+      return stringLength;
     }
   }
 

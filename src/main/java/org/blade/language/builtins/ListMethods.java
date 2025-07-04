@@ -22,6 +22,7 @@ public final class ListMethods implements BaseBuiltinDeclaration {
     return new RegulatedMap<>() {{
       add("@key", false, ListMethodsFactory.NKeyDecoratorNodeFactory.getInstance());
       add("@value", false, ListMethodsFactory.NValueDecoratorNodeFactory.getInstance());
+      add("length", false, ListMethodsFactory.NLengthMethodNodeFactory.getInstance());
       add("append", false, ListMethodsFactory.NAppendMethodNodeFactory.getInstance());
     }};
   }
@@ -71,15 +72,21 @@ public final class ListMethods implements BaseBuiltinDeclaration {
     }
   }
 
+  public abstract static class NLengthMethodNode extends NBuiltinFunctionNode {
+    @Specialization
+    protected Object doAny(ListObject self) {
+      return self.getArraySize();
+    }
+  }
+
   public abstract static class NAppendMethodNode extends NBuiltinFunctionNode {
     @Specialization
-    protected Object doAny(DynamicObject self, Object item,
+    protected Object doAny(ListObject list, Object item,
                            @CachedLibrary(limit = "3") InteropLibrary interopLibrary) {
       try {
-        ListObject list = (ListObject) self;
         long size = list.getArraySize();
         list.resize(size + 1);
-        interopLibrary.writeArrayElement(self, size, item);
+        interopLibrary.writeArrayElement(list, size, item);
       } catch (UnsupportedMessageException | UnsupportedTypeException | InvalidArrayIndexException e) {
         throw BladeRuntimeError.error(this, e.getMessage());
       }

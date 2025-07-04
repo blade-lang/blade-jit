@@ -260,7 +260,7 @@ public class Lexer {
         if (interpolating.size() < MAX_INTERPOLATION_NESTING) {
           interpolating.push(c);
           current++;
-          addToken(INTERPOLATION, getUnquotedString(c));
+          addToken(INTERPOLATION, unescapeString(c));
           current++;
           return;
         }
@@ -283,7 +283,7 @@ public class Lexer {
     }
 
     match(c);
-    addToken(LITERAL, getUnquotedString(c));
+    addToken(LITERAL, unescapeString(c));
   }
 
   /**
@@ -545,22 +545,78 @@ public class Lexer {
     return source;
   }
 
-  private String getUnquotedString(char quote) {
-    Charset UTF_8 = StandardCharsets.UTF_8;
-    String escaped = sourceCharacters.subSequence(start + 1, current - 1).toString()
-      .replace("\\0", "\0")
-      .replace("\\$", "$")
-      .replace("\\'", quote == '\'' || quote == '}' ? "'" : "\\'")
-      .replace("\\\"", quote == '\"' || quote == '}' ? "'" : "\\\"")
-      .replace("\\b", "\b")
-      .replace("\\f", "\f")
-      .replace("\\n", "\n")
-      .replace("\\r", "\r")
-      .replace("\\t", "\t")
-      .replace("\\\\", "\\")
-      .replace("\\n", "\n");
+  String unescapeString(char quote) {
+    String escapedString = sourceCharacters.subSequence(start + 1, current - 1).toString();
 
-    // ensure we align to UTF8
-    return UTF_8.decode(UTF_8.encode(escaped)).toString();
+    StringBuilder unescaped = new StringBuilder();
+
+    int length = escapedString.length();
+    for (int i = 0; i < length; i++) {
+      char currentChar = escapedString.charAt(i);
+
+      if (currentChar == '\\' && i + 9 < length && escapedString.charAt(i + 1) == 'U') {
+        try {
+          String hexCode = escapedString.substring(i + 2, i + 10);
+          long unicodeValue = Long.parseLong(hexCode, 16);
+          unescaped.append((char) unicodeValue);
+          i += 9; // Skip the \\UXXXXXXXX sequence
+        } catch (NumberFormatException e) {
+          // If it's not a valid hex code, treat it as literal characters
+          unescaped.append(currentChar);
+        }
+      } else if (currentChar == '\\' && i + 5 < length && escapedString.charAt(i + 1) == 'u') {
+        try {
+          String hexCode = escapedString.substring(i + 2, i + 6);
+          int unicodeValue = Integer.parseInt(hexCode, 16);
+          unescaped.append((char) unicodeValue);
+          i += 5; // Skip the \\uXXXX sequence
+        } catch (NumberFormatException e) {
+          // If it's not a valid hex code, treat it as literal characters
+          unescaped.append(currentChar);
+        }
+      } else if (currentChar == '\\' && i + 3 < length && escapedString.charAt(i + 1) == 'x') {
+        try {
+          String hexCode = escapedString.substring(i + 2, i + 4);
+          int unicodeValue = Byte.parseByte(hexCode, 16);
+          unescaped.append((char) unicodeValue);
+          i += 3; // Skip the \\xXX sequence
+        } catch (NumberFormatException e) {
+          // If it's not a valid hex code, treat it as literal characters
+          unescaped.append(currentChar);
+        }
+      } else if(currentChar == '\\' && i + 1 < length) {
+        char nextChar = escapedString.charAt(i + 1);
+
+        switch (nextChar) {
+          case '0': unescaped.append('\0'); break;
+          case 'b': unescaped.append('\b'); break;
+          case 'f': unescaped.append('\f'); break;
+          case 'n': unescaped.append('\n'); break;
+          case 'r': unescaped.append('\r'); break;
+          case 't': unescaped.append('\t'); break;
+          case '\'': {
+            if(quote != '\'' && quote != '}') {
+              unescaped.append('\\');
+            }
+            unescaped.append('\'');
+            break;
+          }
+          case '"': {
+            if(quote != '"' && quote != '}') {
+              unescaped.append('\\');
+            }
+            unescaped.append('"');
+            break;
+          }
+          default: unescaped.append(nextChar);
+        }
+
+        i++;
+      } else {
+        unescaped.append(currentChar);
+      }
+    }
+
+    return unescaped.toString();
   }
 }

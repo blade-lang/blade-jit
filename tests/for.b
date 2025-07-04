@@ -31,7 +31,7 @@ class Iterable {
   @key(x) {
     if x == nil return 0
 
-    if x < self.items.length - 1
+    if x < self.items.length() - 1
       return x + 1
     return nil
   }

@@ -22,19 +22,12 @@ import java.util.List;
 
 @ExportLibrary(InteropLibrary.class)
 public final class ListObject extends BladeObject {
-  static final String LENGTH_PROP = "length";
-
-  private final DynamicObjectLibrary UNCACHED_LIB = DynamicObjectLibrary.getUncached();
-
   @CompilerDirectives.CompilationFinal(dimensions = 1)
   private Object[] items;
 
-  // List properties...
-  @DynamicField private long length;
-
   public ListObject(Shape shape, BladeClass classObject, Object[] objects) {
     super(shape, classObject);
-    setArrayElements(objects);
+    this.items = objects;
   }
 
   public Object[] getItems() {
@@ -80,16 +73,6 @@ public final class ListObject extends BladeObject {
       : BladeNil.SINGLETON;
   }
 
-  @ExportMessage
-  Object readMember(String member,
-                    @CachedLibrary("this") DynamicObjectLibrary objectLibrary,
-                    @CachedLibrary("this.classObject") InteropLibrary classInteropLibrary) throws UnsupportedMessageException, UnknownIdentifierException {
-    return switch (member) {
-      case "length" -> objectLibrary.getOrDefault(this, "length", 0);
-      default -> super.readMember(member, objectLibrary, classInteropLibrary);
-    };
-  }
-
   @ExportMessage.Ignore
   void writeArrayElement(long index, Object value) {
     items[(int) index] = value;
@@ -108,11 +91,6 @@ public final class ListObject extends BladeObject {
     return result;
   }
 
-  private void setArrayElements(Object[] items) {
-    this.items = items;
-    writeMember(LENGTH_PROP, (long) items.length, UNCACHED_LIB);
-  }
-
   @ExplodeLoop
   public void resize(long length) {
     final int itemsLength = items.length;
@@ -122,7 +100,7 @@ public final class ListObject extends BladeObject {
         ? this.items[i]
         : BladeNil.SINGLETON;
     }
-    this.setArrayElements(newItems);
+    this.items = newItems;
   }
 
   private long effectiveIndex(long index, long length) {
@@ -159,12 +137,7 @@ public final class ListObject extends BladeObject {
 
   @ExportMessage
   static class WriteMember {
-    @Specialization(guards = "LENGTH_PROP.equals(member)")
-    static void writeLength(ListObject list, String member, Object value, @Bind Node node) {
-      throw BladeRuntimeError.error(node, "Direct modification of list.length prohibited");
-    }
-
-    @Fallback
+    @Specialization
     static void writeNonLength(
       ListObject list, String member, Object value,
       @CachedLibrary(limit = "3") DynamicObjectLibrary objectLibrary
