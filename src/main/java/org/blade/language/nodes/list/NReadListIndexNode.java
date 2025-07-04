@@ -10,7 +10,7 @@ import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.strings.TruffleString;
 import org.blade.language.nodes.BladeTypesGen;
 import org.blade.language.nodes.NNode;
-import org.blade.language.nodes.NPropertyReaderNode;
+import org.blade.language.nodes.common.NPropertyReaderNode;
 import org.blade.language.nodes.expressions.NParentExprNode;
 import org.blade.language.runtime.BString;
 import org.blade.language.runtime.BladeRuntimeError;
@@ -100,9 +100,4 @@ public abstract class NReadListIndexNode extends NNode {
 
     return executeRead(target, property);
   }
-
-
-  /*static abstract class InnerNode extends Node {
-
-  }*/
 }

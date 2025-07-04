@@ -1,4 +1,4 @@
-package org.blade.language.nodes;
+package org.blade.language.nodes.common;
 
 import com.oracle.truffle.api.dsl.Bind;
 import com.oracle.truffle.api.dsl.Fallback;
@@ -9,6 +9,7 @@ import com.oracle.truffle.api.interop.UnsupportedMessageException;
 import com.oracle.truffle.api.interop.UnsupportedTypeException;
 import com.oracle.truffle.api.library.CachedLibrary;
 import com.oracle.truffle.api.nodes.Node;
+import org.blade.language.nodes.NBaseNode;
 import org.blade.language.runtime.BladeRuntimeError;
 
 @SuppressWarnings("truffle-inlining")

@@ -15,6 +15,10 @@ public final class BString {
     return TruffleString.fromJavaStringUncached(s, BladeLanguage.ENCODING);
   }
 
+  public static TruffleString fromJavaString(TruffleString.FromJavaStringNode fromJavaStringNode, String s) {
+    return fromJavaStringNode.execute(s, BladeLanguage.ENCODING);
+  }
+
   public static TruffleString fromLong(TruffleString.FromLongNode fromLongNode, long value) {
     return fromLongNode.execute(value, BladeLanguage.ENCODING, true);
   }
@@ -106,6 +110,10 @@ public final class BString {
       : toString(object);
   }
 
+  public static TruffleString toTruffleString(Object object) {
+    return fromJavaString(toString(object));
+  }
+
   @CompilerDirectives.TruffleBoundary
   public static String toUpper(String string) {
     return string.toUpperCase();
@@ -140,5 +148,9 @@ public final class BString {
 
   public static TruffleStringBuilder builder() {
     return TruffleStringBuilder.create(BladeLanguage.ENCODING);
+  }
+
+  public static TruffleString.CodePointSet createCodePointSet(int[] set) {
+    return TruffleString.CodePointSet.fromRanges(set, BladeLanguage.ENCODING);
   }
 }

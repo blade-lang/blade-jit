@@ -1,4 +1,4 @@
-package org.blade.language.nodes;
+package org.blade.language.nodes.common;
 
 import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.GenerateCached;

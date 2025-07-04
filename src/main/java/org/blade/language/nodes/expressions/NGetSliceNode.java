@@ -5,7 +5,7 @@ import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.object.Shape;
 import com.oracle.truffle.api.strings.TruffleString;
 import org.blade.language.nodes.NNode;
-import org.blade.language.nodes.NNormalizeIndexNode;
+import org.blade.language.nodes.common.NNormalizeIndexNode;
 import org.blade.language.runtime.BString;
 import org.blade.language.runtime.BladeClass;
 import org.blade.language.runtime.BladeRuntimeError;
@@ -19,7 +19,7 @@ import org.blade.language.shared.BuiltinClassesModel;
 @ImportStatic(BString.class)
 public abstract class NGetSliceNode extends NNode {
 
-  @Specialization(guards = {"intLength(string, lengthNode) == 0"})
+  @Specialization(guards = {"string.isEmpty()"})
   protected Object doString(TruffleString string, long lower, long upper,
                             @Cached @Cached.Shared("lengthNode") TruffleString.CodePointLengthNode lengthNode,
                             @Cached @Cached.Shared("substringNode") TruffleString.SubstringNode substringNode) {
@@ -33,7 +33,7 @@ public abstract class NGetSliceNode extends NNode {
     return BString.EMPTY;
   }
 
-  @Specialization(guards = {"intLength(string, lengthNode) > 0", "lower != upper"})
+  @Specialization(guards = {"!string.isEmpty()", "lower != upper"})
   protected Object doString3(TruffleString string, long lower, long upper,
                              @Cached @Cached.Shared("lengthNode") TruffleString.CodePointLengthNode lengthNode,
                              @Cached @Cached.Shared("substringNode") TruffleString.SubstringNode substringNode,

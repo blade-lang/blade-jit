@@ -6,7 +6,7 @@ import com.oracle.truffle.api.dsl.NodeField;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import org.blade.language.nodes.NNode;
-import org.blade.language.nodes.NPropertyReaderNode;
+import org.blade.language.nodes.common.NPropertyReaderNode;
 
 @NodeChild("targetExpr")
 @NodeField(name = "name", type = String.class)

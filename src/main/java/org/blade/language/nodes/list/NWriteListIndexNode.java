@@ -9,7 +9,7 @@ import com.oracle.truffle.api.library.CachedLibrary;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.strings.TruffleString;
 import org.blade.language.nodes.NNode;
-import org.blade.language.nodes.NPropertyWriterNode;
+import org.blade.language.nodes.common.NPropertyWriterNode;
 import org.blade.language.runtime.BString;
 import org.blade.language.runtime.BladeRuntimeError;
 import org.blade.language.runtime.ListObject;

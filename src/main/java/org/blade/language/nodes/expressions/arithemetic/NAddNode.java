@@ -9,6 +9,7 @@ import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.object.Shape;
 import com.oracle.truffle.api.strings.TruffleString;
 import org.blade.language.nodes.NBinaryNode;
+import org.blade.language.nodes.common.NToStringNode;
 import org.blade.language.runtime.*;
 
 import java.math.BigInteger;
@@ -87,14 +88,14 @@ public abstract class NAddNode extends NBinaryNode {
 
   @CompilerDirectives.TruffleBoundary
   @Specialization(guards = "isString(left, right)")
-  protected static TruffleString doStringConverted(Object left, Object right,
-                                                   @Cached TruffleString.FromJavaStringNode leftFromJavaNode,
-                                                   @Cached TruffleString.FromJavaStringNode rightFromJavaNode,
+  protected static TruffleString doStringConverted(Object left, Object right, @Bind Node node,
+                                                   @Cached NToStringNode leftToStringNode,
+                                                   @Cached NToStringNode rightToStringNode,
                                                    @Cached @Cached.Shared("concatNode") TruffleString.ConcatNode concatNode) {
     return BString.concat(
       concatNode,
-      BString.fromObject(leftFromJavaNode, left),
-      BString.fromObject(rightFromJavaNode, right)
+      leftToStringNode.execute(node, left),
+      rightToStringNode.execute(node, right)
     );
   }
 

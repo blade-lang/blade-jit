@@ -7,7 +7,7 @@ import com.oracle.truffle.api.library.CachedLibrary;
 import com.oracle.truffle.api.object.DynamicObject;
 import com.oracle.truffle.api.object.DynamicObjectLibrary;
 import com.oracle.truffle.api.object.Property;
-import org.blade.language.nodes.NGlobalScopeObjectNode;
+import org.blade.language.nodes.common.NGlobalScopeObjectNode;
 import org.blade.language.nodes.NNode;
 import org.blade.language.runtime.BladeRuntimeError;
 

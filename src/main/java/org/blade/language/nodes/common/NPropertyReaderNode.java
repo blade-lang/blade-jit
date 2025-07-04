@@ -1,4 +1,4 @@
-package org.blade.language.nodes;
+package org.blade.language.nodes.common;
 
 import com.oracle.truffle.api.dsl.Bind;
 import com.oracle.truffle.api.dsl.Cached;
@@ -11,6 +11,7 @@ import com.oracle.truffle.api.library.CachedLibrary;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.object.DynamicObjectLibrary;
 import com.oracle.truffle.api.strings.TruffleString;
+import org.blade.language.nodes.NBaseNode;
 import org.blade.language.nodes.string.NStringPropertyReaderNode;
 import org.blade.language.runtime.BObject;
 import org.blade.language.runtime.BString;

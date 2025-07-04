@@ -5,7 +5,7 @@ import com.oracle.truffle.api.dsl.NodeChild;
 import com.oracle.truffle.api.dsl.NodeField;
 import com.oracle.truffle.api.dsl.Specialization;
 import org.blade.language.nodes.NNode;
-import org.blade.language.nodes.NPropertyWriterNode;
+import org.blade.language.nodes.common.NPropertyWriterNode;
 
 @NodeChild("target")
 @NodeChild("value")
