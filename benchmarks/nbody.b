@@ -78,7 +78,9 @@ class NBodySystem {
   @new() {
     var px = 0, py = 0, pz = 0
 
-    iter var i = 0; i < bodies.length; i++ {
+    const size = bodies.length()
+
+    iter var i = 0; i < size; i++ {
       var body = bodies[i]
       var mass = body.mass
 
@@ -91,7 +93,7 @@ class NBodySystem {
   }
 
   advance(dt) {
-    var size = bodies.length
+    const size = bodies.length()
 
     iter var i = 0; i < size; i++ {
       var bodyi = bodies[i]
@@ -134,7 +136,7 @@ class NBodySystem {
 
   energy() {
     var e = 0
-    var size = bodies.length
+    const size = bodies.length()
 
     iter var i = 0; i < size; i++ {
       var bodyi = bodies[i]

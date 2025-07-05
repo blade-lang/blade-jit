@@ -6,7 +6,7 @@
 
 def pad(i: Number, last: Bool) {
   var res = i.to_string()
-  var count = 10 - res.length
+  var count = 10 - res.length()
   while count > 0 {
     if last {
       res += ' '
