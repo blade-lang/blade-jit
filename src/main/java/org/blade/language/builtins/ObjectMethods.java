@@ -1,17 +1,16 @@
 package org.blade.language.builtins;
 
-import com.oracle.truffle.api.dsl.Cached;
-import com.oracle.truffle.api.dsl.Fallback;
-import com.oracle.truffle.api.dsl.NodeFactory;
-import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.dsl.*;
 import com.oracle.truffle.api.interop.InteropLibrary;
 import com.oracle.truffle.api.interop.UnknownIdentifierException;
 import com.oracle.truffle.api.interop.UnsupportedMessageException;
 import com.oracle.truffle.api.library.CachedLibrary;
+import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.object.DynamicObject;
 import com.oracle.truffle.api.object.DynamicObjectLibrary;
 import com.oracle.truffle.api.strings.TruffleString;
 import org.blade.language.BaseBuiltinDeclaration;
+import org.blade.language.nodes.common.NToStringNode;
 import org.blade.language.nodes.functions.NBuiltinFunctionNode;
 import org.blade.language.nodes.string.NStringPropertyReaderNode;
 import org.blade.language.runtime.*;
@@ -30,19 +29,13 @@ public class ObjectMethods implements BaseBuiltinDeclaration {
 
   public abstract static class NObjectToStringMethodNode extends NBuiltinFunctionNode {
     @Specialization
-    protected TruffleString doString(TruffleString self) {
+    protected static TruffleString doString(TruffleString self) {
       return self;
     }
 
-    @Specialization
-    protected TruffleString doObject(DynamicObject self,
-                                     @Cached TruffleString.FromJavaStringNode fromJavaStringNode) {
-      return BString.fromObject(fromJavaStringNode, self);
-    }
-
     @Fallback
-    protected Object doPrimitive(Object self) {
-      return BString.fromObject(self);
+    protected static Object doPrimitive(Object self, @Bind Node node, @Cached NToStringNode toStringNode) {
+      return toStringNode.execute(node, self);
     }
   }
 
@@ -53,15 +46,9 @@ public class ObjectMethods implements BaseBuiltinDeclaration {
       return dynamicObjectLibrary.containsKey(self, BString.toString(property));
     }
 
-    @Specialization
-    protected boolean doString(TruffleString self, Object property) {
-      // strings only have the 'length' property
-      return NStringPropertyReaderNode.LENGTH_PROP.equals(BString.toString(property));
-    }
-
     @Fallback
     protected boolean doPrimitive(Object self, Object property,
-                                  @Cached(value = "languageContext().objectsModel.objectObject") DynamicObject clasObject,
+                                  @Cached(value = "languageContext().objectsModel.objectObject", neverDefault = true) DynamicObject clasObject,
                                   @CachedLibrary(value = "languageContext().objectsModel.objectObject") InteropLibrary classInteropLibrary) {
       try {
         return evaluateBoolean(classInteropLibrary.readMember(clasObject, BString.toString(property)));

@@ -5,9 +5,11 @@ import com.oracle.truffle.api.dsl.*;
 import com.oracle.truffle.api.interop.InteropLibrary;
 import com.oracle.truffle.api.library.CachedLibrary;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
+import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.strings.TruffleString;
 import org.blade.language.BaseBuiltinDeclaration;
 import org.blade.language.BladeLanguage;
+import org.blade.language.nodes.common.NToStringNode;
 import org.blade.language.nodes.functions.NBuiltinFunctionNode;
 import org.blade.language.runtime.*;
 import org.blade.language.shared.BuiltinClassesModel;
@@ -129,14 +131,13 @@ public final class BuiltinFunctions implements BaseBuiltinDeclaration {
 
   public abstract static class BinFunctionNode extends NBuiltinFunctionNode {
     @Specialization
-    protected TruffleString doLong(long arg,
-                                   @Cached TruffleString.FromJavaStringNode fromJavaStringNode) {
-      return BString.fromObject(fromJavaStringNode, Long.toBinaryString(arg));
+    protected static TruffleString doLong(long arg, @Bind Node node, @Cached NToStringNode toStringNode) {
+      return toStringNode.execute(node, Long.toBinaryString(arg));
     }
 
     @Fallback
-    protected double doInvalid(Object object) {
-      throw BladeRuntimeError.argumentError(this, "bin", object);
+    protected static double doInvalid(Object object, @Bind Node node) {
+      throw BladeRuntimeError.argumentError(node, "bin", object);
     }
   }
 
@@ -148,7 +149,7 @@ public final class BuiltinFunctions implements BaseBuiltinDeclaration {
       if (arg >= 0x110000) {
         throw BladeRuntimeError.valueError(this, "chr() argument out of maximum UTF-16 character range 0x10FFFE");
       }
-      return BString.fromObject(fromJavaStringNode, BString.fromCodePoint(fromCodePointNode, (int) arg));
+      return BString.fromCodePoint(fromCodePointNode, (int) arg);
     }
 
     @Fallback
@@ -159,14 +160,13 @@ public final class BuiltinFunctions implements BaseBuiltinDeclaration {
 
   public abstract static class HexFunctionNode extends NBuiltinFunctionNode {
     @Specialization
-    protected TruffleString doLong(long arg,
-                                   @Cached TruffleString.FromJavaStringNode fromJavaStringNode) {
-      return BString.fromObject(fromJavaStringNode, Long.toHexString(arg));
+    protected static TruffleString doLong(long arg, @Bind Node node, @Cached NToStringNode toStringNode) {
+      return toStringNode.execute(node, Long.toHexString(arg));
     }
 
     @Fallback
-    protected double doInvalid(Object object) {
-      throw BladeRuntimeError.argumentError(this, "hex", object);
+    protected static double doInvalid(Object object, @Bind Node node) {
+      throw BladeRuntimeError.argumentError(node, "hex", object);
     }
   }
 
@@ -307,14 +307,13 @@ public final class BuiltinFunctions implements BaseBuiltinDeclaration {
 
   public abstract static class OctFunctionNode extends NBuiltinFunctionNode {
     @Specialization
-    protected TruffleString doLong(long arg,
-                                   @Cached TruffleString.FromJavaStringNode fromJavaStringNode) {
-      return BString.fromObject(fromJavaStringNode, Long.toString(arg, 8));
+    protected static TruffleString doLong(long arg, @Bind Node node, @Cached NToStringNode toStringNode) {
+      return toStringNode.execute(node, Long.toString(arg, 8));
     }
 
     @Fallback
-    protected double doInvalid(Object object) {
-      throw BladeRuntimeError.argumentError(this, "oct", object);
+    protected static double doInvalid(Object object, @Bind Node node) {
+      throw BladeRuntimeError.argumentError(node, "oct", object);
     }
   }
 
