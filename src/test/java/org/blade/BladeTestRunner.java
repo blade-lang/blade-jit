@@ -233,7 +233,7 @@ public class BladeTestRunner extends ParentRunner<BladeTestRunner.TestCase> {
     for (String line : Files.readAllLines(file, Charset.defaultCharset())) {
       outFile.append(line).append(LF);
     }
-    return outFile.toString();
+    return outFile.toString().replace("\r", "");
   }
 
   public static void installBuiltin(NodeFactory<? extends NBuiltinFunctionNode> builtin) {
@@ -313,7 +313,7 @@ public class BladeTestRunner extends ParentRunner<BladeTestRunner.TestCase> {
       run(context, testCase.path, printer);
       printer.flush();
 
-      String actualOutput = out.toString();
+      String actualOutput = out.toString().replace("\r", "").replaceAll("([^\\\\])\\\\([^\\\\])", "$1/$2");
       if (testCase.expectRegex) {
         MatcherAssert.assertThat(testCase.name.toString(), actualOutput, matchesAs(testCase.expectedOutput));
       } else if (testCase.expectStackTrace) {
