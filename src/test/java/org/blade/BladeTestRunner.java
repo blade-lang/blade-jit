@@ -313,6 +313,13 @@ public class BladeTestRunner extends ParentRunner<BladeTestRunner.TestCase> {
       printer.flush();
 
       String actualOutput = out.toString();
+
+      // Temporary hack for GraalVM 25.
+      // TODO: Implement a proper and robust solution.
+      if(actualOutput.contains("org.graalvm.polyglot.PolyglotException")) {
+        actualOutput = actualOutput.replace("org.graalvm.polyglot.PolyglotException: ", "");
+      }
+
       if (testCase.expectRegex) {
         MatcherAssert.assertThat(testCase.name.toString(), actualOutput, matchesAs(testCase.expectedOutput));
       } else if (testCase.expectStackTrace) {
