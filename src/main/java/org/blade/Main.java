@@ -144,7 +144,7 @@ public class Main {
     return true;
   }
 
-  private static void printStackTrace(String message, Iterator<PolyglotException.StackFrame> elements) {
+  public static void printStackTrace(String message, Iterator<PolyglotException.StackFrame> elements) {
     System.err.println(message);
     while (elements.hasNext()) {
       PolyglotException.StackFrame frame = elements.next();
