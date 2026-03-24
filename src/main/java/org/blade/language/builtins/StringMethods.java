@@ -16,35 +16,38 @@ import org.blade.utility.RegulatedMap;
 public class StringMethods implements BaseBuiltinDeclaration {
   @Override
   public RegulatedMap<String, Boolean, NodeFactory<? extends NBuiltinFunctionNode>> getDeclarations() {
-    return new RegulatedMap<>() {{
-      add("@key", false, StringMethodsFactory.NKeyDecoratorNodeFactory.getInstance());
-      add("@value", false, StringMethodsFactory.NValueDecoratorNodeFactory.getInstance());
-      add("length", false, StringMethodsFactory.NLengthMethodNodeFactory.getInstance());
-      add("upper", false, StringMethodsFactory.NUpperMethodNodeFactory.getInstance());
-      add("lower", false, StringMethodsFactory.NLowerMethodNodeFactory.getInstance());
-      add("is_alpha", false, StringMethodsFactory.NIsAlphaMethodNodeFactory.getInstance());
-      add("is_alnum", false, StringMethodsFactory.NIsAlNumMethodNodeFactory.getInstance());
-      add("is_number", false, StringMethodsFactory.NIsNumberMethodNodeFactory.getInstance());
-      add("is_lower", false, StringMethodsFactory.NIsLowerMethodNodeFactory.getInstance());
-      add("is_upper", false, StringMethodsFactory.NIsUpperMethodNodeFactory.getInstance());
-      add("is_space", false, StringMethodsFactory.NIsSpaceMethodNodeFactory.getInstance());
-      add("trim", false, StringMethodsFactory.NTrimMethodNodeFactory.getInstance());
-      add("ltrim", false, StringMethodsFactory.NLTrimMethodNodeFactory.getInstance());
-      add("rtrim", false, StringMethodsFactory.NRTrimMethodNodeFactory.getInstance());
-      add("join", false, StringMethodsFactory.NJoinMethodNodeFactory.getInstance());
-      add("index_of", false, StringMethodsFactory.NIndexOfMethodNodeFactory.getInstance());
-      add("starts_with", false, StringMethodsFactory.NStartsWithMethodNodeFactory.getInstance());
-      add("ends_with", false, StringMethodsFactory.NEndsWithMethodNodeFactory.getInstance());
-    }};
+    return new RegulatedMap<>() {
+      {
+        add("@key", false, StringMethodsFactory.NKeyDecoratorNodeFactory.getInstance());
+        add("@value", false, StringMethodsFactory.NValueDecoratorNodeFactory.getInstance());
+        add("length", false, StringMethodsFactory.NLengthMethodNodeFactory.getInstance());
+        add("upper", false, StringMethodsFactory.NUpperMethodNodeFactory.getInstance());
+        add("lower", false, StringMethodsFactory.NLowerMethodNodeFactory.getInstance());
+        add("is_alpha", false, StringMethodsFactory.NIsAlphaMethodNodeFactory.getInstance());
+        add("is_alnum", false, StringMethodsFactory.NIsAlNumMethodNodeFactory.getInstance());
+        add("is_number", false, StringMethodsFactory.NIsNumberMethodNodeFactory.getInstance());
+        add("is_lower", false, StringMethodsFactory.NIsLowerMethodNodeFactory.getInstance());
+        add("is_upper", false, StringMethodsFactory.NIsUpperMethodNodeFactory.getInstance());
+        add("is_space", false, StringMethodsFactory.NIsSpaceMethodNodeFactory.getInstance());
+        add("trim", false, StringMethodsFactory.NTrimMethodNodeFactory.getInstance());
+        add("ltrim", false, StringMethodsFactory.NLTrimMethodNodeFactory.getInstance());
+        add("rtrim", false, StringMethodsFactory.NRTrimMethodNodeFactory.getInstance());
+        add("join", false, StringMethodsFactory.NJoinMethodNodeFactory.getInstance());
+        add("index_of", false, StringMethodsFactory.NIndexOfMethodNodeFactory.getInstance());
+        add("starts_with", false, StringMethodsFactory.NStartsWithMethodNodeFactory.getInstance());
+        add("ends_with", false, StringMethodsFactory.NEndsWithMethodNodeFactory.getInstance());
+        add("lpad", false, StringMethodsFactory.NLpadMethodNodeFactory.getInstance());
+        add("rpad", false, StringMethodsFactory.NRpadMethodNodeFactory.getInstance());
+      }
+    };
   }
-
 
   @ImportStatic(BString.class)
   public abstract static class NKeyDecoratorNode extends NBuiltinFunctionNode {
     @Specialization
     protected Object doAny(TruffleString string, Object item,
-                           @Cached TruffleString.CodePointLengthNode lengthNode,
-                           @Cached(value = "length(string, lengthNode)", neverDefault = false) long stringLength) {
+        @Cached TruffleString.CodePointLengthNode lengthNode,
+        @Cached(value = "length(string, lengthNode)", neverDefault = false) long stringLength) {
       if (stringLength == 0) {
         return BladeNil.SINGLETON;
       } else if (item == BladeNil.SINGLETON) {
@@ -72,9 +75,9 @@ public class StringMethods implements BaseBuiltinDeclaration {
   public abstract static class NValueDecoratorNode extends NBuiltinFunctionNode {
     @Specialization
     protected Object doAny(TruffleString string, long index,
-                           @Cached TruffleString.CodePointLengthNode lengthNode,
-                           @Cached(value = "length(string, lengthNode)", neverDefault = false) long stringLength,
-                           @Cached TruffleString.SubstringNode substringNode) {
+        @Cached TruffleString.CodePointLengthNode lengthNode,
+        @Cached(value = "length(string, lengthNode)", neverDefault = false) long stringLength,
+        @Cached TruffleString.SubstringNode substringNode) {
 
       if (index > -1 && index < stringLength) {
         return BString.substring(string, (int) index, 1, substringNode);
@@ -100,10 +103,9 @@ public class StringMethods implements BaseBuiltinDeclaration {
 
     @Specialization(guards = "isNil(extra)")
     protected long indexOfNil(
-      TruffleString self, TruffleString other, Object extra,
-      @Cached @Cached.Shared("indexOfStringNode") TruffleString.IndexOfStringNode indexOfStringNode,
-      @Cached @Cached.Shared("lengthNode") TruffleString.CodePointLengthNode lengthNode
-    ) {
+        TruffleString self, TruffleString other, Object extra,
+        @Cached @Cached.Shared("indexOfStringNode") TruffleString.IndexOfStringNode indexOfStringNode,
+        @Cached @Cached.Shared("lengthNode") TruffleString.CodePointLengthNode lengthNode) {
       if (self == BString.EMPTY) {
         return -1;
       }
@@ -113,10 +115,9 @@ public class StringMethods implements BaseBuiltinDeclaration {
 
     @Specialization(replaces = "indexOfNil")
     protected long indexOfLong(
-      TruffleString self, TruffleString other, long startIndex,
-      @Cached @Cached.Shared("indexOfStringNode") TruffleString.IndexOfStringNode indexOfStringNode,
-      @Cached @Cached.Shared("lengthNode") TruffleString.CodePointLengthNode lengthNode
-    ) {
+        TruffleString self, TruffleString other, long startIndex,
+        @Cached @Cached.Shared("indexOfStringNode") TruffleString.IndexOfStringNode indexOfStringNode,
+        @Cached @Cached.Shared("lengthNode") TruffleString.CodePointLengthNode lengthNode) {
       if (self == BString.EMPTY) {
         return -1;
       }
@@ -137,15 +138,14 @@ public class StringMethods implements BaseBuiltinDeclaration {
   public abstract static class NUpperMethodNode extends NBuiltinFunctionNode {
     @Specialization
     protected TruffleString doValid(TruffleString self,
-                                    @Cached TruffleString.FromJavaStringNode fromJavaStringNode) {
+        @Cached TruffleString.FromJavaStringNode fromJavaStringNode) {
       if (self == BString.EMPTY) {
         return self;
       }
 
       return fromJavaStringNode.execute(
-        BString.toUpper(self.toJavaStringUncached()),
-        BladeLanguage.ENCODING
-      );
+          BString.toUpper(self.toJavaStringUncached()),
+          BladeLanguage.ENCODING);
     }
 
     @Fallback
@@ -157,7 +157,7 @@ public class StringMethods implements BaseBuiltinDeclaration {
   public abstract static class NLowerMethodNode extends NBuiltinFunctionNode {
     @Specialization
     protected TruffleString doValid(TruffleString self,
-                                    @Cached TruffleString.FromJavaStringNode fromJavaStringNode) {
+        @Cached TruffleString.FromJavaStringNode fromJavaStringNode) {
       if (self == BString.EMPTY) {
         return self;
       }
@@ -174,9 +174,9 @@ public class StringMethods implements BaseBuiltinDeclaration {
   public abstract static class NIsAlphaMethodNode extends NBuiltinFunctionNode {
     @Specialization
     protected boolean doValid(TruffleString self,
-                              @Cached TruffleString.ToJavaStringNode toJavaStringNode,
-                              @Cached TruffleString.CodePointLengthNode lengthNode,
-                              @Cached TruffleString.CodePointAtIndexNode codePointNode) {
+        @Cached TruffleString.ToJavaStringNode toJavaStringNode,
+        @Cached TruffleString.CodePointLengthNode lengthNode,
+        @Cached TruffleString.CodePointAtIndexNode codePointNode) {
       if (self == BString.EMPTY) {
         return false;
       }
@@ -206,8 +206,8 @@ public class StringMethods implements BaseBuiltinDeclaration {
   public abstract static class NIsAlNumMethodNode extends NBuiltinFunctionNode {
     @Specialization
     protected boolean doValid(TruffleString self,
-                              @Cached TruffleString.CodePointLengthNode lengthNode,
-                              @Cached TruffleString.CodePointAtIndexNode codePointNode) {
+        @Cached TruffleString.CodePointLengthNode lengthNode,
+        @Cached TruffleString.CodePointAtIndexNode codePointNode) {
       if (self == BString.EMPTY) {
         return false;
       }
@@ -237,8 +237,8 @@ public class StringMethods implements BaseBuiltinDeclaration {
   public abstract static class NIsNumberMethodNode extends NBuiltinFunctionNode {
     @Specialization
     protected boolean doValid(TruffleString self,
-                              @Cached TruffleString.CodePointLengthNode lengthNode,
-                              @Cached TruffleString.CodePointAtIndexNode codePointNode) {
+        @Cached TruffleString.CodePointLengthNode lengthNode,
+        @Cached TruffleString.CodePointAtIndexNode codePointNode) {
       if (self == BString.EMPTY) {
         return false;
       }
@@ -268,8 +268,8 @@ public class StringMethods implements BaseBuiltinDeclaration {
   public abstract static class NIsLowerMethodNode extends NBuiltinFunctionNode {
     @Specialization
     protected boolean doValid(TruffleString self,
-                              @Cached TruffleString.CodePointLengthNode lengthNode,
-                              @Cached TruffleString.CodePointAtIndexNode codePointNode) {
+        @Cached TruffleString.CodePointLengthNode lengthNode,
+        @Cached TruffleString.CodePointAtIndexNode codePointNode) {
       if (self == BString.EMPTY) {
         return false;
       }
@@ -299,8 +299,8 @@ public class StringMethods implements BaseBuiltinDeclaration {
   public abstract static class NIsUpperMethodNode extends NBuiltinFunctionNode {
     @Specialization
     protected boolean doValid(TruffleString self,
-                              @Cached TruffleString.CodePointLengthNode lengthNode,
-                              @Cached TruffleString.CodePointAtIndexNode codePointNode) {
+        @Cached TruffleString.CodePointLengthNode lengthNode,
+        @Cached TruffleString.CodePointAtIndexNode codePointNode) {
       if (self == BString.EMPTY) {
         return false;
       }
@@ -330,8 +330,8 @@ public class StringMethods implements BaseBuiltinDeclaration {
   public abstract static class NIsSpaceMethodNode extends NBuiltinFunctionNode {
     @Specialization
     protected boolean doValid(TruffleString self,
-                              @Cached TruffleString.CodePointLengthNode lengthNode,
-                              @Cached TruffleString.CodePointAtIndexNode codePointNode) {
+        @Cached TruffleString.CodePointLengthNode lengthNode,
+        @Cached TruffleString.CodePointAtIndexNode codePointNode) {
       if (self == BString.EMPTY) {
         return false;
       }
@@ -361,8 +361,8 @@ public class StringMethods implements BaseBuiltinDeclaration {
   public abstract static class NStartsWithMethodNode extends NBuiltinFunctionNode {
     @Specialization
     protected boolean doValid(TruffleString self, TruffleString other,
-                              @Cached TruffleString.CodePointLengthNode lengthNode,
-                              @Cached TruffleString.IndexOfStringNode indexOfNode) {
+        @Cached TruffleString.CodePointLengthNode lengthNode,
+        @Cached TruffleString.IndexOfStringNode indexOfNode) {
       if (self == BString.EMPTY) {
         return false;
       }
@@ -379,8 +379,8 @@ public class StringMethods implements BaseBuiltinDeclaration {
   public abstract static class NEndsWithMethodNode extends NBuiltinFunctionNode {
     @Specialization
     protected boolean doValid(TruffleString self, TruffleString other,
-                              @Cached TruffleString.CodePointLengthNode lengthNode,
-                              @Cached TruffleString.IndexOfStringNode indexOfNode) {
+        @Cached TruffleString.CodePointLengthNode lengthNode,
+        @Cached TruffleString.IndexOfStringNode indexOfNode) {
       if (self == BString.EMPTY) {
         return false;
       }
@@ -412,9 +412,9 @@ public class StringMethods implements BaseBuiltinDeclaration {
 
     @Specialization
     protected Object doDefault(TruffleString string, BladeNil nil,
-                               @Cached @Cached.Shared("lengthNode") TruffleString.CodePointLengthNode lengthNode,
-                               @Cached @Cached.Shared("substringNode") TruffleString.SubstringNode substringNode,
-                               @Cached @Cached.Shared("charUTF16Node") TruffleString.ReadCharUTF16Node charUTF16Node) {
+        @Cached @Cached.Shared("lengthNode") TruffleString.CodePointLengthNode lengthNode,
+        @Cached @Cached.Shared("substringNode") TruffleString.SubstringNode substringNode,
+        @Cached @Cached.Shared("charUTF16Node") TruffleString.ReadCharUTF16Node charUTF16Node) {
       int length = (int) BString.length(string, lengthNode);
       if (length == 0) {
         return string;
@@ -439,10 +439,10 @@ public class StringMethods implements BaseBuiltinDeclaration {
 
     @Specialization(guards = "length(item, lengthNode) == 1")
     protected Object doItemSetValid(TruffleString string, TruffleString item,
-                                    @Cached @Cached.Shared("equalNode") TruffleString.EqualNode equalNode,
-                                    @Cached @Cached.Shared("lengthNode") TruffleString.CodePointLengthNode lengthNode,
-                                    @Cached @Cached.Shared("substringNode") TruffleString.SubstringNode substringNode,
-                                    @Cached @Cached.Shared("charUTF16Node") TruffleString.ReadCharUTF16Node charUTF16Node) {
+        @Cached @Cached.Shared("equalNode") TruffleString.EqualNode equalNode,
+        @Cached @Cached.Shared("lengthNode") TruffleString.CodePointLengthNode lengthNode,
+        @Cached @Cached.Shared("substringNode") TruffleString.SubstringNode substringNode,
+        @Cached @Cached.Shared("charUTF16Node") TruffleString.ReadCharUTF16Node charUTF16Node) {
       char trimmer = charUTF16Node.execute(item, 0);
 
       int length = (int) BString.length(string, lengthNode);
@@ -469,10 +469,10 @@ public class StringMethods implements BaseBuiltinDeclaration {
 
     @Specialization
     protected Object doItemSetInvalid(TruffleString string, TruffleString item,
-                                      @Cached @Cached.Shared("equalNode") TruffleString.EqualNode equalNode,
-                                      @Cached @Cached.Shared("lengthNode") TruffleString.CodePointLengthNode lengthNode,
-                                      @Cached @Cached.Shared("substringNode") TruffleString.SubstringNode substringNode,
-                                      @Cached @Cached.Shared("charUTF16Node") TruffleString.ReadCharUTF16Node charUTF16Node) {
+        @Cached @Cached.Shared("equalNode") TruffleString.EqualNode equalNode,
+        @Cached @Cached.Shared("lengthNode") TruffleString.CodePointLengthNode lengthNode,
+        @Cached @Cached.Shared("substringNode") TruffleString.SubstringNode substringNode,
+        @Cached @Cached.Shared("charUTF16Node") TruffleString.ReadCharUTF16Node charUTF16Node) {
       throw BladeRuntimeError.valueError(this, "Char expected in argument 2, string given.");
     }
 
@@ -502,9 +502,9 @@ public class StringMethods implements BaseBuiltinDeclaration {
 
     @Specialization
     protected Object doDefault(TruffleString string, BladeNil nil,
-                               @Cached @Cached.Shared("lengthNode") TruffleString.CodePointLengthNode lengthNode,
-                               @Cached @Cached.Shared("substringNode") TruffleString.SubstringNode substringNode,
-                               @Cached @Cached.Shared("charUTF16Node") TruffleString.ReadCharUTF16Node charUTF16Node) {
+        @Cached @Cached.Shared("lengthNode") TruffleString.CodePointLengthNode lengthNode,
+        @Cached @Cached.Shared("substringNode") TruffleString.SubstringNode substringNode,
+        @Cached @Cached.Shared("charUTF16Node") TruffleString.ReadCharUTF16Node charUTF16Node) {
       int length = (int) BString.length(string, lengthNode);
       if (length == 0) {
         return string;
@@ -524,10 +524,10 @@ public class StringMethods implements BaseBuiltinDeclaration {
 
     @Specialization(guards = "length(item, lengthNode) == 1")
     protected Object doItemSetValid(TruffleString string, TruffleString item,
-                                    @Cached @Cached.Shared("equalNode") TruffleString.EqualNode equalNode,
-                                    @Cached @Cached.Shared("lengthNode") TruffleString.CodePointLengthNode lengthNode,
-                                    @Cached @Cached.Shared("substringNode") TruffleString.SubstringNode substringNode,
-                                    @Cached @Cached.Shared("charUTF16Node") TruffleString.ReadCharUTF16Node charUTF16Node) {
+        @Cached @Cached.Shared("equalNode") TruffleString.EqualNode equalNode,
+        @Cached @Cached.Shared("lengthNode") TruffleString.CodePointLengthNode lengthNode,
+        @Cached @Cached.Shared("substringNode") TruffleString.SubstringNode substringNode,
+        @Cached @Cached.Shared("charUTF16Node") TruffleString.ReadCharUTF16Node charUTF16Node) {
       char trimmer = charUTF16Node.execute(item, 0);
 
       int length = (int) BString.length(string, lengthNode);
@@ -549,10 +549,10 @@ public class StringMethods implements BaseBuiltinDeclaration {
 
     @Specialization
     protected Object doItemSetInvalid(TruffleString string, TruffleString item,
-                                      @Cached @Cached.Shared("equalNode") TruffleString.EqualNode equalNode,
-                                      @Cached @Cached.Shared("lengthNode") TruffleString.CodePointLengthNode lengthNode,
-                                      @Cached @Cached.Shared("substringNode") TruffleString.SubstringNode substringNode,
-                                      @Cached @Cached.Shared("charUTF16Node") TruffleString.ReadCharUTF16Node charUTF16Node) {
+        @Cached @Cached.Shared("equalNode") TruffleString.EqualNode equalNode,
+        @Cached @Cached.Shared("lengthNode") TruffleString.CodePointLengthNode lengthNode,
+        @Cached @Cached.Shared("substringNode") TruffleString.SubstringNode substringNode,
+        @Cached @Cached.Shared("charUTF16Node") TruffleString.ReadCharUTF16Node charUTF16Node) {
       throw BladeRuntimeError.valueError(this, "Char expected in argument 2, string given.");
     }
 
@@ -581,9 +581,9 @@ public class StringMethods implements BaseBuiltinDeclaration {
 
     @Specialization
     protected Object doDefault(TruffleString string, BladeNil nil,
-                               @Cached @Cached.Shared("lengthNode") TruffleString.CodePointLengthNode lengthNode,
-                               @Cached @Cached.Shared("substringNode") TruffleString.SubstringNode substringNode,
-                               @Cached @Cached.Shared("charUTF16Node") TruffleString.ReadCharUTF16Node charUTF16Node) {
+        @Cached @Cached.Shared("lengthNode") TruffleString.CodePointLengthNode lengthNode,
+        @Cached @Cached.Shared("substringNode") TruffleString.SubstringNode substringNode,
+        @Cached @Cached.Shared("charUTF16Node") TruffleString.ReadCharUTF16Node charUTF16Node) {
       int length = (int) BString.length(string, lengthNode);
       if (length == 0) {
         return string;
@@ -603,10 +603,10 @@ public class StringMethods implements BaseBuiltinDeclaration {
 
     @Specialization(guards = "length(item, lengthNode) == 1")
     protected Object doItemSetValid(TruffleString string, TruffleString item,
-                                    @Cached @Cached.Shared("equalNode") TruffleString.EqualNode equalNode,
-                                    @Cached @Cached.Shared("lengthNode") TruffleString.CodePointLengthNode lengthNode,
-                                    @Cached @Cached.Shared("substringNode") TruffleString.SubstringNode substringNode,
-                                    @Cached @Cached.Shared("charUTF16Node") TruffleString.ReadCharUTF16Node charUTF16Node) {
+        @Cached @Cached.Shared("equalNode") TruffleString.EqualNode equalNode,
+        @Cached @Cached.Shared("lengthNode") TruffleString.CodePointLengthNode lengthNode,
+        @Cached @Cached.Shared("substringNode") TruffleString.SubstringNode substringNode,
+        @Cached @Cached.Shared("charUTF16Node") TruffleString.ReadCharUTF16Node charUTF16Node) {
       char trimmer = charUTF16Node.execute(item, 0);
 
       int length = (int) BString.length(string, lengthNode);
@@ -628,10 +628,10 @@ public class StringMethods implements BaseBuiltinDeclaration {
 
     @Specialization
     protected Object doItemSetInvalid(TruffleString string, TruffleString item,
-                                      @Cached @Cached.Shared("equalNode") TruffleString.EqualNode equalNode,
-                                      @Cached @Cached.Shared("lengthNode") TruffleString.CodePointLengthNode lengthNode,
-                                      @Cached @Cached.Shared("substringNode") TruffleString.SubstringNode substringNode,
-                                      @Cached @Cached.Shared("charUTF16Node") TruffleString.ReadCharUTF16Node charUTF16Node) {
+        @Cached @Cached.Shared("equalNode") TruffleString.EqualNode equalNode,
+        @Cached @Cached.Shared("lengthNode") TruffleString.CodePointLengthNode lengthNode,
+        @Cached @Cached.Shared("substringNode") TruffleString.SubstringNode substringNode,
+        @Cached @Cached.Shared("charUTF16Node") TruffleString.ReadCharUTF16Node charUTF16Node) {
       throw BladeRuntimeError.valueError(this, "Char expected in argument 2, string given.");
     }
 
@@ -655,8 +655,8 @@ public class StringMethods implements BaseBuiltinDeclaration {
 
     @Specialization(guards = "list.getArraySize() > 0")
     public static Object doList(TruffleString string, ListObject list, @Bind Node node,
-                                @Cached @Cached.Shared("toStringNode") NToStringNode toStringNode,
-                                @Cached @Cached.Shared("concatNode") TruffleString.ConcatNode concatNode) {
+        @Cached @Cached.Shared("toStringNode") NToStringNode toStringNode,
+        @Cached @Cached.Shared("concatNode") TruffleString.ConcatNode concatNode) {
       Object[] items = list.getItems();
       final long length = list.getArraySize();
 
@@ -669,12 +669,12 @@ public class StringMethods implements BaseBuiltinDeclaration {
       return result;
     }
 
-    @Specialization(guards = {"!string.isEmpty()", "!item.isEmpty()"})
+    @Specialization(guards = { "!string.isEmpty()", "!item.isEmpty()" })
     public static Object doString(TruffleString string, TruffleString item, @Bind Node node,
-                                  @Cached TruffleString.CodePointLengthNode lengthNode,
-                                  @Cached TruffleString.ReadCharUTF16Node readCharUTF16Node,
-                                  @Cached @Cached.Shared("toStringNode") NToStringNode toStringNode,
-                                  @Cached @Cached.Shared("concatNode") TruffleString.ConcatNode concatNode) {
+        @Cached TruffleString.CodePointLengthNode lengthNode,
+        @Cached TruffleString.ReadCharUTF16Node readCharUTF16Node,
+        @Cached @Cached.Shared("toStringNode") NToStringNode toStringNode,
+        @Cached @Cached.Shared("concatNode") TruffleString.ConcatNode concatNode) {
       final long length = BString.length(item, lengthNode);
 
       TruffleString result = toStringNode.execute(node, readCharUTF16Node.execute(item, 0));
@@ -688,10 +688,10 @@ public class StringMethods implements BaseBuiltinDeclaration {
 
     @Specialization(limit = "3")
     public static Object doDictionary(TruffleString string, DictionaryObject dictionary,
-                                      @Bind Node node,
-                                      @Cached @Cached.Shared("toStringNode") NToStringNode toStringNode,
-                                      @CachedLibrary("dictionary") DynamicObjectLibrary objectLibrary,
-                                      @Cached @Cached.Shared("concatNode") TruffleString.ConcatNode concatNode) {
+        @Bind Node node,
+        @Cached @Cached.Shared("toStringNode") NToStringNode toStringNode,
+        @CachedLibrary("dictionary") DynamicObjectLibrary objectLibrary,
+        @Cached @Cached.Shared("concatNode") TruffleString.ConcatNode concatNode) {
       Object[] keys = objectLibrary.getKeyArray(dictionary);
       final int length = keys.length;
       if (length == 0) {
@@ -720,6 +720,102 @@ public class StringMethods implements BaseBuiltinDeclaration {
     @Fallback
     protected static Object doFallback(Object object, Object iterable, @Bind Node node) {
       throw BladeRuntimeError.argumentError(node, "string.join()", iterable);
+    }
+  }
+
+  @ImportStatic(BString.class)
+  public abstract static class NLpadMethodNode extends NBuiltinFunctionNode {
+    @Specialization
+    protected TruffleString doLpad(TruffleString self, long width, BladeNil nil,
+        @Cached @Cached.Shared("lengthNode") TruffleString.CodePointLengthNode lengthNode,
+        @Cached @Cached.Shared("concatNode") TruffleString.ConcatNode concatNode,
+        @Cached @Cached.Shared("fromJavaStringNode") TruffleString.FromJavaStringNode fromJavaStringNode) {
+      long length = BString.length(self, lengthNode);
+      if (width <= length || width < 0) {
+        return self;
+      }
+      long padCount = width - length;
+      TruffleString padString = createPadString(padCount, ' ', fromJavaStringNode);
+      return BString.concat(concatNode, padString, self);
+    }
+
+    @Specialization(guards = "length(fill, lengthNode) == 1")
+    protected TruffleString doLpadWithFill(TruffleString self, long width, TruffleString fill,
+        @Cached @Cached.Shared("lengthNode") TruffleString.CodePointLengthNode lengthNode,
+        @Cached TruffleString.ReadCharUTF16Node readCharNode,
+        @Cached @Cached.Shared("concatNode") TruffleString.ConcatNode concatNode,
+        @Cached @Cached.Shared("fromJavaStringNode") TruffleString.FromJavaStringNode fromJavaStringNode) {
+      long length = BString.length(self, lengthNode);
+      if (width <= length || width < 0) {
+        return self;
+      }
+      long padCount = width - length;
+      char fillChar = (char) readCharNode.execute(fill, 0);
+      TruffleString padString = createPadString(padCount, fillChar, fromJavaStringNode);
+      return BString.concat(concatNode, padString, self);
+    }
+
+    @Fallback
+    protected Object doInvalid(Object self, Object width, Object fill) {
+      throw BladeRuntimeError.argumentError(this, "string.lpad", width, fill);
+    }
+
+    @CompilerDirectives.TruffleBoundary
+    private TruffleString createPadString(long count, char fillChar,
+        TruffleString.FromJavaStringNode fromJavaStringNode) {
+      StringBuilder sb = new StringBuilder((int) count);
+      for (long i = 0; i < count; i++) {
+        sb.append(fillChar);
+      }
+      return fromJavaStringNode.execute(sb.toString(), BladeLanguage.ENCODING);
+    }
+  }
+
+  @ImportStatic(BString.class)
+  public abstract static class NRpadMethodNode extends NBuiltinFunctionNode {
+    @Specialization
+    protected TruffleString doRpad(TruffleString self, long width, BladeNil nil,
+        @Cached @Cached.Shared("lengthNode") TruffleString.CodePointLengthNode lengthNode,
+        @Cached @Cached.Shared("concatNode") TruffleString.ConcatNode concatNode,
+        @Cached @Cached.Shared("fromJavaStringNode") TruffleString.FromJavaStringNode fromJavaStringNode) {
+      long length = BString.length(self, lengthNode);
+      if (width <= length || width < 0) {
+        return self;
+      }
+      long padCount = width - length;
+      TruffleString padString = createPadString(padCount, ' ', fromJavaStringNode);
+      return BString.concat(concatNode, self, padString);
+    }
+
+    @Specialization(guards = "length(fill, lengthNode) == 1")
+    protected TruffleString doRpadWithFill(TruffleString self, long width, TruffleString fill,
+        @Cached @Cached.Shared("lengthNode") TruffleString.CodePointLengthNode lengthNode,
+        @Cached TruffleString.ReadCharUTF16Node readCharNode,
+        @Cached @Cached.Shared("concatNode") TruffleString.ConcatNode concatNode,
+        @Cached @Cached.Shared("fromJavaStringNode") TruffleString.FromJavaStringNode fromJavaStringNode) {
+      long length = BString.length(self, lengthNode);
+      if (width <= length || width < 0) {
+        return self;
+      }
+      long padCount = width - length;
+      char fillChar = (char) readCharNode.execute(fill, 0);
+      TruffleString padString = createPadString(padCount, fillChar, fromJavaStringNode);
+      return BString.concat(concatNode, self, padString);
+    }
+
+    @Fallback
+    protected Object doInvalid(Object self, Object width, Object fill) {
+      throw BladeRuntimeError.argumentError(this, "string.rpad", width, fill);
+    }
+
+    @CompilerDirectives.TruffleBoundary
+    private TruffleString createPadString(long count, char fillChar,
+        TruffleString.FromJavaStringNode fromJavaStringNode) {
+      StringBuilder sb = new StringBuilder((int) count);
+      for (long i = 0; i < count; i++) {
+        sb.append(fillChar);
+      }
+      return fromJavaStringNode.execute(sb.toString(), BladeLanguage.ENCODING);
     }
   }
 }
