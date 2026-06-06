@@ -1,0 +1,40 @@
+package org.zuri.language.nodes.expressions;
+
+import com.oracle.truffle.api.dsl.Cached;
+import com.oracle.truffle.api.dsl.NodeChild;
+import com.oracle.truffle.api.dsl.NodeField;
+import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.frame.VirtualFrame;
+import org.zuri.language.nodes.NNode;
+import org.zuri.language.nodes.common.NPropertyReaderNode;
+
+@NodeChild("targetExpr")
+@NodeField(name = "name", type = String.class)
+public abstract class NGetPropertyNode extends NNode {
+  public abstract Object executeRead(Object object);
+
+  public abstract NNode getTargetExpr();
+
+  protected abstract String getName();
+
+  @Specialization
+  protected Object readProperty(Object target, @Cached NPropertyReaderNode propertyReader) {
+    return propertyReader.executeRead(target, getName());
+  }
+
+  @Override
+  public Object evaluateFunction(VirtualFrame frame, Object receiver) {
+    NNode expr = getTargetExpr();
+
+    Object target = expr instanceof NParentExprNode parentNode
+      ? parentNode.getParentClass()
+      : receiver;
+
+    return executeRead(target);
+  }
+
+  @Override
+  public Object evaluateReceiver(VirtualFrame frame) {
+    return getTargetExpr().execute(frame);
+  }
+}

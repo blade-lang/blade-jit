@@ -1,3 +1,3 @@
 Manifest-Version: 1.0
-Main-Class: org.blade.Main
+Main-Class: org.zuri.Main
 

@@ -1,0 +1,123 @@
+package org.zuri.language.builtins;
+
+import com.oracle.truffle.api.dsl.*;
+import com.oracle.truffle.api.interop.InteropLibrary;
+import com.oracle.truffle.api.interop.UnknownIdentifierException;
+import com.oracle.truffle.api.interop.UnsupportedMessageException;
+import com.oracle.truffle.api.library.CachedLibrary;
+import com.oracle.truffle.api.nodes.Node;
+import com.oracle.truffle.api.object.DynamicObject;
+import com.oracle.truffle.api.object.DynamicObjectLibrary;
+import com.oracle.truffle.api.strings.TruffleString;
+import org.zuri.language.BaseBuiltinDeclaration;
+import org.zuri.language.nodes.common.NToStringNode;
+import org.zuri.language.nodes.functions.NBuiltinFunctionNode;
+import org.zuri.language.nodes.string.NStringPropertyReaderNode;
+import org.zuri.language.runtime.*;
+import org.zuri.language.shared.BuiltinClassesModel;
+import org.zuri.utility.RegulatedMap;
+
+public class ObjectMethods implements BaseBuiltinDeclaration {
+  @Override
+  public RegulatedMap<String, Boolean, NodeFactory<? extends NBuiltinFunctionNode>> getDeclarations() {
+    return new RegulatedMap<>() {{
+      add("to_string", false, ObjectMethodsFactory.NObjectToStringMethodNodeFactory.getInstance());
+      add("has_prop", false, ObjectMethodsFactory.NObjectHasPropMethodNodeFactory.getInstance());
+      add("get_class", false, ObjectMethodsFactory.GetClassMethodNodeFactory.getInstance());
+    }};
+  }
+
+  public abstract static class NObjectToStringMethodNode extends NBuiltinFunctionNode {
+    @Specialization
+    protected static TruffleString doString(TruffleString self) {
+      return self;
+    }
+
+    @Fallback
+    protected static Object doPrimitive(Object self, @Bind Node node, @Cached NToStringNode toStringNode) {
+      return toStringNode.execute(node, self);
+    }
+  }
+
+  public abstract static class NObjectHasPropMethodNode extends NBuiltinFunctionNode {
+    @Specialization(limit = "3")
+    protected boolean doObject(DynamicObject self, Object property,
+                               @CachedLibrary("self") DynamicObjectLibrary dynamicObjectLibrary) {
+      return dynamicObjectLibrary.containsKey(self, BString.toString(property));
+    }
+
+    @Fallback
+    protected boolean doPrimitive(Object self, Object property,
+                                  @Cached(value = "languageContext().objectsModel.objectObject", neverDefault = true) DynamicObject clasObject,
+                                  @CachedLibrary(value = "languageContext().objectsModel.objectObject") InteropLibrary classInteropLibrary) {
+      try {
+        return evaluateBoolean(classInteropLibrary.readMember(clasObject, BString.toString(property)));
+      } catch (UnsupportedMessageException | UnknownIdentifierException e) {
+        return false;
+      }
+    }
+  }
+
+  public abstract static class GetClassMethodNode extends NBuiltinFunctionNode {
+
+    @Specialization
+    protected Object doInt(int object,
+                           @Cached(value = "languageContext().objectsModel", neverDefault = true) @Cached.Shared("objectsModel") BuiltinClassesModel objectsModel,
+                           @Cached(value = "objectsModel.numberObject", neverDefault = true) ZuriClass numberObject) {
+      return numberObject;
+    }
+
+    @Specialization
+    protected Object doLong(long object,
+                            @Cached(value = "languageContext().objectsModel", neverDefault = true) @Cached.Shared("objectsModel") BuiltinClassesModel objectsModel,
+                            @Cached(value = "objectsModel.numberObject", neverDefault = true) ZuriClass numberObject) {
+      return numberObject;
+    }
+
+    @Specialization
+    protected Object doDouble(double object,
+                              @Cached(value = "languageContext().objectsModel", neverDefault = true) @Cached.Shared("objectsModel") BuiltinClassesModel objectsModel,
+                              @Cached(value = "objectsModel.numberObject", neverDefault = true) ZuriClass numberObject) {
+      return numberObject;
+    }
+
+    @Specialization
+    protected Object doBoolean(boolean object,
+                               @Cached(value = "languageContext().objectsModel", neverDefault = true) @Cached.Shared("objectsModel") BuiltinClassesModel objectsModel,
+                               @Cached(value = "objectsModel.booleanObject", neverDefault = true) ZuriClass booleanObject) {
+      return booleanObject;
+    }
+
+    @Specialization
+    protected Object doBigInt(BigIntObject object,
+                              @Cached(value = "languageContext().objectsModel", neverDefault = true) @Cached.Shared("objectsModel") BuiltinClassesModel objectsModel,
+                              @Cached(value = "objectsModel.bigIntObject", neverDefault = true) ZuriClass bigIntObject) {
+      return bigIntObject;
+    }
+
+    @Specialization
+    protected Object doString(TruffleString object,
+                              @Cached(value = "languageContext().objectsModel", neverDefault = true) @Cached.Shared("objectsModel") BuiltinClassesModel objectsModel,
+                              @Cached(value = "objectsModel.stringObject", neverDefault = true) ZuriClass stringObject) {
+      return stringObject;
+    }
+
+    @Specialization
+    protected Object doRange(RangeObject object,
+                             @Cached(value = "languageContext().objectsModel", neverDefault = true) @Cached.Shared("objectsModel") BuiltinClassesModel objectsModel,
+                             @Cached(value = "objectsModel.rangeObject", neverDefault = true) ZuriClass rangeObject) {
+      return rangeObject;
+    }
+
+    @Specialization
+    protected Object doObject(ZuriObject object) {
+      return object.classObject;
+    }
+
+    @Fallback
+    protected Object doOthers(Object object,
+                              @Cached(value = "languageContext().objectsModel", neverDefault = true) @Cached.Shared("objectsModel") BuiltinClassesModel objectsModel) {
+      return objectsModel.objectObject;
+    }
+  }
+}

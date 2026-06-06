@@ -2,9 +2,9 @@
   <configuration default="false" name="GenerateAST" type="Application" factoryName="Application">
     <option name="ALTERNATIVE_JRE_PATH" value="graalvm-25" />
     <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="true" />
-    <option name="MAIN_CLASS_NAME" value="tools.blade.GenerateAst" />
-    <module name="blade.main" />
-    <option name="PROGRAM_PARAMETERS" value="$PROJECT_DIR$/src/main/java/org/blade/language/parser/ast" />
+    <option name="MAIN_CLASS_NAME" value="tools.zuri.GenerateAst" />
+    <module name="zuri.main" />
+    <option name="PROGRAM_PARAMETERS" value="$PROJECT_DIR$/src/main/java/org/zuri/language/parser/ast" />
     <method v="2">
       <option name="Make" enabled="true" />
     </method>

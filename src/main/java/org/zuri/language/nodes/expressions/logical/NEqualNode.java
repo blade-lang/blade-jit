@@ -1,0 +1,68 @@
+package org.zuri.language.nodes.expressions.logical;
+
+import com.oracle.truffle.api.CompilerDirectives;
+import com.oracle.truffle.api.bytecode.OperationProxy;
+import com.oracle.truffle.api.dsl.Bind;
+import com.oracle.truffle.api.dsl.Cached;
+import com.oracle.truffle.api.dsl.Fallback;
+import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.interop.InteropLibrary;
+import com.oracle.truffle.api.library.CachedLibrary;
+import com.oracle.truffle.api.nodes.Node;
+import com.oracle.truffle.api.strings.TruffleString;
+import org.zuri.language.ZuriLanguage;
+import org.zuri.language.nodes.NBinaryNode;
+import org.zuri.language.runtime.BigIntObject;
+import org.zuri.language.runtime.ZuriObject;
+
+@OperationProxy.Proxyable(allowUncached = true)
+public abstract class NEqualNode extends NBinaryNode {
+
+  @Specialization
+  protected static boolean doBoolean(boolean left, boolean right) {
+    return left == right;
+  }
+
+  @Specialization
+  protected static boolean doLongs(long left, long right) {
+    return left == right;
+  }
+
+  @CompilerDirectives.TruffleBoundary
+  @Specialization
+  protected static boolean doBigInts(BigIntObject left, BigIntObject right) {
+    return left.equals(right);
+  }
+
+  @Specialization
+  protected static boolean doDoubles(double left, double right) {
+    return left == right;
+  }
+
+  @Specialization
+  protected static boolean doStrings(String left, String right) {
+    return left.equals(right);
+  }
+
+  @Specialization
+  protected static boolean doTruffleStrings(TruffleString left, TruffleString right,
+                                            @Cached TruffleString.EqualNode equalNode) {
+    return equalNode.execute(left, right, ZuriLanguage.ENCODING);
+  }
+
+  @Specialization(limit = "3")
+  protected static Object doObjects(ZuriObject left, ZuriObject right,
+                                    @Bind Node node, @CachedLibrary("left") InteropLibrary interopLibrary) {
+    Object overrideValue = methodOverride(node, "==", left, right, interopLibrary);
+    if (overrideValue != null) {
+      return evaluateBoolean(overrideValue);
+    }
+
+    return doUnsupported(left, right);
+  }
+
+  @Fallback
+  protected static boolean doUnsupported(Object left, Object right) {
+    return left == right;
+  }
+}

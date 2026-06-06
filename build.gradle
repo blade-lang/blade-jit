@@ -3,7 +3,7 @@ plugins {
     id 'org.graalvm.buildtools.native' version '0.10.6'
 }
 
-group = 'org.blade'
+group = 'org.zuri'
 version = '1.0.0'
 
 repositories {
@@ -67,8 +67,8 @@ graalvmNative {
 
     binaries.main {
         // options to configure the main binary
-        imageName = 'blade'
-        mainClass = 'org.blade.Main'
+        imageName = 'zuri'
+        mainClass = 'org.zuri.Main'
 
         fallback = true
 
@@ -77,10 +77,10 @@ graalvmNative {
         buildArgs.add('-H:+AddAllCharsets')
         buildArgs.add('-H:MaxRuntimeCompileMethods=5400')
         buildArgs.add('-H:+UnlockExperimentalVMOptions')
-        buildArgs.add('--initialize-at-build-time=org.blade')
+        buildArgs.add('--initialize-at-build-time=org.zuri')
         buildArgs.add('--enable-native-access=org.graalvm.truffle')
         buildArgs.add('--enable-native-access=org.graalvm.polyglot')
-        buildArgs.add('-Dpolyglot.image-build-time.PreinitializeContexts=blade')
+        buildArgs.add('-Dpolyglot.image-build-time.PreinitializeContexts=zuri')
     }
 
     binaries.test {

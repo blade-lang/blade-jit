@@ -1,0 +1,42 @@
+package org.zuri.language.nodes;
+
+import com.oracle.truffle.api.frame.FrameDescriptor;
+import com.oracle.truffle.api.frame.MaterializedFrame;
+import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.nodes.RootNode;
+import org.zuri.language.ZuriLanguage;
+import org.zuri.language.nodes.functions.NFunctionBodyNode;
+
+public final class NFunctionRootNode extends RootNode {
+  private final String name;
+  private final MaterializedFrame parentFrame;
+  @SuppressWarnings("FieldMayBeFinal")
+  @Child
+  private NStmtNode block;
+
+  public NFunctionRootNode(ZuriLanguage language, FrameDescriptor frameDescriptor, NFunctionBodyNode block, String name, MaterializedFrame parentFrame) {
+    super(language, frameDescriptor);
+    this.block = block;
+    this.name = name;
+    this.parentFrame = parentFrame;
+  }
+
+  @Override
+  public Object execute(VirtualFrame frame) {
+    if (parentFrame != null) {
+      frame.setObject(0, parentFrame);
+    }
+
+    return block.execute(frame);
+  }
+
+  @Override
+  public String toString() {
+    return name;
+  }
+
+  @Override
+  public String getName() {
+    return name;
+  }
+}

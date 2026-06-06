@@ -1,6 +1,6 @@
 ## Changes
 
-Blade JIT allows us to re-assess a few things about Blade and introduce greater flexibility and security to the language
+Zuri JIT allows us to re-assess a few things about Zuri and introduce greater flexibility and security to the language
 and runtime in general.
 
 - `const` keyword for declaring constants.
