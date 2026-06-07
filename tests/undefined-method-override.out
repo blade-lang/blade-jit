@@ -1,2 +1,2 @@
 ^^^
-ArgumentError: '+' is not defined for call signature (A, A)
+ArgumentError: operator + is not defined for call signature (A, A)

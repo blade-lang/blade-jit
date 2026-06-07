@@ -31,6 +31,6 @@ public abstract class NNegateNode extends NUnaryNode {
 
   @Fallback
   protected static double doUnsupported(Object value, @Bind Node node) {
-    throw ZuriRuntimeError.argumentError(node, "-", value);
+    throw ZuriRuntimeError.argumentError(node, "negative operator -", value);
   }
 }

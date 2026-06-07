@@ -140,7 +140,7 @@ public class StringMethods implements BaseBuiltinDeclaration {
 
     @Fallback
     protected Object unknownArguments(Object self, Object other, Object object) {
-      throw ZuriRuntimeError.argumentError(this, "string.index_of", self, other, object);
+      throw ZuriRuntimeError.argumentError(this, "string.index_of", other, object);
     }
   }
 
@@ -159,7 +159,7 @@ public class StringMethods implements BaseBuiltinDeclaration {
 
     @Fallback
     protected Object doInvalid(Object self) {
-      throw ZuriRuntimeError.argumentError(this, "string.upper", self);
+      throw ZuriRuntimeError.argumentError(this, "string.upper");
     }
   }
 
@@ -176,7 +176,7 @@ public class StringMethods implements BaseBuiltinDeclaration {
 
     @Fallback
     protected Object doInvalid(Object self) {
-      throw ZuriRuntimeError.argumentError(this, "string.lower", self);
+      throw ZuriRuntimeError.argumentError(this, "string.lower");
     }
   }
 
@@ -203,7 +203,7 @@ public class StringMethods implements BaseBuiltinDeclaration {
 
     @Fallback
     protected Object doInvalid(Object self) {
-      throw ZuriRuntimeError.argumentError(this, "string.is_alpha", self);
+      throw ZuriRuntimeError.argumentError(this, "string.is_alpha");
     }
 
     @CompilerDirectives.TruffleBoundary
@@ -234,7 +234,7 @@ public class StringMethods implements BaseBuiltinDeclaration {
 
     @Fallback
     protected Object doInvalid(Object self) {
-      throw ZuriRuntimeError.argumentError(this, "string.is_alnum", self);
+      throw ZuriRuntimeError.argumentError(this, "string.is_alnum");
     }
 
     @CompilerDirectives.TruffleBoundary
@@ -265,7 +265,7 @@ public class StringMethods implements BaseBuiltinDeclaration {
 
     @Fallback
     protected Object doInvalid(Object self) {
-      throw ZuriRuntimeError.argumentError(this, "string.is_number", self);
+      throw ZuriRuntimeError.argumentError(this, "string.is_number");
     }
 
     @CompilerDirectives.TruffleBoundary
@@ -296,7 +296,7 @@ public class StringMethods implements BaseBuiltinDeclaration {
 
     @Fallback
     protected Object doInvalid(Object self) {
-      throw ZuriRuntimeError.argumentError(this, "string.is_lower", self);
+      throw ZuriRuntimeError.argumentError(this, "string.is_lower");
     }
 
     @CompilerDirectives.TruffleBoundary
@@ -327,7 +327,7 @@ public class StringMethods implements BaseBuiltinDeclaration {
 
     @Fallback
     protected Object doInvalid(Object self) {
-      throw ZuriRuntimeError.argumentError(this, "string.is_upper", self);
+      throw ZuriRuntimeError.argumentError(this, "string.is_upper");
     }
 
     @CompilerDirectives.TruffleBoundary
@@ -358,7 +358,7 @@ public class StringMethods implements BaseBuiltinDeclaration {
 
     @Fallback
     protected Object doInvalid(Object self) {
-      throw ZuriRuntimeError.argumentError(this, "string.is_space", self);
+      throw ZuriRuntimeError.argumentError(this, "string.is_space");
     }
 
     @CompilerDirectives.TruffleBoundary
@@ -381,7 +381,7 @@ public class StringMethods implements BaseBuiltinDeclaration {
 
     @Fallback
     protected Object doInvalid(Object self, Object other) {
-      throw ZuriRuntimeError.argumentError(this, "string.starts_with", self, other);
+      throw ZuriRuntimeError.argumentError(this, "string.starts_with", other);
     }
   }
 
@@ -403,7 +403,7 @@ public class StringMethods implements BaseBuiltinDeclaration {
 
     @Fallback
     protected Object doInvalid(Object self, Object other) {
-      throw ZuriRuntimeError.argumentError(this, "string.ends_with", self, other);
+      throw ZuriRuntimeError.argumentError(this, "string.ends_with", other);
     }
   }
 

@@ -63,6 +63,6 @@ public abstract class NBitNotNode extends NUnaryNode {
 
   @Fallback
   protected static double doUnsupported(Object left, @Bind Node node) {
-    throw ZuriRuntimeError.argumentError(node, "~", left);
+    throw ZuriRuntimeError.argumentError(node, "operator ~", left);
   }
 }

@@ -37,7 +37,7 @@ public abstract class NBitUnsignedRightShiftNode extends NBinaryNode {
 
   @Fallback
   protected static double doUnsupported(Object left, Object right, @Bind Node node) {
-    throw ZuriRuntimeError.argumentError(node, ">>>", left, right);
+    throw ZuriRuntimeError.argumentError(node, "operator >>>", left, right);
   }
 
   private static int toUInt32(long value) {

@@ -82,7 +82,7 @@ public abstract class NDivideNode extends NBinaryNode {
 
   @Fallback
   protected static double doUnsupported(Object left, Object right, @Bind Node node) {
-    throw ZuriRuntimeError.argumentError(node, "/", left, right);
+    throw ZuriRuntimeError.argumentError(node, "operator /", left, right);
   }
 
   protected static boolean isCornerCase(long a, long b) {
