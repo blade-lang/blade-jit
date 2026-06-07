@@ -69,21 +69,21 @@ public abstract class NAddNode extends NBinaryNode {
   @Specialization
   protected static TruffleString doStrings(TruffleString left, TruffleString right,
                                            @Cached @Cached.Shared("concatNode") TruffleString.ConcatNode concatNode) {
-    return BString.concat(concatNode, left, right);
+    return ZString.concat(concatNode, left, right);
   }
 
   @Specialization
   protected static TruffleString doStringLong(TruffleString left, long right,
                                               @Cached @Cached.Shared("fromLongNode") TruffleString.FromLongNode fromLongNode,
                                               @Cached @Cached.Shared("concatNode") TruffleString.ConcatNode concatNode) {
-    return BString.concat(concatNode, left, BString.fromLong(fromLongNode, right));
+    return ZString.concat(concatNode, left, ZString.fromLong(fromLongNode, right));
   }
 
   @Specialization
   protected static TruffleString doLongString(long left, TruffleString right,
                                               @Cached @Cached.Shared("fromLongNode") TruffleString.FromLongNode fromLongNode,
                                               @Cached @Cached.Shared("concatNode") TruffleString.ConcatNode concatNode) {
-    return BString.concat(concatNode, BString.fromLong(fromLongNode, left), right);
+    return ZString.concat(concatNode, ZString.fromLong(fromLongNode, left), right);
   }
 
   @CompilerDirectives.TruffleBoundary
@@ -92,7 +92,7 @@ public abstract class NAddNode extends NBinaryNode {
                                                    @Cached NToStringNode leftToStringNode,
                                                    @Cached NToStringNode rightToStringNode,
                                                    @Cached @Cached.Shared("concatNode") TruffleString.ConcatNode concatNode) {
-    return BString.concat(
+    return ZString.concat(
       concatNode,
       leftToStringNode.execute(node, left),
       rightToStringNode.execute(node, right)

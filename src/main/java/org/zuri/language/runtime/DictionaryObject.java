@@ -31,7 +31,7 @@ public final class DictionaryObject extends ZuriObject {
     List<String> builder = new ArrayList<>();
     for (Object key : keys) {
       try {
-        builder.add(BString.concatString(
+        builder.add(ZString.concatString(
           key.toString(),
           ": ",
           UNCACHED_OBJ.getOrDefault(this, key, ZuriNil.SINGLETON)
@@ -40,7 +40,7 @@ public final class DictionaryObject extends ZuriObject {
       }
     }
 
-    String result = "{" + BString.join(", ", builder) + "}";
+    String result = "{" + ZString.join(", ", builder) + "}";
     builder.clear();
 
     return result;
@@ -51,7 +51,7 @@ public final class DictionaryObject extends ZuriObject {
     assert keysLength == values.length;
 
     for (int i = 0; i < keysLength; i++) {
-      UNCACHED_OBJ.put(this, BString.toString(keys[i]), values[i]);
+      UNCACHED_OBJ.put(this, ZString.toString(keys[i]), values[i]);
     }
   }
 }

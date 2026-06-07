@@ -49,6 +49,7 @@ public class ZuriContext {
   );
   public DynamicObject globalScope;
   public TruffleLanguage.Env env;
+  private final RegexCache regexCache;
 
   public ZuriContext(ZuriLanguage language, TruffleLanguage.Env env, DynamicObject globalScope, BuiltinClassesModel objectsModel, FunctionObject emptyFunction) {
     this.language = language;
@@ -61,11 +62,21 @@ public class ZuriContext {
     output = new PrintWriter(env.out(), true);
     error = new PrintWriter(env.err(), true);
 
+    regexCache = new RegexCache(env);
+
     createBuiltinModules();
   }
 
   public static ZuriContext get(Node node) {
     return REFERENCE.get(node);
+  }
+
+  public static RegexCache getCache(Node node) {
+    return REFERENCE.get(node).regexCache;
+  }
+
+  public RegexCache getRegexCache() {
+    return regexCache;
   }
 
   public static RootCallTarget createCallTarget(ZuriLanguage language, NodeFactory<? extends NBuiltinFunctionNode> factory, boolean offset) {
@@ -192,7 +203,7 @@ public class ZuriContext {
         .toLowerCase(Locale.ROOT)
         .replaceAll("stdmodule$", "");
 
-      var module = new ModuleObject(objectsModel.rootShape, BString.concatString("<native-module ", moduleName, ">"), moduleName);
+      var module = new ModuleObject(objectsModel.rootShape, ZString.concatString("<native-module ", moduleName, ">"), moduleName);
 
       BuiltinDeclarationAccessor.get(m).forEach((factory) -> {
         objectLibrary.putConstant(
@@ -210,7 +221,7 @@ public class ZuriContext {
         );
       });
 
-      builtinModules.putIfAbsent(BString.fromJavaString(moduleName), module);
+      builtinModules.putIfAbsent(ZString.fromJavaString(moduleName), module);
     });
   }
 

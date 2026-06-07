@@ -69,7 +69,7 @@ public final class BuiltinFunctions implements BaseBuiltinDeclaration {
 
     @Fallback
     protected Object fallback(Object object) {
-      ZuriContext.get(this).println(BString.concatString("Something not working right: ", object));
+      ZuriContext.get(this).println(ZString.concatString("Something not working right: ", object));
       return ZuriNil.SINGLETON;
     }
 
@@ -80,14 +80,14 @@ public final class BuiltinFunctions implements BaseBuiltinDeclaration {
       if (length > 0) {
         for (int i = 0; i < length - 1; i++) {
           if (arguments[i] != ZuriNil.SINGLETON) {
-            context.print(BString.fromObject(interopLibrary, arguments[i]));
+            context.print(ZString.fromObject(interopLibrary, arguments[i]));
             context.print(" ");
           }
         }
 
         final int lengthMinusOne = length - 1;
         if (arguments[lengthMinusOne] != ZuriNil.SINGLETON) {
-          context.print(BString.fromObject(interopLibrary, arguments[lengthMinusOne]));
+          context.print(ZString.fromObject(interopLibrary, arguments[lengthMinusOne]));
         }
 
         context.flushOutput();
@@ -149,7 +149,7 @@ public final class BuiltinFunctions implements BaseBuiltinDeclaration {
       if (arg >= 0x110000) {
         throw ZuriRuntimeError.valueError(this, "chr() argument out of maximum UTF-16 character range 0x10FFFE");
       }
-      return BString.fromCodePoint(fromCodePointNode, (int) arg);
+      return ZString.fromCodePoint(fromCodePointNode, (int) arg);
     }
 
     @Fallback
@@ -322,7 +322,7 @@ public final class BuiltinFunctions implements BaseBuiltinDeclaration {
     protected long doLong(TruffleString string,
                           @Cached TruffleString.CodePointAtIndexNode codePointNode,
                           @Cached TruffleString.CodePointLengthNode lengthNode) {
-      long stringLength = BString.length(string, lengthNode);
+      long stringLength = ZString.length(string, lengthNode);
       if (stringLength != 1) {
         throw ZuriRuntimeError.valueError(
           this,
@@ -331,7 +331,7 @@ public final class BuiltinFunctions implements BaseBuiltinDeclaration {
           " given"
         );
       }
-      return BString.toCodePoint(string, codePointNode, 0);
+      return ZString.toCodePoint(string, codePointNode, 0);
     }
 
     @Fallback
@@ -461,7 +461,7 @@ public final class BuiltinFunctions implements BaseBuiltinDeclaration {
     }
   }
 
-  @ImportStatic(BString.class)
+  @ImportStatic(ZString.class)
   public abstract static class ToNumberFunctionNode extends NBuiltinFunctionNode {
     @Specialization
     protected long doLong(long value) {

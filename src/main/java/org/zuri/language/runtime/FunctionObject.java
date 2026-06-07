@@ -4,7 +4,6 @@ import com.oracle.truffle.api.Assumption;
 import com.oracle.truffle.api.CallTarget;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.RootCallTarget;
-import com.oracle.truffle.api.dsl.Bind;
 import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.ReportPolymorphism;
 import com.oracle.truffle.api.dsl.Specialization;
@@ -13,13 +12,10 @@ import com.oracle.truffle.api.library.ExportLibrary;
 import com.oracle.truffle.api.library.ExportMessage;
 import com.oracle.truffle.api.nodes.DirectCallNode;
 import com.oracle.truffle.api.nodes.IndirectCallNode;
-import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.object.Shape;
 import com.oracle.truffle.api.strings.TruffleString;
 import com.oracle.truffle.api.utilities.CyclicAssumption;
 import org.zuri.language.nodes.ZuriTypesGen;
-import org.zuri.language.nodes.functions.NMethodDispatchNode;
-import org.zuri.language.nodes.functions.NMethodDispatchNodeGen;
 
 @ExportLibrary(InteropLibrary.class)
 public final class FunctionObject extends ZuriObject {
@@ -80,7 +76,7 @@ public final class FunctionObject extends ZuriObject {
   @Override
   public String toString() {
     String format = variadic ? "<function %s(%d...) at 0x%x>" : "<function %s(%d) at 0x%x>";
-    return BString.format(format, name, argumentsCount, callTarget.hashCode());
+    return ZString.format(format, name, argumentsCount, callTarget.hashCode());
   }
 
   @ReportPolymorphism

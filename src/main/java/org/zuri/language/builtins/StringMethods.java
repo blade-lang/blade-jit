@@ -2,16 +2,24 @@ package org.zuri.language.builtins;
 
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.dsl.*;
+import com.oracle.truffle.api.interop.InteropLibrary;
 import com.oracle.truffle.api.library.CachedLibrary;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.object.DynamicObjectLibrary;
+import com.oracle.truffle.api.object.Shape;
 import com.oracle.truffle.api.strings.TruffleString;
+import com.oracle.truffle.regex.RegexObject;
+import com.oracle.truffle.regex.result.RegexResult;
 import org.zuri.language.BaseBuiltinDeclaration;
 import org.zuri.language.ZuriLanguage;
 import org.zuri.language.nodes.common.NToStringNode;
 import org.zuri.language.nodes.functions.NBuiltinFunctionNode;
 import org.zuri.language.runtime.*;
+import org.zuri.language.shared.BuiltinClassesModel;
 import org.zuri.utility.RegulatedMap;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class StringMethods implements BaseBuiltinDeclaration {
   @Override
@@ -38,16 +46,17 @@ public class StringMethods implements BaseBuiltinDeclaration {
         add("ends_with", false, StringMethodsFactory.NEndsWithMethodNodeFactory.getInstance());
         add("lpad", false, StringMethodsFactory.NLpadMethodNodeFactory.getInstance());
         add("rpad", false, StringMethodsFactory.NRpadMethodNodeFactory.getInstance());
+        add("match", false, StringMethodsFactory.NMatchMethodNodeFactory.getInstance());
       }
     };
   }
 
-  @ImportStatic(BString.class)
+  @ImportStatic(ZString.class)
   public abstract static class NKeyDecoratorNode extends NBuiltinFunctionNode {
     @Specialization
     protected Object doAny(TruffleString string, Object item,
-        @Cached TruffleString.CodePointLengthNode lengthNode,
-        @Cached(value = "length(string, lengthNode)", neverDefault = false) long stringLength) {
+                           @Cached TruffleString.CodePointLengthNode lengthNode,
+                           @Cached(value = "length(string, lengthNode)", neverDefault = false) long stringLength) {
       if (stringLength == 0) {
         return ZuriNil.SINGLETON;
       } else if (item == ZuriNil.SINGLETON) {
@@ -71,16 +80,16 @@ public class StringMethods implements BaseBuiltinDeclaration {
     }
   }
 
-  @ImportStatic(BString.class)
+  @ImportStatic(ZString.class)
   public abstract static class NValueDecoratorNode extends NBuiltinFunctionNode {
     @Specialization
     protected Object doAny(TruffleString string, long index,
-        @Cached TruffleString.CodePointLengthNode lengthNode,
-        @Cached(value = "length(string, lengthNode)", neverDefault = false) long stringLength,
-        @Cached TruffleString.SubstringNode substringNode) {
+                           @Cached TruffleString.CodePointLengthNode lengthNode,
+                           @Cached(value = "length(string, lengthNode)", neverDefault = false) long stringLength,
+                           @Cached TruffleString.SubstringNode substringNode) {
 
       if (index > -1 && index < stringLength) {
-        return BString.substring(string, (int) index, 1, substringNode);
+        return ZString.substring(string, (int) index, 1, substringNode);
       }
 
       return doFallback(string, index);
@@ -95,7 +104,7 @@ public class StringMethods implements BaseBuiltinDeclaration {
   public abstract static class NLengthMethodNode extends NBuiltinFunctionNode {
     @Specialization
     protected Object doAny(TruffleString string, @Cached TruffleString.CodePointLengthNode lengthNode) {
-      return BString.length(string, lengthNode);
+      return ZString.length(string, lengthNode);
     }
   }
 
@@ -103,26 +112,26 @@ public class StringMethods implements BaseBuiltinDeclaration {
 
     @Specialization(guards = "isNil(extra)")
     protected long indexOfNil(
-        TruffleString self, TruffleString other, Object extra,
-        @Cached @Cached.Shared("indexOfStringNode") TruffleString.IndexOfStringNode indexOfStringNode,
-        @Cached @Cached.Shared("lengthNode") TruffleString.CodePointLengthNode lengthNode) {
-      if (self == BString.EMPTY) {
+      TruffleString self, TruffleString other, Object extra,
+      @Cached @Cached.Shared("indexOfStringNode") TruffleString.IndexOfStringNode indexOfStringNode,
+      @Cached @Cached.Shared("lengthNode") TruffleString.CodePointLengthNode lengthNode) {
+      if (self == ZString.EMPTY) {
         return -1;
       }
 
-      return BString.indexOf(indexOfStringNode, lengthNode, self, other, 0);
+      return ZString.indexOf(indexOfStringNode, lengthNode, self, other, 0);
     }
 
     @Specialization(replaces = "indexOfNil")
     protected long indexOfLong(
-        TruffleString self, TruffleString other, long startIndex,
-        @Cached @Cached.Shared("indexOfStringNode") TruffleString.IndexOfStringNode indexOfStringNode,
-        @Cached @Cached.Shared("lengthNode") TruffleString.CodePointLengthNode lengthNode) {
-      if (self == BString.EMPTY) {
+      TruffleString self, TruffleString other, long startIndex,
+      @Cached @Cached.Shared("indexOfStringNode") TruffleString.IndexOfStringNode indexOfStringNode,
+      @Cached @Cached.Shared("lengthNode") TruffleString.CodePointLengthNode lengthNode) {
+      if (self == ZString.EMPTY) {
         return -1;
       }
 
-      return BString.indexOf(indexOfStringNode, lengthNode, self, other, (int) startIndex);
+      return ZString.indexOf(indexOfStringNode, lengthNode, self, other, (int) startIndex);
     }
 
     protected boolean isNil(Object o) {
@@ -138,14 +147,14 @@ public class StringMethods implements BaseBuiltinDeclaration {
   public abstract static class NUpperMethodNode extends NBuiltinFunctionNode {
     @Specialization
     protected TruffleString doValid(TruffleString self,
-        @Cached TruffleString.FromJavaStringNode fromJavaStringNode) {
-      if (self == BString.EMPTY) {
+                                    @Cached TruffleString.FromJavaStringNode fromJavaStringNode) {
+      if (self == ZString.EMPTY) {
         return self;
       }
 
       return fromJavaStringNode.execute(
-          BString.toUpper(self.toJavaStringUncached()),
-          ZuriLanguage.ENCODING);
+        ZString.toUpper(self.toJavaStringUncached()),
+        ZuriLanguage.ENCODING);
     }
 
     @Fallback
@@ -157,12 +166,12 @@ public class StringMethods implements BaseBuiltinDeclaration {
   public abstract static class NLowerMethodNode extends NBuiltinFunctionNode {
     @Specialization
     protected TruffleString doValid(TruffleString self,
-        @Cached TruffleString.FromJavaStringNode fromJavaStringNode) {
-      if (self == BString.EMPTY) {
+                                    @Cached TruffleString.FromJavaStringNode fromJavaStringNode) {
+      if (self == ZString.EMPTY) {
         return self;
       }
 
-      return BString.fromObject(fromJavaStringNode, BString.toLower(self.toJavaStringUncached()));
+      return ZString.fromObject(fromJavaStringNode, ZString.toLower(self.toJavaStringUncached()));
     }
 
     @Fallback
@@ -174,14 +183,14 @@ public class StringMethods implements BaseBuiltinDeclaration {
   public abstract static class NIsAlphaMethodNode extends NBuiltinFunctionNode {
     @Specialization
     protected boolean doValid(TruffleString self,
-        @Cached TruffleString.ToJavaStringNode toJavaStringNode,
-        @Cached TruffleString.CodePointLengthNode lengthNode,
-        @Cached TruffleString.CodePointAtIndexNode codePointNode) {
-      if (self == BString.EMPTY) {
+                              @Cached TruffleString.ToJavaStringNode toJavaStringNode,
+                              @Cached TruffleString.CodePointLengthNode lengthNode,
+                              @Cached TruffleString.CodePointAtIndexNode codePointNode) {
+      if (self == ZString.EMPTY) {
         return false;
       }
 
-      int length = BString.intLength(self, lengthNode);
+      int length = ZString.intLength(self, lengthNode);
       for (int i = 0; i < length; i++) {
         int c = codePointNode.execute(self, i, ZuriLanguage.ENCODING);
         if (!isAlpha(c)) {
@@ -206,13 +215,13 @@ public class StringMethods implements BaseBuiltinDeclaration {
   public abstract static class NIsAlNumMethodNode extends NBuiltinFunctionNode {
     @Specialization
     protected boolean doValid(TruffleString self,
-        @Cached TruffleString.CodePointLengthNode lengthNode,
-        @Cached TruffleString.CodePointAtIndexNode codePointNode) {
-      if (self == BString.EMPTY) {
+                              @Cached TruffleString.CodePointLengthNode lengthNode,
+                              @Cached TruffleString.CodePointAtIndexNode codePointNode) {
+      if (self == ZString.EMPTY) {
         return false;
       }
 
-      int length = BString.intLength(self, lengthNode);
+      int length = ZString.intLength(self, lengthNode);
       for (int i = 0; i < length; i++) {
         int c = codePointNode.execute(self, i, ZuriLanguage.ENCODING);
         if (!isAlphaNumeric(c)) {
@@ -237,13 +246,13 @@ public class StringMethods implements BaseBuiltinDeclaration {
   public abstract static class NIsNumberMethodNode extends NBuiltinFunctionNode {
     @Specialization
     protected boolean doValid(TruffleString self,
-        @Cached TruffleString.CodePointLengthNode lengthNode,
-        @Cached TruffleString.CodePointAtIndexNode codePointNode) {
-      if (self == BString.EMPTY) {
+                              @Cached TruffleString.CodePointLengthNode lengthNode,
+                              @Cached TruffleString.CodePointAtIndexNode codePointNode) {
+      if (self == ZString.EMPTY) {
         return false;
       }
 
-      int length = BString.intLength(self, lengthNode);
+      int length = ZString.intLength(self, lengthNode);
       for (int i = 0; i < length; i++) {
         int c = codePointNode.execute(self, i, ZuriLanguage.ENCODING);
         if (!isDigit(c)) {
@@ -268,13 +277,13 @@ public class StringMethods implements BaseBuiltinDeclaration {
   public abstract static class NIsLowerMethodNode extends NBuiltinFunctionNode {
     @Specialization
     protected boolean doValid(TruffleString self,
-        @Cached TruffleString.CodePointLengthNode lengthNode,
-        @Cached TruffleString.CodePointAtIndexNode codePointNode) {
-      if (self == BString.EMPTY) {
+                              @Cached TruffleString.CodePointLengthNode lengthNode,
+                              @Cached TruffleString.CodePointAtIndexNode codePointNode) {
+      if (self == ZString.EMPTY) {
         return false;
       }
 
-      int length = BString.intLength(self, lengthNode);
+      int length = ZString.intLength(self, lengthNode);
       for (int i = 0; i < length; i++) {
         int c = codePointNode.execute(self, i, ZuriLanguage.ENCODING);
         if (!isLower(c)) {
@@ -299,13 +308,13 @@ public class StringMethods implements BaseBuiltinDeclaration {
   public abstract static class NIsUpperMethodNode extends NBuiltinFunctionNode {
     @Specialization
     protected boolean doValid(TruffleString self,
-        @Cached TruffleString.CodePointLengthNode lengthNode,
-        @Cached TruffleString.CodePointAtIndexNode codePointNode) {
-      if (self == BString.EMPTY) {
+                              @Cached TruffleString.CodePointLengthNode lengthNode,
+                              @Cached TruffleString.CodePointAtIndexNode codePointNode) {
+      if (self == ZString.EMPTY) {
         return false;
       }
 
-      int length = BString.intLength(self, lengthNode);
+      int length = ZString.intLength(self, lengthNode);
       for (int i = 0; i < length; i++) {
         int c = codePointNode.execute(self, i, ZuriLanguage.ENCODING);
         if (!isUpper(c)) {
@@ -330,13 +339,13 @@ public class StringMethods implements BaseBuiltinDeclaration {
   public abstract static class NIsSpaceMethodNode extends NBuiltinFunctionNode {
     @Specialization
     protected boolean doValid(TruffleString self,
-        @Cached TruffleString.CodePointLengthNode lengthNode,
-        @Cached TruffleString.CodePointAtIndexNode codePointNode) {
-      if (self == BString.EMPTY) {
+                              @Cached TruffleString.CodePointLengthNode lengthNode,
+                              @Cached TruffleString.CodePointAtIndexNode codePointNode) {
+      if (self == ZString.EMPTY) {
         return false;
       }
 
-      int length = BString.intLength(self, lengthNode);
+      int length = ZString.intLength(self, lengthNode);
       for (int i = 0; i < length; i++) {
         int c = codePointNode.execute(self, i, ZuriLanguage.ENCODING);
         if (!isSpace(c)) {
@@ -361,13 +370,13 @@ public class StringMethods implements BaseBuiltinDeclaration {
   public abstract static class NStartsWithMethodNode extends NBuiltinFunctionNode {
     @Specialization
     protected boolean doValid(TruffleString self, TruffleString other,
-        @Cached TruffleString.CodePointLengthNode lengthNode,
-        @Cached TruffleString.IndexOfStringNode indexOfNode) {
-      if (self == BString.EMPTY) {
+                              @Cached TruffleString.CodePointLengthNode lengthNode,
+                              @Cached TruffleString.IndexOfStringNode indexOfNode) {
+      if (self == ZString.EMPTY) {
         return false;
       }
 
-      return BString.indexOf(indexOfNode, lengthNode, self, other, 0) == 0;
+      return ZString.indexOf(indexOfNode, lengthNode, self, other, 0) == 0;
     }
 
     @Fallback
@@ -379,15 +388,15 @@ public class StringMethods implements BaseBuiltinDeclaration {
   public abstract static class NEndsWithMethodNode extends NBuiltinFunctionNode {
     @Specialization
     protected boolean doValid(TruffleString self, TruffleString other,
-        @Cached TruffleString.CodePointLengthNode lengthNode,
-        @Cached TruffleString.IndexOfStringNode indexOfNode) {
-      if (self == BString.EMPTY) {
+                              @Cached TruffleString.CodePointLengthNode lengthNode,
+                              @Cached TruffleString.IndexOfStringNode indexOfNode) {
+      if (self == ZString.EMPTY) {
         return false;
       }
 
-      long thisLength = BString.length(self, lengthNode);
-      long otherLength = BString.length(other, lengthNode);
-      long index = BString.indexOf(indexOfNode, lengthNode, self, other, 0);
+      long thisLength = ZString.length(self, lengthNode);
+      long otherLength = ZString.length(other, lengthNode);
+      long index = ZString.indexOf(indexOfNode, lengthNode, self, other, 0);
 
       return index > -1 && index + otherLength == thisLength;
     }
@@ -398,7 +407,7 @@ public class StringMethods implements BaseBuiltinDeclaration {
     }
   }
 
-  @ImportStatic(BString.class)
+  @ImportStatic(ZString.class)
   public abstract static class NTrimMethodNode extends NBuiltinFunctionNode {
     @Specialization(guards = "string == EMPTY")
     protected Object doEmptyString(TruffleString string, Object trimmer) {
@@ -412,10 +421,10 @@ public class StringMethods implements BaseBuiltinDeclaration {
 
     @Specialization
     protected Object doDefault(TruffleString string, ZuriNil nil,
-        @Cached @Cached.Shared("lengthNode") TruffleString.CodePointLengthNode lengthNode,
-        @Cached @Cached.Shared("substringNode") TruffleString.SubstringNode substringNode,
-        @Cached @Cached.Shared("charUTF16Node") TruffleString.ReadCharUTF16Node charUTF16Node) {
-      int length = (int) BString.length(string, lengthNode);
+                               @Cached @Cached.Shared("lengthNode") TruffleString.CodePointLengthNode lengthNode,
+                               @Cached @Cached.Shared("substringNode") TruffleString.SubstringNode substringNode,
+                               @Cached @Cached.Shared("charUTF16Node") TruffleString.ReadCharUTF16Node charUTF16Node) {
+      int length = (int) ZString.length(string, lengthNode);
       if (length == 0) {
         return string;
       }
@@ -431,21 +440,21 @@ public class StringMethods implements BaseBuiltinDeclaration {
       }
 
       if (start > end) {
-        return BString.EMPTY;
+        return ZString.EMPTY;
       } else {
-        return BString.substring(string, start, end - start + 1, substringNode);
+        return ZString.substring(string, start, end - start + 1, substringNode);
       }
     }
 
     @Specialization(guards = "length(item, lengthNode) == 1")
     protected Object doItemSetValid(TruffleString string, TruffleString item,
-        @Cached @Cached.Shared("equalNode") TruffleString.EqualNode equalNode,
-        @Cached @Cached.Shared("lengthNode") TruffleString.CodePointLengthNode lengthNode,
-        @Cached @Cached.Shared("substringNode") TruffleString.SubstringNode substringNode,
-        @Cached @Cached.Shared("charUTF16Node") TruffleString.ReadCharUTF16Node charUTF16Node) {
+                                    @Cached @Cached.Shared("equalNode") TruffleString.EqualNode equalNode,
+                                    @Cached @Cached.Shared("lengthNode") TruffleString.CodePointLengthNode lengthNode,
+                                    @Cached @Cached.Shared("substringNode") TruffleString.SubstringNode substringNode,
+                                    @Cached @Cached.Shared("charUTF16Node") TruffleString.ReadCharUTF16Node charUTF16Node) {
       char trimmer = charUTF16Node.execute(item, 0);
 
-      int length = (int) BString.length(string, lengthNode);
+      int length = (int) ZString.length(string, lengthNode);
       if (length == 0) {
         return string;
       }
@@ -461,18 +470,18 @@ public class StringMethods implements BaseBuiltinDeclaration {
       }
 
       if (start > end) {
-        return BString.EMPTY;
+        return ZString.EMPTY;
       } else {
-        return BString.substring(string, start, end - start + 1, substringNode);
+        return ZString.substring(string, start, end - start + 1, substringNode);
       }
     }
 
     @Specialization
     protected Object doItemSetInvalid(TruffleString string, TruffleString item,
-        @Cached @Cached.Shared("equalNode") TruffleString.EqualNode equalNode,
-        @Cached @Cached.Shared("lengthNode") TruffleString.CodePointLengthNode lengthNode,
-        @Cached @Cached.Shared("substringNode") TruffleString.SubstringNode substringNode,
-        @Cached @Cached.Shared("charUTF16Node") TruffleString.ReadCharUTF16Node charUTF16Node) {
+                                      @Cached @Cached.Shared("equalNode") TruffleString.EqualNode equalNode,
+                                      @Cached @Cached.Shared("lengthNode") TruffleString.CodePointLengthNode lengthNode,
+                                      @Cached @Cached.Shared("substringNode") TruffleString.SubstringNode substringNode,
+                                      @Cached @Cached.Shared("charUTF16Node") TruffleString.ReadCharUTF16Node charUTF16Node) {
       throw ZuriRuntimeError.valueError(this, "Char expected in argument 2, string given.");
     }
 
@@ -487,7 +496,7 @@ public class StringMethods implements BaseBuiltinDeclaration {
     }
   }
 
-  @ImportStatic(BString.class)
+  @ImportStatic(ZString.class)
   public abstract static class NLTrimMethodNode extends NBuiltinFunctionNode {
 
     @Specialization(guards = "string == EMPTY")
@@ -502,10 +511,10 @@ public class StringMethods implements BaseBuiltinDeclaration {
 
     @Specialization
     protected Object doDefault(TruffleString string, ZuriNil nil,
-        @Cached @Cached.Shared("lengthNode") TruffleString.CodePointLengthNode lengthNode,
-        @Cached @Cached.Shared("substringNode") TruffleString.SubstringNode substringNode,
-        @Cached @Cached.Shared("charUTF16Node") TruffleString.ReadCharUTF16Node charUTF16Node) {
-      int length = (int) BString.length(string, lengthNode);
+                               @Cached @Cached.Shared("lengthNode") TruffleString.CodePointLengthNode lengthNode,
+                               @Cached @Cached.Shared("substringNode") TruffleString.SubstringNode substringNode,
+                               @Cached @Cached.Shared("charUTF16Node") TruffleString.ReadCharUTF16Node charUTF16Node) {
+      int length = (int) ZString.length(string, lengthNode);
       if (length == 0) {
         return string;
       }
@@ -516,21 +525,21 @@ public class StringMethods implements BaseBuiltinDeclaration {
       }
 
       if (start == length - 1) {
-        return BString.EMPTY;
+        return ZString.EMPTY;
       } else {
-        return BString.substring(string, start, length - start, substringNode);
+        return ZString.substring(string, start, length - start, substringNode);
       }
     }
 
     @Specialization(guards = "length(item, lengthNode) == 1")
     protected Object doItemSetValid(TruffleString string, TruffleString item,
-        @Cached @Cached.Shared("equalNode") TruffleString.EqualNode equalNode,
-        @Cached @Cached.Shared("lengthNode") TruffleString.CodePointLengthNode lengthNode,
-        @Cached @Cached.Shared("substringNode") TruffleString.SubstringNode substringNode,
-        @Cached @Cached.Shared("charUTF16Node") TruffleString.ReadCharUTF16Node charUTF16Node) {
+                                    @Cached @Cached.Shared("equalNode") TruffleString.EqualNode equalNode,
+                                    @Cached @Cached.Shared("lengthNode") TruffleString.CodePointLengthNode lengthNode,
+                                    @Cached @Cached.Shared("substringNode") TruffleString.SubstringNode substringNode,
+                                    @Cached @Cached.Shared("charUTF16Node") TruffleString.ReadCharUTF16Node charUTF16Node) {
       char trimmer = charUTF16Node.execute(item, 0);
 
-      int length = (int) BString.length(string, lengthNode);
+      int length = (int) ZString.length(string, lengthNode);
       if (length == 0) {
         return string;
       }
@@ -541,18 +550,18 @@ public class StringMethods implements BaseBuiltinDeclaration {
       }
 
       if (start == length - 1) {
-        return BString.EMPTY;
+        return ZString.EMPTY;
       } else {
-        return BString.substring(string, start, length - start, substringNode);
+        return ZString.substring(string, start, length - start, substringNode);
       }
     }
 
     @Specialization
     protected Object doItemSetInvalid(TruffleString string, TruffleString item,
-        @Cached @Cached.Shared("equalNode") TruffleString.EqualNode equalNode,
-        @Cached @Cached.Shared("lengthNode") TruffleString.CodePointLengthNode lengthNode,
-        @Cached @Cached.Shared("substringNode") TruffleString.SubstringNode substringNode,
-        @Cached @Cached.Shared("charUTF16Node") TruffleString.ReadCharUTF16Node charUTF16Node) {
+                                      @Cached @Cached.Shared("equalNode") TruffleString.EqualNode equalNode,
+                                      @Cached @Cached.Shared("lengthNode") TruffleString.CodePointLengthNode lengthNode,
+                                      @Cached @Cached.Shared("substringNode") TruffleString.SubstringNode substringNode,
+                                      @Cached @Cached.Shared("charUTF16Node") TruffleString.ReadCharUTF16Node charUTF16Node) {
       throw ZuriRuntimeError.valueError(this, "Char expected in argument 2, string given.");
     }
 
@@ -567,7 +576,7 @@ public class StringMethods implements BaseBuiltinDeclaration {
     }
   }
 
-  @ImportStatic(BString.class)
+  @ImportStatic(ZString.class)
   public abstract static class NRTrimMethodNode extends NBuiltinFunctionNode {
     @Specialization(guards = "string == EMPTY")
     protected Object doEmptyString(TruffleString string, Object trimmer) {
@@ -581,10 +590,10 @@ public class StringMethods implements BaseBuiltinDeclaration {
 
     @Specialization
     protected Object doDefault(TruffleString string, ZuriNil nil,
-        @Cached @Cached.Shared("lengthNode") TruffleString.CodePointLengthNode lengthNode,
-        @Cached @Cached.Shared("substringNode") TruffleString.SubstringNode substringNode,
-        @Cached @Cached.Shared("charUTF16Node") TruffleString.ReadCharUTF16Node charUTF16Node) {
-      int length = (int) BString.length(string, lengthNode);
+                               @Cached @Cached.Shared("lengthNode") TruffleString.CodePointLengthNode lengthNode,
+                               @Cached @Cached.Shared("substringNode") TruffleString.SubstringNode substringNode,
+                               @Cached @Cached.Shared("charUTF16Node") TruffleString.ReadCharUTF16Node charUTF16Node) {
+      int length = (int) ZString.length(string, lengthNode);
       if (length == 0) {
         return string;
       }
@@ -595,21 +604,21 @@ public class StringMethods implements BaseBuiltinDeclaration {
       }
 
       if (end == 0) {
-        return BString.EMPTY;
+        return ZString.EMPTY;
       } else {
-        return BString.substring(string, 0, end + 1, substringNode);
+        return ZString.substring(string, 0, end + 1, substringNode);
       }
     }
 
     @Specialization(guards = "length(item, lengthNode) == 1")
     protected Object doItemSetValid(TruffleString string, TruffleString item,
-        @Cached @Cached.Shared("equalNode") TruffleString.EqualNode equalNode,
-        @Cached @Cached.Shared("lengthNode") TruffleString.CodePointLengthNode lengthNode,
-        @Cached @Cached.Shared("substringNode") TruffleString.SubstringNode substringNode,
-        @Cached @Cached.Shared("charUTF16Node") TruffleString.ReadCharUTF16Node charUTF16Node) {
+                                    @Cached @Cached.Shared("equalNode") TruffleString.EqualNode equalNode,
+                                    @Cached @Cached.Shared("lengthNode") TruffleString.CodePointLengthNode lengthNode,
+                                    @Cached @Cached.Shared("substringNode") TruffleString.SubstringNode substringNode,
+                                    @Cached @Cached.Shared("charUTF16Node") TruffleString.ReadCharUTF16Node charUTF16Node) {
       char trimmer = charUTF16Node.execute(item, 0);
 
-      int length = (int) BString.length(string, lengthNode);
+      int length = (int) ZString.length(string, lengthNode);
       if (length == 0) {
         return string;
       }
@@ -620,18 +629,18 @@ public class StringMethods implements BaseBuiltinDeclaration {
       }
 
       if (end == 0) {
-        return BString.EMPTY;
+        return ZString.EMPTY;
       } else {
-        return BString.substring(string, 0, end + 1, substringNode);
+        return ZString.substring(string, 0, end + 1, substringNode);
       }
     }
 
     @Specialization
     protected Object doItemSetInvalid(TruffleString string, TruffleString item,
-        @Cached @Cached.Shared("equalNode") TruffleString.EqualNode equalNode,
-        @Cached @Cached.Shared("lengthNode") TruffleString.CodePointLengthNode lengthNode,
-        @Cached @Cached.Shared("substringNode") TruffleString.SubstringNode substringNode,
-        @Cached @Cached.Shared("charUTF16Node") TruffleString.ReadCharUTF16Node charUTF16Node) {
+                                      @Cached @Cached.Shared("equalNode") TruffleString.EqualNode equalNode,
+                                      @Cached @Cached.Shared("lengthNode") TruffleString.CodePointLengthNode lengthNode,
+                                      @Cached @Cached.Shared("substringNode") TruffleString.SubstringNode substringNode,
+                                      @Cached @Cached.Shared("charUTF16Node") TruffleString.ReadCharUTF16Node charUTF16Node) {
       throw ZuriRuntimeError.valueError(this, "Char expected in argument 2, string given.");
     }
 
@@ -655,32 +664,32 @@ public class StringMethods implements BaseBuiltinDeclaration {
 
     @Specialization(guards = "list.getArraySize() > 0")
     public static Object doList(TruffleString string, ListObject list, @Bind Node node,
-        @Cached @Cached.Shared("toStringNode") NToStringNode toStringNode,
-        @Cached @Cached.Shared("concatNode") TruffleString.ConcatNode concatNode) {
+                                @Cached @Cached.Shared("toStringNode") NToStringNode toStringNode,
+                                @Cached @Cached.Shared("concatNode") TruffleString.ConcatNode concatNode) {
       Object[] items = list.getItems();
       final long length = list.getArraySize();
 
       TruffleString result = toStringNode.execute(node, items[0]);
       for (int i = 1; i < length; i++) {
-        result = BString.concat(concatNode, result, string);
-        result = BString.concat(concatNode, result, toStringNode.execute(node, items[i]));
+        result = ZString.concat(concatNode, result, string);
+        result = ZString.concat(concatNode, result, toStringNode.execute(node, items[i]));
       }
 
       return result;
     }
 
-    @Specialization(guards = { "!string.isEmpty()", "!item.isEmpty()" })
+    @Specialization(guards = {"!string.isEmpty()", "!item.isEmpty()"})
     public static Object doString(TruffleString string, TruffleString item, @Bind Node node,
-        @Cached TruffleString.CodePointLengthNode lengthNode,
-        @Cached TruffleString.ReadCharUTF16Node readCharUTF16Node,
-        @Cached @Cached.Shared("toStringNode") NToStringNode toStringNode,
-        @Cached @Cached.Shared("concatNode") TruffleString.ConcatNode concatNode) {
-      final long length = BString.length(item, lengthNode);
+                                  @Cached TruffleString.CodePointLengthNode lengthNode,
+                                  @Cached TruffleString.ReadCharUTF16Node readCharUTF16Node,
+                                  @Cached @Cached.Shared("toStringNode") NToStringNode toStringNode,
+                                  @Cached @Cached.Shared("concatNode") TruffleString.ConcatNode concatNode) {
+      final long length = ZString.length(item, lengthNode);
 
       TruffleString result = toStringNode.execute(node, readCharUTF16Node.execute(item, 0));
       for (int i = 1; i < length; i++) {
-        result = BString.concat(concatNode, result, string);
-        result = BString.concat(concatNode, result, toStringNode.execute(node, readCharUTF16Node.execute(item, i)));
+        result = ZString.concat(concatNode, result, string);
+        result = ZString.concat(concatNode, result, toStringNode.execute(node, readCharUTF16Node.execute(item, i)));
       }
 
       return result;
@@ -688,10 +697,10 @@ public class StringMethods implements BaseBuiltinDeclaration {
 
     @Specialization(limit = "3")
     public static Object doDictionary(TruffleString string, DictionaryObject dictionary,
-        @Bind Node node,
-        @Cached @Cached.Shared("toStringNode") NToStringNode toStringNode,
-        @CachedLibrary("dictionary") DynamicObjectLibrary objectLibrary,
-        @Cached @Cached.Shared("concatNode") TruffleString.ConcatNode concatNode) {
+                                      @Bind Node node,
+                                      @Cached @Cached.Shared("toStringNode") NToStringNode toStringNode,
+                                      @CachedLibrary("dictionary") DynamicObjectLibrary objectLibrary,
+                                      @Cached @Cached.Shared("concatNode") TruffleString.ConcatNode concatNode) {
       Object[] keys = objectLibrary.getKeyArray(dictionary);
       final int length = keys.length;
       if (length == 0) {
@@ -700,8 +709,8 @@ public class StringMethods implements BaseBuiltinDeclaration {
 
       TruffleString result = toStringNode.execute(node, keys[0]);
       for (int i = 1; i < length; i++) {
-        result = BString.concat(concatNode, result, string);
-        result = BString.concat(concatNode, result, toStringNode.execute(node, keys[i]));
+        result = ZString.concat(concatNode, result, string);
+        result = ZString.concat(concatNode, result, toStringNode.execute(node, keys[i]));
       }
 
       return result;
@@ -714,7 +723,7 @@ public class StringMethods implements BaseBuiltinDeclaration {
 
     @Specialization(guards = "items.isEmpty()")
     public static Object doEmptyString(TruffleString string, TruffleString items) {
-      return BString.EMPTY;
+      return ZString.EMPTY;
     }
 
     @Fallback
@@ -723,36 +732,36 @@ public class StringMethods implements BaseBuiltinDeclaration {
     }
   }
 
-  @ImportStatic(BString.class)
+  @ImportStatic(ZString.class)
   public abstract static class NLpadMethodNode extends NBuiltinFunctionNode {
     @Specialization
     protected TruffleString doLpad(TruffleString self, long width, ZuriNil nil,
-        @Cached @Cached.Shared("lengthNode") TruffleString.CodePointLengthNode lengthNode,
-        @Cached @Cached.Shared("concatNode") TruffleString.ConcatNode concatNode,
-        @Cached @Cached.Shared("fromJavaStringNode") TruffleString.FromJavaStringNode fromJavaStringNode) {
-      long length = BString.length(self, lengthNode);
+                                   @Cached @Cached.Shared("lengthNode") TruffleString.CodePointLengthNode lengthNode,
+                                   @Cached @Cached.Shared("concatNode") TruffleString.ConcatNode concatNode,
+                                   @Cached @Cached.Shared("fromJavaStringNode") TruffleString.FromJavaStringNode fromJavaStringNode) {
+      long length = ZString.length(self, lengthNode);
       if (width <= length || width < 0) {
         return self;
       }
       long padCount = width - length;
       TruffleString padString = createPadString(padCount, ' ', fromJavaStringNode);
-      return BString.concat(concatNode, padString, self);
+      return ZString.concat(concatNode, padString, self);
     }
 
     @Specialization(guards = "length(fill, lengthNode) == 1")
     protected TruffleString doLpadWithFill(TruffleString self, long width, TruffleString fill,
-        @Cached @Cached.Shared("lengthNode") TruffleString.CodePointLengthNode lengthNode,
-        @Cached TruffleString.ReadCharUTF16Node readCharNode,
-        @Cached @Cached.Shared("concatNode") TruffleString.ConcatNode concatNode,
-        @Cached @Cached.Shared("fromJavaStringNode") TruffleString.FromJavaStringNode fromJavaStringNode) {
-      long length = BString.length(self, lengthNode);
+                                           @Cached @Cached.Shared("lengthNode") TruffleString.CodePointLengthNode lengthNode,
+                                           @Cached TruffleString.ReadCharUTF16Node readCharNode,
+                                           @Cached @Cached.Shared("concatNode") TruffleString.ConcatNode concatNode,
+                                           @Cached @Cached.Shared("fromJavaStringNode") TruffleString.FromJavaStringNode fromJavaStringNode) {
+      long length = ZString.length(self, lengthNode);
       if (width <= length || width < 0) {
         return self;
       }
       long padCount = width - length;
       char fillChar = (char) readCharNode.execute(fill, 0);
       TruffleString padString = createPadString(padCount, fillChar, fromJavaStringNode);
-      return BString.concat(concatNode, padString, self);
+      return ZString.concat(concatNode, padString, self);
     }
 
     @Fallback
@@ -762,7 +771,7 @@ public class StringMethods implements BaseBuiltinDeclaration {
 
     @CompilerDirectives.TruffleBoundary
     private TruffleString createPadString(long count, char fillChar,
-        TruffleString.FromJavaStringNode fromJavaStringNode) {
+                                          TruffleString.FromJavaStringNode fromJavaStringNode) {
       StringBuilder sb = new StringBuilder((int) count);
       for (long i = 0; i < count; i++) {
         sb.append(fillChar);
@@ -771,36 +780,36 @@ public class StringMethods implements BaseBuiltinDeclaration {
     }
   }
 
-  @ImportStatic(BString.class)
+  @ImportStatic(ZString.class)
   public abstract static class NRpadMethodNode extends NBuiltinFunctionNode {
     @Specialization
     protected TruffleString doRpad(TruffleString self, long width, ZuriNil nil,
-        @Cached @Cached.Shared("lengthNode") TruffleString.CodePointLengthNode lengthNode,
-        @Cached @Cached.Shared("concatNode") TruffleString.ConcatNode concatNode,
-        @Cached @Cached.Shared("fromJavaStringNode") TruffleString.FromJavaStringNode fromJavaStringNode) {
-      long length = BString.length(self, lengthNode);
+                                   @Cached @Cached.Shared("lengthNode") TruffleString.CodePointLengthNode lengthNode,
+                                   @Cached @Cached.Shared("concatNode") TruffleString.ConcatNode concatNode,
+                                   @Cached @Cached.Shared("fromJavaStringNode") TruffleString.FromJavaStringNode fromJavaStringNode) {
+      long length = ZString.length(self, lengthNode);
       if (width <= length || width < 0) {
         return self;
       }
       long padCount = width - length;
       TruffleString padString = createPadString(padCount, ' ', fromJavaStringNode);
-      return BString.concat(concatNode, self, padString);
+      return ZString.concat(concatNode, self, padString);
     }
 
     @Specialization(guards = "length(fill, lengthNode) == 1")
     protected TruffleString doRpadWithFill(TruffleString self, long width, TruffleString fill,
-        @Cached @Cached.Shared("lengthNode") TruffleString.CodePointLengthNode lengthNode,
-        @Cached TruffleString.ReadCharUTF16Node readCharNode,
-        @Cached @Cached.Shared("concatNode") TruffleString.ConcatNode concatNode,
-        @Cached @Cached.Shared("fromJavaStringNode") TruffleString.FromJavaStringNode fromJavaStringNode) {
-      long length = BString.length(self, lengthNode);
+                                           @Cached @Cached.Shared("lengthNode") TruffleString.CodePointLengthNode lengthNode,
+                                           @Cached TruffleString.ReadCharUTF16Node readCharNode,
+                                           @Cached @Cached.Shared("concatNode") TruffleString.ConcatNode concatNode,
+                                           @Cached @Cached.Shared("fromJavaStringNode") TruffleString.FromJavaStringNode fromJavaStringNode) {
+      long length = ZString.length(self, lengthNode);
       if (width <= length || width < 0) {
         return self;
       }
       long padCount = width - length;
       char fillChar = readCharNode.execute(fill, 0);
       TruffleString padString = createPadString(padCount, fillChar, fromJavaStringNode);
-      return BString.concat(concatNode, self, padString);
+      return ZString.concat(concatNode, self, padString);
     }
 
     @Fallback
@@ -810,12 +819,143 @@ public class StringMethods implements BaseBuiltinDeclaration {
 
     @CompilerDirectives.TruffleBoundary
     private TruffleString createPadString(long count, char fillChar,
-        TruffleString.FromJavaStringNode fromJavaStringNode) {
+                                          TruffleString.FromJavaStringNode fromJavaStringNode) {
       StringBuilder sb = new StringBuilder((int) count);
       for (long i = 0; i < count; i++) {
         sb.append(fillChar);
       }
       return fromJavaStringNode.execute(sb.toString(), ZuriLanguage.ENCODING);
+    }
+  }
+
+  public abstract static class NMatchMethodNode extends NBuiltinFunctionNode {
+    @Specialization(guards = "isNil(startIndex)")
+    protected Object doMatchFromZero(
+      TruffleString input,
+      TruffleString pattern,
+      Object startIndex,
+      @Cached @Cached.Shared("stringLengthNode") TruffleString.CodePointLengthNode stringLengthNode,
+      @Cached @Cached.Shared("toJavaString") TruffleString.ToJavaStringNode toJavaString,
+      @CachedLibrary(limit = "3") @Cached.Shared("regexInterop") InteropLibrary regexInterop,
+      @CachedLibrary(limit = "3") @Cached.Shared("resultInterop") InteropLibrary resultInterop,
+      @Cached(value = "languageContext().objectsModel", neverDefault = true) @Cached.Shared("classesModel") BuiltinClassesModel classesModel,
+      @Cached(value = "classesModel.dictionaryShape", neverDefault = true) Shape shape,
+      @Cached(value = "classesModel.dictionaryObject", neverDefault = true) ZuriClass classObject
+    ) {
+      return doMatch(input, pattern, 0, stringLengthNode, toJavaString, regexInterop, resultInterop, shape, classObject);
+    }
+
+    @Specialization(replaces = "doMatchFromZero")
+    protected Object doMatchFromIndex(
+      TruffleString input,
+      TruffleString pattern,
+      long startIndex,
+      @Cached @Cached.Shared("stringLengthNode") TruffleString.CodePointLengthNode stringLengthNode,
+      @Cached @Cached.Shared("toJavaString") TruffleString.ToJavaStringNode toJavaString,
+      @CachedLibrary(limit = "3") @Cached.Shared("regexInterop") InteropLibrary regexInterop,
+      @CachedLibrary(limit = "3") @Cached.Shared("resultInterop") InteropLibrary resultInterop,
+      @Cached(value = "languageContext().objectsModel", neverDefault = true) @Cached.Shared("classesModel") BuiltinClassesModel classesModel,
+      @Cached(value = "classesModel.dictionaryShape", neverDefault = true) Shape shape,
+      @Cached(value = "classesModel.dictionaryObject", neverDefault = true) ZuriClass classObject
+    ) {
+      return doMatch(input, pattern, startIndex, stringLengthNode, toJavaString, regexInterop, resultInterop, shape, classObject);
+    }
+
+    @Fallback
+    protected Object doFallback(Object object, Object other, Object startIndex) {
+      throw ZuriRuntimeError.argumentError(this, "string.match()", other, startIndex);
+    }
+
+    protected boolean isNil(Object o) {
+      return o == ZuriNil.SINGLETON;
+    }
+
+    protected Object doMatch(
+      TruffleString input, TruffleString pattern, long startIndex,
+      TruffleString.CodePointLengthNode stringLengthNode, TruffleString.ToJavaStringNode toJavaString,
+      InteropLibrary regexInterop, InteropLibrary resultInterop, Shape shape, ZuriClass classObject
+    ) {
+      int inputLength = ZString.intLength(input, stringLengthNode);
+      int patternLength = ZString.intLength(pattern, stringLengthNode);
+
+      if (patternLength == 0 || inputLength == 0) {
+        return false;
+      }
+
+      String patternStr = toJavaString.execute(pattern);
+      String inputStr = toJavaString.execute(input);
+
+      RegexObject compiled = ZuriContext.get(this).getRegexCache().compile(patternStr, regexInterop);
+
+      RegexResult result = (RegexResult) execMatch(this, regexInterop, compiled, inputStr, (int) startIndex);
+
+      return buildGroupsDictionary(this, resultInterop, compiled, result, inputStr, shape, classObject);
+    }
+
+    private static Object execMatch(Node node, InteropLibrary interop, RegexObject compiled,
+                                    String input, int fromIndex) {
+      try {
+        return interop.invokeMember(compiled, "exec", input, fromIndex);
+      } catch (Exception e) {
+        throw ZuriRuntimeError.error(node, e.getMessage());
+      }
+    }
+
+    @CompilerDirectives.TruffleBoundary
+    private static Object buildGroupsDictionary(
+      Node node, InteropLibrary interop,
+      RegexObject regex,
+      RegexResult result,
+      String input, Shape shape, ZuriClass classObject
+    ) {
+      try {
+        boolean isMatch = (boolean) interop.readMember(result, "isMatch");
+        if (!isMatch) return false;
+
+        Object getStart = interop.readMember(result, "getStart");
+        Object getEnd = interop.readMember(result, "getEnd");
+
+        List<Object> groupIds = new ArrayList<>();
+        List<Object> groupValues = new ArrayList<>();
+
+        // Add numbered groups
+        for (int i = 0; i < regex.getNumberOfCaptureGroups(); i++) {
+          int start = (int) interop.execute(getStart, i);
+          int end = (int) interop.execute(getEnd, i);
+
+          // -1 on both means group index is out of bounds — we're done
+          if (start == -1 && end == -1 && i > 0)
+            break;
+
+          groupIds.add(i);
+          groupValues.add(start == -1
+            ? ZuriNil.SINGLETON          // unmatched optional group
+            : input.substring(start, end));
+        }
+
+        // Add named groups
+        Object groupsObj = interop.readMember(regex, "groups");
+        if (!interop.isNull(groupsObj)) {
+          Object groupNames = interop.getMembers(groupsObj);
+          long nameCount = interop.getArraySize(groupNames);
+
+          for (long n = 0; n < nameCount; n++) {
+            String name = (String) interop.readArrayElement(groupNames, n);
+
+            int start = (int) interop.execute(getStart, n);
+            int end = (int) interop.execute(getEnd, n);
+
+            groupIds.add(ZString.fromJavaString(name));
+            groupValues.add(start == -1
+              ? ZuriNil.SINGLETON          // unmatched optional group
+              : input.substring(start, end));
+          }
+        }
+
+        return new DictionaryObject(shape, classObject, groupIds.toArray(), groupValues.toArray());
+      } catch (Exception e) {
+        throw ZuriRuntimeError.error(node, e.getMessage());
+      }
     }
   }
 }

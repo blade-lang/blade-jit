@@ -6,31 +6,28 @@ import com.oracle.truffle.api.object.Shape;
 import com.oracle.truffle.api.strings.TruffleString;
 import org.zuri.language.nodes.NNode;
 import org.zuri.language.nodes.common.NNormalizeIndexNode;
-import org.zuri.language.runtime.BString;
-import org.zuri.language.runtime.ZuriClass;
-import org.zuri.language.runtime.ZuriRuntimeError;
-import org.zuri.language.runtime.ListObject;
+import org.zuri.language.runtime.*;
 import org.zuri.language.shared.ZuriUtil;
 import org.zuri.language.shared.BuiltinClassesModel;
 
 @NodeChild("targetExpr")
 @NodeChild("lowerExpr")
 @NodeChild("upperExpr")
-@ImportStatic(BString.class)
+@ImportStatic(ZString.class)
 public abstract class NGetSliceNode extends NNode {
 
   @Specialization(guards = {"string.isEmpty()"})
   protected Object doString(TruffleString string, long lower, long upper,
                             @Cached @Cached.Shared("lengthNode") TruffleString.CodePointLengthNode lengthNode,
                             @Cached @Cached.Shared("substringNode") TruffleString.SubstringNode substringNode) {
-    return BString.EMPTY;
+    return ZString.EMPTY;
   }
 
   @Specialization(guards = {"lower == upper"})
   protected Object doString2(TruffleString string, long lower, long upper,
                              @Cached @Cached.Shared("lengthNode") TruffleString.CodePointLengthNode lengthNode,
                              @Cached @Cached.Shared("substringNode") TruffleString.SubstringNode substringNode) {
-    return BString.EMPTY;
+    return ZString.EMPTY;
   }
 
   @Specialization(guards = {"!string.isEmpty()", "lower != upper"})
@@ -38,15 +35,15 @@ public abstract class NGetSliceNode extends NNode {
                              @Cached @Cached.Shared("lengthNode") TruffleString.CodePointLengthNode lengthNode,
                              @Cached @Cached.Shared("substringNode") TruffleString.SubstringNode substringNode,
                              @Cached @Cached.Shared("normalizeIndexNode") NNormalizeIndexNode normalizeIndexNode) {
-    final int length = BString.intLength(string, lengthNode);
+    final int length = ZString.intLength(string, lengthNode);
     final int effectiveLower = normalizeIndexNode.executeLong(this, lower, length);
     final int effectiveUpper = normalizeIndexNode.executeLong(this, upper, length);
 
     if (effectiveUpper < effectiveLower) {
-      return BString.EMPTY;
+      return ZString.EMPTY;
     }
 
-    return BString.substring(string, effectiveLower, effectiveUpper, substringNode);
+    return ZString.substring(string, effectiveLower, effectiveUpper, substringNode);
   }
 
   @Specialization(guards = {"list.getArraySize() == 0"})

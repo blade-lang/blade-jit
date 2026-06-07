@@ -44,7 +44,8 @@ import java.util.stream.IntStream;
   defaultMimeType = ZuriLanguage.MIME_TYPE,
   characterMimeTypes = ZuriLanguage.MIME_TYPE,
   contextPolicy = TruffleLanguage.ContextPolicy.SHARED,
-  fileTypeDetectors = ZuriFileDetector.class
+  fileTypeDetectors = ZuriFileDetector.class,
+  dependentLanguages = "regex"
 )
 @ProvidedTags({
   StatementTag.class, CallTag.class, RootTag.class, RootBodyTag.class, ExpressionTag.class, TryBlockTag.class,

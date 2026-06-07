@@ -4,14 +4,14 @@ import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.strings.TruffleString;
 import org.zuri.language.nodes.NNode;
-import org.zuri.language.runtime.BString;
+import org.zuri.language.runtime.ZString;
 
 public final class NStringLiteralNode extends NNode {
   @CompilerDirectives.CompilationFinal
   private final TruffleString value;
 
   public NStringLiteralNode(String value) {
-    this.value = BString.fromJavaString(value);
+    this.value = ZString.fromJavaString(value);
   }
 
   @Override

@@ -28,7 +28,7 @@ public class ZuriObject extends DynamicObject {
   @CompilerDirectives.TruffleBoundary
   @Override
   public String toString() {
-    return BString.format("<class %s instance at 0x%x>", ((ZuriClass) classObject).name, hash());
+    return ZString.format("<class %s instance at 0x%x>", ((ZuriClass) classObject).name, hash());
   }
 
   @CompilerDirectives.TruffleBoundary

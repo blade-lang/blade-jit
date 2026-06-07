@@ -12,7 +12,6 @@ import com.oracle.truffle.api.strings.TruffleString;
 import org.zuri.language.BaseBuiltinDeclaration;
 import org.zuri.language.nodes.common.NToStringNode;
 import org.zuri.language.nodes.functions.NBuiltinFunctionNode;
-import org.zuri.language.nodes.string.NStringPropertyReaderNode;
 import org.zuri.language.runtime.*;
 import org.zuri.language.shared.BuiltinClassesModel;
 import org.zuri.utility.RegulatedMap;
@@ -43,7 +42,7 @@ public class ObjectMethods implements BaseBuiltinDeclaration {
     @Specialization(limit = "3")
     protected boolean doObject(DynamicObject self, Object property,
                                @CachedLibrary("self") DynamicObjectLibrary dynamicObjectLibrary) {
-      return dynamicObjectLibrary.containsKey(self, BString.toString(property));
+      return dynamicObjectLibrary.containsKey(self, ZString.toString(property));
     }
 
     @Fallback
@@ -51,7 +50,7 @@ public class ObjectMethods implements BaseBuiltinDeclaration {
                                   @Cached(value = "languageContext().objectsModel.objectObject", neverDefault = true) DynamicObject clasObject,
                                   @CachedLibrary(value = "languageContext().objectsModel.objectObject") InteropLibrary classInteropLibrary) {
       try {
-        return evaluateBoolean(classInteropLibrary.readMember(clasObject, BString.toString(property)));
+        return evaluateBoolean(classInteropLibrary.readMember(clasObject, ZString.toString(property)));
       } catch (UnsupportedMessageException | UnknownIdentifierException e) {
         return false;
       }

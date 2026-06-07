@@ -20,7 +20,7 @@ public class ZuriRuntimeError extends AbstractTruffleException {
   }
 
   public ZuriRuntimeError(Object value, Node node) {
-    super(BString.toString(value), node);
+    super(ZString.toString(value), node);
     this.value = value;
   }
 
@@ -36,7 +36,7 @@ public class ZuriRuntimeError extends AbstractTruffleException {
 //  private static final InteropLibrary UNCACHED_LIB = InteropLibrary.getFactory().getUncached();
 
   public ZuriRuntimeError(Object name, Object message, ZuriObject value, NNode node) {
-    super(BString.toString(name) + ": " + BString.toString(message), node);
+    super(ZString.toString(name) + ": " + ZString.toString(message), node);
     this.value = value;
   }
 
@@ -62,15 +62,15 @@ public class ZuriRuntimeError extends AbstractTruffleException {
 
   @CompilerDirectives.TruffleBoundary
   public static AbstractTruffleException create(String message, Object... others) {
-    return new ZuriRuntimeError(BString.concatString(message, others));
+    return new ZuriRuntimeError(ZString.concatString(message, others));
   }
 
   public static AbstractTruffleException error(Node node, String message, Object... values) {
-    return create(ErrorObject.create(node, "Error", BString.concatString(message, values)), node);
+    return create(ErrorObject.create(node, "Error", ZString.concatString(message, values)), node);
   }
 
   public static AbstractTruffleException typeError(Node node, String message, Object... values) {
-    return create(ErrorObject.create(node, "TypeError", BString.concatString(message, values)), node);
+    return create(ErrorObject.create(node, "TypeError", ZString.concatString(message, values)), node);
   }
 
   public static AbstractTruffleException valueError(Node node, String message) {
@@ -78,7 +78,7 @@ public class ZuriRuntimeError extends AbstractTruffleException {
   }
 
   public static AbstractTruffleException valueError(Node node, String message, Object... values) {
-    return create(ErrorObject.create(node, "ValueError", BString.concatString(message, values)), node);
+    return create(ErrorObject.create(node, "ValueError", ZString.concatString(message, values)), node);
   }
 
   public static AbstractTruffleException assertError(Node node, String message) {
@@ -86,7 +86,7 @@ public class ZuriRuntimeError extends AbstractTruffleException {
   }
 
   public static AbstractTruffleException assertError(Node node, String message, Object... values) {
-    return create(ErrorObject.create(node, "AssertError", BString.concatString(message, values)), node);
+    return create(ErrorObject.create(node, "AssertError", ZString.concatString(message, values)), node);
   }
 
   @ExplodeLoop
@@ -95,7 +95,7 @@ public class ZuriRuntimeError extends AbstractTruffleException {
     StringBuilder result = new StringBuilder();
 
     if (operation != null) {
-      result.append("'").append(operation).append("'");
+      result.append(operation);
     } else {
       result.append("operation");
     }

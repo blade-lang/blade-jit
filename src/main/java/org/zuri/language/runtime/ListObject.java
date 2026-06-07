@@ -6,8 +6,6 @@ import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.Fallback;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.interop.InteropLibrary;
-import com.oracle.truffle.api.interop.UnknownIdentifierException;
-import com.oracle.truffle.api.interop.UnsupportedMessageException;
 import com.oracle.truffle.api.library.CachedLibrary;
 import com.oracle.truffle.api.library.ExportLibrary;
 import com.oracle.truffle.api.library.ExportMessage;
@@ -15,7 +13,6 @@ import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.object.DynamicObjectLibrary;
 import com.oracle.truffle.api.object.Shape;
-import com.oracle.truffle.api.profiles.InlinedConditionProfile;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -82,10 +79,10 @@ public final class ListObject extends ZuriObject {
   public String toString() {
     List<String> builder = new ArrayList<>();
     for (Object item : items) {
-      builder.add(BString.toString(item));
+      builder.add(ZString.toString(item));
     }
 
-    String result = "[" + BString.join(", ", builder) + "]";
+    String result = "[" + ZString.join(", ", builder) + "]";
     builder.clear();
 
     return result;

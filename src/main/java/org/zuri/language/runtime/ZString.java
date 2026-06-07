@@ -8,7 +8,7 @@ import org.zuri.language.ZuriLanguage;
 
 import java.util.List;
 
-public final class BString {
+public final class ZString {
   public final static TruffleString EMPTY = fromJavaString("");
 
   public static TruffleString fromJavaString(String s) {

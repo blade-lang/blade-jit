@@ -12,14 +12,14 @@ import org.zuri.language.nodes.ZuriTypesGen;
 import org.zuri.language.nodes.NNode;
 import org.zuri.language.nodes.common.NPropertyReaderNode;
 import org.zuri.language.nodes.expressions.NParentExprNode;
-import org.zuri.language.runtime.BString;
+import org.zuri.language.runtime.ZString;
 import org.zuri.language.runtime.ZuriRuntimeError;
 import org.zuri.language.runtime.ListObject;
 
 @SuppressWarnings("truffle-inlining")
 @NodeChild("listExpr")
 @NodeChild("indexExpr")
-@ImportStatic(BString.class)
+@ImportStatic(ZString.class)
 public abstract class NReadListIndexNode extends NNode {
   abstract Object executeRead(Object list, Object index);
 
@@ -70,7 +70,7 @@ public abstract class NReadListIndexNode extends NNode {
     @CachedLibrary("list") InteropLibrary interopLibrary,
     @Cached @Cached.Shared("propertyReaderNode") NPropertyReaderNode propertyReaderNode
   ) {
-    return propertyReaderNode.executeRead(list, BString.toString(property));
+    return propertyReaderNode.executeRead(list, ZString.toString(property));
   }
 
   @Fallback

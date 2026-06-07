@@ -16,7 +16,7 @@ import org.zuri.language.runtime.*;
 
 @NodeChild("path")
 @NodeChild("name")
-@ImportStatic(BString.class)
+@ImportStatic(ZString.class)
 @SuppressWarnings("unused")
 public abstract class NImportProcessorNode extends NNode {
 
@@ -110,7 +110,7 @@ public abstract class NImportProcessorNode extends NNode {
     if (importsAll) {
       MemberNamesObject moduleMembers = (MemberNamesObject) objectLibrary.getMembers(module, false);
       for (Object name : moduleMembers.getNames()) {
-        String originalName = BString.toString(name);
+        String originalName = ZString.toString(name);
 
         try {
           Object exportedValue = module.getExport(originalName);
@@ -125,12 +125,12 @@ public abstract class NImportProcessorNode extends NNode {
   protected ModuleObject loadModule(TruffleString name, TruffleString path, TruffleString.ToJavaStringNode nameToStringNode, TruffleString.ToJavaStringNode pathToStringNode) {
     return languageContext().loadModule(
       this,
-      BString.toString(nameToStringNode, name),
-      BString.toString(pathToStringNode, path)
+      ZString.toString(nameToStringNode, name),
+      ZString.toString(pathToStringNode, path)
     );
   }
 
   protected boolean isBuiltin(TruffleString path, TruffleString.CodePointAtIndexNode codePointNode) {
-    return BString.toCodePoint(path, codePointNode, 0) == 95; // 95 == `_`
+    return ZString.toCodePoint(path, codePointNode, 0) == 95; // 95 == `_`
   }
 }

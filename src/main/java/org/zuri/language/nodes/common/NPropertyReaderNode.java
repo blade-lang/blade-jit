@@ -13,10 +13,7 @@ import com.oracle.truffle.api.object.DynamicObjectLibrary;
 import com.oracle.truffle.api.strings.TruffleString;
 import org.zuri.language.nodes.NBaseNode;
 import org.zuri.language.nodes.string.NStringPropertyReaderNode;
-import org.zuri.language.runtime.BObject;
-import org.zuri.language.runtime.BString;
-import org.zuri.language.runtime.ZuriNil;
-import org.zuri.language.runtime.ZuriRuntimeError;
+import org.zuri.language.runtime.*;
 
 @SuppressWarnings({"truffle-inlining", "truffle-unused"})
 public abstract class NPropertyReaderNode extends NBaseNode {
@@ -47,7 +44,7 @@ public abstract class NPropertyReaderNode extends NBaseNode {
   ) {
     throw ZuriRuntimeError.typeError(
       node,
-      BString.concatString("Cannot read properties of nil (reading '", property, "')")
+      ZString.concatString("Cannot read properties of nil (reading '", property, "')")
     );
   }
 
@@ -58,6 +55,6 @@ public abstract class NPropertyReaderNode extends NBaseNode {
     @Cached(value = "languageContext().objectsModel.objectObject", neverDefault = false) BObject objectObject,
     @CachedLibrary(limit = "3") DynamicObjectLibrary objectLibrary
   ) {
-    return objectLibrary.getOrDefault(objectObject, BString.toString(property), ZuriNil.SINGLETON);
+    return objectLibrary.getOrDefault(objectObject, ZString.toString(property), ZuriNil.SINGLETON);
   }
 }

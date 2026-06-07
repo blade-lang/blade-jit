@@ -1,7 +1,6 @@
 package org.zuri.language.nodes.common;
 
 import com.oracle.truffle.api.CompilerDirectives;
-import com.oracle.truffle.api.bytecode.OperationProxy;
 import com.oracle.truffle.api.dsl.*;
 import com.oracle.truffle.api.interop.InteropLibrary;
 import com.oracle.truffle.api.interop.UnsupportedMessageException;
@@ -36,7 +35,7 @@ public abstract class NToBooleanNode extends NNode {
 
   @Specialization
   public static boolean doString(TruffleString value, @Cached TruffleString.CodePointLengthNode lengthNode) {
-    return BString.length(value, lengthNode) > 0;
+    return ZString.length(value, lengthNode) > 0;
   }
 
   @Specialization

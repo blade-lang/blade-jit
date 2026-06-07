@@ -52,19 +52,19 @@ public abstract class NRaiseStmtNode extends NStmtNode {
   @Specialization
   protected Object doOtherError(Object value) {
     if (isAssert) {
-      throw ZuriRuntimeError.assertError(this, BString.toString(value));
+      throw ZuriRuntimeError.assertError(this, ZString.toString(value));
     }
     throw ZuriRuntimeError.create(value, this);
   }
 
   @CompilerDirectives.TruffleBoundary
   private TruffleString formStackTrace(Object type, Object message, ZuriRuntimeError easyScriptException) {
-    TruffleStringBuilder sb = BString.builder();
-    sb.appendStringUncached(BString.fromObject(type));
+    TruffleStringBuilder sb = ZString.builder();
+    sb.appendStringUncached(ZString.fromObject(type));
 
     if (message != ZuriNil.SINGLETON) {
-      sb.appendStringUncached(BString.fromJavaString(": "));
-      sb.appendStringUncached(BString.fromObject(message));
+      sb.appendStringUncached(ZString.fromJavaString(": "));
+      sb.appendStringUncached(ZString.fromObject(message));
     }
 
     List<TruffleStackTraceElement> truffleStackTraceEls = TruffleStackTrace.getStackTrace(easyScriptException);
@@ -78,28 +78,28 @@ public abstract class NRaiseStmtNode extends NStmtNode {
         RootNode rootNode = location.getRootNode();
         String funcName = rootNode.getName();
 
-        sb.appendStringUncached(BString.fromJavaString("\n\tat "));
+        sb.appendStringUncached(ZString.fromJavaString("\n\tat "));
 
         String fileName = sourceSection.getSource().getName();
         String filePath = sourceSection.getSource().getPath();
 
-        sb.appendStringUncached(BString.fromJavaString(filePath == null ? fileName : filePath));
-        sb.appendStringUncached(BString.fromJavaString(":"));
-        sb.appendStringUncached(BString.fromObject(startLine));
-        sb.appendStringUncached(BString.fromJavaString(":"));
-        sb.appendStringUncached(BString.fromObject(sourceSection.getStartColumn()));
+        sb.appendStringUncached(ZString.fromJavaString(filePath == null ? fileName : filePath));
+        sb.appendStringUncached(ZString.fromJavaString(":"));
+        sb.appendStringUncached(ZString.fromObject(startLine));
+        sb.appendStringUncached(ZString.fromJavaString(":"));
+        sb.appendStringUncached(ZString.fromObject(sourceSection.getStartColumn()));
 
-        sb.appendStringUncached(BString.fromJavaString(" -> "));
+        sb.appendStringUncached(ZString.fromJavaString(" -> "));
 
         // we want to ignore the top-level program RootNode type in this stack trace
         boolean isFunc = !":program".equals(funcName);
         if (isFunc) {
-          sb.appendStringUncached(BString.fromJavaString(funcName));
+          sb.appendStringUncached(ZString.fromJavaString(funcName));
         } else {
-          sb.appendStringUncached(BString.fromJavaString("@.script"));
+          sb.appendStringUncached(ZString.fromJavaString("@.script"));
         }
 
-        sb.appendStringUncached(BString.fromJavaString("()"));
+        sb.appendStringUncached(ZString.fromJavaString("()"));
       }
     }
     return sb.toStringUncached();

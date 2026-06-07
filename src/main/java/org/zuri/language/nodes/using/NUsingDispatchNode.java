@@ -11,7 +11,7 @@ import com.oracle.truffle.api.profiles.InlinedConditionProfile;
 import com.oracle.truffle.api.strings.TruffleString;
 import org.zuri.language.nodes.NNode;
 import org.zuri.language.nodes.NStmtNode;
-import org.zuri.language.runtime.BString;
+import org.zuri.language.runtime.ZString;
 import org.zuri.language.runtime.BigIntObject;
 import org.zuri.language.runtime.ZuriNil;
 
@@ -104,7 +104,7 @@ public abstract class NUsingDispatchNode extends NStmtNode {
                             @Cached TruffleString.EqualNode equalNode) {
     for (NWhenNode caseNode : caseNodes) {
       if (caseNode.execute(frame) instanceof TruffleString string) {
-        if (BString.equals(switchValue, string, equalNode)) {
+        if (ZString.equals(switchValue, string, equalNode)) {
           return caseNode.bodyNode.execute(frame);
         }
       }

@@ -10,14 +10,14 @@ import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.strings.TruffleString;
 import org.zuri.language.nodes.NNode;
 import org.zuri.language.nodes.common.NPropertyWriterNode;
-import org.zuri.language.runtime.BString;
+import org.zuri.language.runtime.ZString;
 import org.zuri.language.runtime.ZuriRuntimeError;
 import org.zuri.language.runtime.ListObject;
 
 @NodeChild("listExpr")
 @NodeChild("indexExpr")
 @NodeChild("valueExpr")
-@ImportStatic(BString.class)
+@ImportStatic(ZString.class)
 public abstract class NWriteListIndexNode extends NNode {
   @Specialization(guards = "listLibrary.isArrayElementWritable(list, index)", limit = "3")
   protected static Object doLong(Object list, long index, Object value, @Bind Node node,
@@ -77,7 +77,7 @@ public abstract class NWriteListIndexNode extends NNode {
       throw ZuriRuntimeError.error(node, "List index ", index, " out of range");
     }
 
-    return sharedPropertyWriterNode.executeWrite(target, BString.toString(index), value);
+    return sharedPropertyWriterNode.executeWrite(target, ZString.toString(index), value);
   }
 
   protected static boolean isBool(Object value) {

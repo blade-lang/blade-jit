@@ -8,7 +8,7 @@ import com.oracle.truffle.api.utilities.TriState;
 import org.zuri.annotations.ObjectName;
 
 @ExportLibrary(InteropLibrary.class)
-@ObjectName("Nil")
+@ObjectName("nil")
 public class ZuriNil implements TruffleObject {
   public static final ZuriNil SINGLETON = new ZuriNil();
   private static final int IDENTITY_HASH = System.identityHashCode(SINGLETON);

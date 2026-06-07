@@ -15,7 +15,7 @@ public final class ErrorObject extends ZuriObject {
     this.type = prototype.name;
     this.message = message;
     UNCACHED_OBJ.put(this, "type", prototype.name);
-    UNCACHED_OBJ.put(this, "message", BString.fromJavaString(message));
+    UNCACHED_OBJ.put(this, "message", ZString.fromJavaString(message));
   }
 
   @CompilerDirectives.TruffleBoundary

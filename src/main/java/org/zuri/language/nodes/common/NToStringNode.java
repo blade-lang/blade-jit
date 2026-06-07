@@ -19,10 +19,10 @@ import static com.oracle.truffle.api.CompilerDirectives.shouldNotReachHere;
 public abstract class NToStringNode extends Node {
   static final int LIMIT = 5;
 
-  private static final TruffleString NIL = BString.toTruffleString("nil");
-  private static final TruffleString TRUE = BString.toTruffleString("true");
-  private static final TruffleString FALSE = BString.toTruffleString("false");
-  private static final TruffleString FOREIGN_OBJECT = BString.toTruffleString("[foreign object]");
+  private static final TruffleString NIL = ZString.toTruffleString("nil");
+  private static final TruffleString TRUE = ZString.toTruffleString("true");
+  private static final TruffleString FALSE = ZString.toTruffleString("false");
+  private static final TruffleString FOREIGN_OBJECT = ZString.toTruffleString("[foreign object]");
 
   public abstract TruffleString execute(Node node, Object value);
 
@@ -34,7 +34,7 @@ public abstract class NToStringNode extends Node {
   @Specialization
   protected static TruffleString fromString(String value,
                                             @Cached.Shared("fromJava") @Cached(inline = false) TruffleString.FromJavaStringNode fromJavaStringNode) {
-    return BString.fromJavaString(fromJavaStringNode, value);
+    return ZString.fromJavaString(fromJavaStringNode, value);
   }
 
   @Specialization
@@ -51,32 +51,32 @@ public abstract class NToStringNode extends Node {
   @CompilerDirectives.TruffleBoundary
   protected static TruffleString fromLong(long value,
                                           @Cached.Shared("fromLong") @Cached(inline = false) TruffleString.FromLongNode fromLongNode) {
-    return BString.fromLong(fromLongNode, value);
+    return ZString.fromLong(fromLongNode, value);
   }
 
   @Specialization
   @CompilerDirectives.TruffleBoundary
   protected static TruffleString fromDouble(double value,
                                           @Cached.Shared("fromJava") @Cached(inline = false) TruffleString.FromJavaStringNode fromJavaStringNode) {
-    return BString.fromObject(fromJavaStringNode, value);
+    return ZString.fromObject(fromJavaStringNode, value);
   }
 
   @Specialization
   protected static TruffleString fromBigNumber(BigIntObject value,
                                                @Cached.Shared("fromJava") @Cached(inline = false) TruffleString.FromJavaStringNode fromJavaStringNode) {
-    return BString.fromObject(fromJavaStringNode, value.get());
+    return ZString.fromObject(fromJavaStringNode, value.get());
   }
 
   @Specialization
   public static TruffleString fromFunction(FunctionObject value,
                                            @Cached.Shared("fromJava") @Cached(inline = false) TruffleString.FromJavaStringNode fromJavaStringNode) {
-    return BString.fromJavaString(fromJavaStringNode, value.name);
+    return ZString.fromJavaString(fromJavaStringNode, value.name);
   }
 
   @Specialization
   protected static TruffleString fromObject(ZuriObject value,
                                                 @Cached.Shared("fromJava") @Cached(inline = false) TruffleString.FromJavaStringNode fromJavaStringNode) {
-    return BString.fromObject(fromJavaStringNode, value);
+    return ZString.fromObject(fromJavaStringNode, value);
   }
 
   @Specialization(limit = "LIMIT")
@@ -86,13 +86,13 @@ public abstract class NToStringNode extends Node {
                                           @Cached.Shared("fromJava") @Cached(inline = false) TruffleString.FromJavaStringNode fromJavaStringNode) {
     try {
       if (interop.fitsInLong(value)) {
-        return BString.fromLong(fromLongNode, interop.asLong(value));
+        return ZString.fromLong(fromLongNode, interop.asLong(value));
       } else if (interop.fitsInDouble(value)) {
-        return BString.fromObject(fromJavaStringNode, interop.asDouble(value));
+        return ZString.fromObject(fromJavaStringNode, interop.asDouble(value));
       } else if (interop.isString(value)) {
-        return BString.fromJavaString(fromJavaStringNode, interop.asString(value));
+        return ZString.fromJavaString(fromJavaStringNode, interop.asString(value));
       } else if (interop.isNumber(value) && value instanceof BigIntObject bigIntObject) {
-        return BString.fromObject(fromJavaStringNode, bigIntObject.get());
+        return ZString.fromObject(fromJavaStringNode, bigIntObject.get());
       } else if (interop.isNull(value)) {
         return NIL;
       } else {

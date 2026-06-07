@@ -19,6 +19,7 @@ dependencies {
     implementation 'org.graalvm.polyglot:polyglot:25.0.0'
     implementation 'org.graalvm.truffle:truffle-runtime:25.0.0'
     implementation 'org.graalvm.polyglot:inspect:25.0.0'
+    implementation 'org.graalvm.regex:regex:25.0.0'
 
     annotationProcessor 'org.graalvm.truffle:truffle-dsl-processor:25.0.0'
 

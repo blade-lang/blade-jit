@@ -67,6 +67,10 @@ public class Main {
           System.out.print("%> ");
 
           String line = reader.readLine();
+          if(line == null) {
+            continue;
+          }
+
           if (line.equals(".exit")) {
             break;
           }
